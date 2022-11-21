@@ -29,7 +29,7 @@ namespace EasySslStream
         public static void EnableDebugMode(DEBUG_MODE mode = DEBUG_MODE.Console)
         {
 
-            if(DEBUG_MODE == DEBUG_MODE.Console)
+            if(mode == DEBUG_MODE.Console)
             CommunicationWithEntry.DebugMessage = void(string message) =>
             {
 
