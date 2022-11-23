@@ -9,7 +9,7 @@ namespace EasySslStream
     internal static class CommunicationWithEntry
     {
 
-        public delegate void DebugMessageDelegate(string message);
+        public delegate void DebugMessageDelegate(string message,string MessageTitle);
         public static DebugMessageDelegate DebugMessage;
 
 
