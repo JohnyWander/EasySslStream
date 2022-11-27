@@ -29,14 +29,14 @@ namespace EasySslStream
 
         public SerializeConfiguration(Mode mode)
         {
-           if(mode == Mode.Save)
+            if (mode == Mode.Save)
             {
                 Serialize();
             }
 
-           if(mode == Mode.Load)
+            if (mode == Mode.Load)
             {
-            //    Deserialize();
+                Deserialize();
             }
 
         }
@@ -45,14 +45,29 @@ namespace EasySslStream
         {
 
 
-            Stream serialized = File.OpenWrite("temp.dat");
+            Stream serialized = File.OpenWrite("configuration.dat");
 
-            BinaryFormatter b = new BinaryFormatter();
-            b.Serialize(serialized, this);
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(serialized, this);
+
+            serialized.Dispose();
+            bf = null;
 
         }
 
-        
+        public void Deserialize()
+        {
+            Stream serialized = File.OpenRead("configuration.dat");
+
+            BinaryFormatter bf = new BinaryFormatter();
+            SerializeConfiguration deserialized = (SerializeConfiguration)bf.Deserialize(serialized);
+
+            DynamicConfiguration.DEBUG = deserialized.DEBUG;
+
+
+
+        }
+
 
 
     }

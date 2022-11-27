@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
+
+
 namespace EasySslStream
 {
     public delegate void DebugLocalVariableEventRaised();
@@ -19,7 +21,7 @@ namespace EasySslStream
         /// <summary>
         /// True - Lib will try to output debug Messages through specified 
         /// </summary>
-        static bool DEBUG = false;
+        public static bool DEBUG = false;
         public static DEBUG_MODE debug_mode;
         public static string? debug_message;
         public static string? debug_title;
@@ -93,8 +95,15 @@ namespace EasySslStream
         public static void Save()
         {
             SerializeConfiguration SC = new SerializeConfiguration(SerializeConfiguration.Mode.Save);
+            
            
 
+        }
+
+        public static void Load()
+        {
+            SerializeConfiguration SC = new SerializeConfiguration(SerializeConfiguration.Mode.Load);
+            
         }
 
 
