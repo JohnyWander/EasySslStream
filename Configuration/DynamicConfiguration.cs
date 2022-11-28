@@ -18,11 +18,24 @@ namespace EasySslStream
             MessageBox,
             LocalVariable
         }
+
+        public static DEBUG_MODE debug_mode;
+
+        public enum SSL_Certgen_mode
+        {
+            OpenSSL,
+            Makecer,
+            DotNet
+
+        }
+
+        public static SSL_Certgen_mode Certgen_Mode; 
+
         /// <summary>
         /// True - Lib will try to output debug Messages through specified 
         /// </summary>
         public static bool DEBUG = false;
-        public static DEBUG_MODE debug_mode;
+     
         public static string? debug_message;
         public static string? debug_title;
 
@@ -90,7 +103,12 @@ namespace EasySslStream
             RaiseMessage = null;
         }
 
-
+       
+        public static void SelectCertgenMode()
+        {
+         
+        }
+        
 
 
 
