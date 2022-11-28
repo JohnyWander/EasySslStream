@@ -38,7 +38,6 @@ namespace Debug_mode_test
 
 
 
-            EasySslStream.DynamicConfiguration.Save();
 
         }
     }
