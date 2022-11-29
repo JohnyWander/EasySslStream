@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EasySslStream.Exceptions
+namespace EasySslStream.GenerationClasses
 {
-    internal class Class1
+    internal class MakecertCertGeneration : Abstraction.CertGenClassesParent
     {
-       
-       
     }
 }

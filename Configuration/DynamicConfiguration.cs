@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
-
+using System.Runtime.CompilerServices;
 
 namespace EasySslStream
 {
@@ -12,6 +12,9 @@ namespace EasySslStream
 
     public static class DynamicConfiguration
     {
+
+        
+     
         public enum DEBUG_MODE
         {
             Console,
@@ -29,7 +32,7 @@ namespace EasySslStream
 
         }
 
-        public static SSL_Certgen_mode Certgen_Mode; 
+        public static SSL_Certgen_mode Certgen_Mode { private set; get; }
 
         /// <summary>
         /// True - Lib will try to output debug Messages through specified 
@@ -104,22 +107,18 @@ namespace EasySslStream
         }
 
        
-        public static void SelectCertgenMode()
+        public static void SelectCertgenMode(SSL_Certgen_mode CertGenMode_)
         {
-         
+            Certgen_Mode = CertGenMode_;
         }
         
 
 
-
-        /////
-        ///
-
-
-
-
-
-
-
     }
+
+
+ 
+    
+
+
 }
