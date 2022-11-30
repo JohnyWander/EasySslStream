@@ -8,16 +8,11 @@ namespace EasySslStream
 {
     internal class DotNetCertGeneration : Abstraction.CertGenClassesParent
     {
-
-        public DotNetCertGeneration()
+        public override void GenerateCA(string outputpath)
         {
-
-         
-
-            
-
-            
+            throw new NotImplementedException();
         }
+
 
 
 

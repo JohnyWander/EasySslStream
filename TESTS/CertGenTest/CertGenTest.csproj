@@ -7,4 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="EasySslStream">
+      <HintPath>..\EasySslStream.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

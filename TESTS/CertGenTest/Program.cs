@@ -4,7 +4,15 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            EasySslStream.DynamicConfiguration.CA_CONFIG.CountryCode = "US";
+
+            EasySslStream.CertGenerationClasses.OpensslCertGeneration opensslCertGeneration = new EasySslStream.CertGenerationClasses.OpensslCertGeneration();
+            opensslCertGeneration.GenerateCA("xd.txt");
+
+
+
+
+
         }
     }
-}
+} 

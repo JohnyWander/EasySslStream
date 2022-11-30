@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using static EasySslStream.CA_CertGen;
 
 namespace EasySslStream
 {
@@ -12,7 +13,7 @@ namespace EasySslStream
 
     public static class DynamicConfiguration
     {
-
+        public static CA_CertGen CA_CONFIG = new CA_CertGen();
         
      
         public enum DEBUG_MODE
@@ -116,7 +117,115 @@ namespace EasySslStream
 
     }
 
+    public class CA_CertGen
+    {
+        public enum HashAlgorithms
+        {
+          sha256,
+          sha384
+        }
+        
+        public enum KeyLengths
+        {
+            RSA_1024,
+            RSA_2048,
+            RSA_4096
+        }
 
+        public HashAlgorithms? HashAlgorithm;
+        public KeyLengths? KeyLength;
+
+        public int Days { internal get; set; } // ex. 356
+
+        internal string? CountryCodeString;
+        public string? CountryCode
+        {
+            internal get
+            {
+                if (CountryCode is not null)
+                {
+                    return CountryCodeString;
+                }
+                else
+                {
+                    throw new Exceptions.CountryCodeInvalidException("CountryCode is NULL");
+                }
+            }
+            set
+            {
+                int length;
+                if (value is null) { throw new Exceptions.CountryCodeInvalidException("Passed value is NULL"); }
+                if (VerifyCountryCode(value, out length)) { CountryCodeString = value?.ToUpper(); }
+                else { throw new Exceptions.CountryCodeInvalidException(length); }
+
+            }
+        }
+        public string? CountryState { internal get; set; } 
+        public string? City { internal get; set; } 
+        public string? Institution { internal get; set; }
+        public string? CommonName { internal get; set; }
+
+        private bool VerifyCountryCode(string CountryCode, out int length)
+        {
+            length = CountryCode.Length;
+            return CountryCode.Length == 2 ? true : false;
+        }
+    }
+
+
+    public class Server_CertGen
+    {
+        public enum HashAlgorithms
+        {
+            sha256,
+            sha384
+        }
+
+        public enum KeyLengths
+        {
+            RSA_1024,
+            RSA_2048,
+            RSA_4096
+        }
+
+        public HashAlgorithms HashAlgorithm;
+        public KeyLengths KeyLength;
+
+        internal string? CountryCodeString;
+        public string? CountryCode
+        {
+            internal get
+            {
+                if (CountryCode is not null)
+                {
+                    return CountryCodeString;
+                }
+                else
+                {
+                    throw new Exceptions.CountryCodeInvalidException("CountryCode is NULL");
+                }
+            }
+            set
+            {
+                int length;
+                if (value is null) { throw new Exceptions.CountryCodeInvalidException("Passed value is NULL"); }
+                if (VerifyCountryCode(value, out length)) { CountryCodeString = value?.ToUpper(); }
+                else { throw new Exceptions.CountryCodeInvalidException(length); }
+
+            }
+        }
+        public string? CountryState { internal get; set; }
+        public string? City { internal get; set; }
+        public string? Institution { internal get; set; }
+
+
+        private bool VerifyCountryCode(string CountryCode,out int length)
+        {
+            length = CountryCode.Length;
+            return CountryCode.Length == 2 ? true : false;
+        }
+
+    }
  
     
 
