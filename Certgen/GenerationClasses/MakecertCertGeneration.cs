@@ -14,6 +14,9 @@ namespace EasySslStream.GenerationClasses
             throw new NotImplementedException();
         }
 
-
+        internal override void LoadCAconfig()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -13,7 +13,10 @@ namespace EasySslStream
             throw new NotImplementedException();
         }
 
-
+        internal override void LoadCAconfig()
+        {
+            throw new NotImplementedException();
+        }
 
 
     }

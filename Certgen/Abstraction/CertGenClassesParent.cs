@@ -11,23 +11,23 @@ namespace EasySslStream.Abstraction
          internal string CAHashAlgo;
          internal string CAKeyLength;
          internal string CAdays;
-        internal string CACountry;
+         internal string CACountry;
+         internal string CAState;
+         internal string CALocation;
+         internal string CAOrganisation;
+         internal string CACommonName;
 
         public abstract void GenerateCA(string outputpath);
         
         public CertGenClassesParent()
         {
-           
+            LoadCAconfig();
+            //Console.WriteLine("parent ctor");
   
         }
-       
-        internal virtual void LoadCAconfig()
-        {
-            CAHashAlgo = DynamicConfiguration.CA_CONFIG.HashAlgorithm.ToString();
-            CAKeyLength = DynamicConfiguration.CA_CONFIG.KeyLength.ToString();
-            CAdays = Convert.ToString(DynamicConfiguration.CA_CONFIG.Days);
 
-        }
+        internal abstract void LoadCAconfig();
+        
 
 
 

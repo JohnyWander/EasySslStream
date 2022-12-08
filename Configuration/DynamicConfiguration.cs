@@ -14,7 +14,7 @@ namespace EasySslStream
     public static class DynamicConfiguration
     {
         public static CA_CertGen CA_CONFIG = new CA_CertGen();
-        
+        public static OpenSSLConfig_ OpenSSl_config = new OpenSSLConfig_();
      
         public enum DEBUG_MODE
         {
@@ -161,8 +161,8 @@ namespace EasySslStream
             }
         }
         public string? CountryState { internal get; set; } 
-        public string? City { internal get; set; } 
-        public string? Institution { internal get; set; }
+        public string? Location { internal get; set; } 
+        public string? Organisation { internal get; set; }
         public string? CommonName { internal get; set; }
 
         private bool VerifyCountryCode(string CountryCode, out int length)
@@ -227,7 +227,39 @@ namespace EasySslStream
 
     }
  
-    
+    public class OpenSSLConfig_
+    {
+
+        public enum Architecture
+        {
+            x32,
+            x64
+        }
+
+        public Architecture OpensslArch;
+
+        public string OpenSSL_PATH { private set; get; }
+
+
+        public void SetOpenSSl_PATH(string path)
+        {
+            OpenSSL_PATH = path;
+            
+        }
+
+
+        public void TryToFindOpenSSl()
+        {
+            
+            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)+"\\OpenSSL\\bin";
+
+            DynamicConfiguration.RaiseMessage?.Invoke("Failed to find openSSL", "OpenSSL error");
+
+
+        }
+        
+        
+    }
 
 
 }
