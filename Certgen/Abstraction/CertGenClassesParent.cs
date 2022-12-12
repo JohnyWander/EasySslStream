@@ -8,14 +8,14 @@ namespace EasySslStream.Abstraction
 {
     public abstract class CertGenClassesParent
     {
-         internal string CAHashAlgo;
-         internal string CAKeyLength;
-         internal string CAdays;
-         internal string CACountry;
-         internal string CAState;
-         internal string CALocation;
-         internal string CAOrganisation;
-         internal string CACommonName;
+          protected string CAHashAlgo;
+          protected string CAKeyLength;
+          protected string CAdays;
+          protected string CACountry;
+          protected string CAState;
+          protected string CALocation;
+          protected string CAOrganisation;
+          protected string CACommonName;
 
         public abstract void GenerateCA(string outputpath);
         

@@ -1,6 +1,7 @@
 ﻿using EasySslStream.Abstraction;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,8 +13,35 @@ namespace EasySslStream.CertGenerationClasses
           
           public override void GenerateCA(string OutputPath)
           {
-            Console.WriteLine(base.CACountry);
-          }
+            string configFile = @$"[req]
+default_bits= {base.CAKeyLength}
+prompt = no
+default_md = {base.CAHashAlgo}
+distinguished_name = dn
+[dn]
+C={base.CACountry}
+ST={base.CAState}
+L={base.CALocation}
+O={base.CAOrganisation}
+CN={base.CACommonName}";
+
+            File.WriteAllText("genconf.txt", configFile);
+
+            string cmdargs = $"req -new -x509 -{base.CAHashAlgo} -nodes -newkey rsa:{base.CAKeyLength} -keyout CA.key -out CA.crt -config genconf.txt";
+
+
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "openssl.exe";
+
+                openssl.StartInfo.Arguments = cmdargs;
+                openssl.Start();
+                openssl.WaitForExit();
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+            }
+
+
+        }
 
         internal override void LoadCAconfig()
         {

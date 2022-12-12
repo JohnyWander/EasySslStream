@@ -251,8 +251,8 @@ namespace EasySslStream
         public void TryToFindOpenSSl()
         {
             
-            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)+"\\OpenSSL\\bin";
-
+            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)+"\\OpenSSL\\bin";
+            string pathx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\OpenSSl\\bin";
             DynamicConfiguration.RaiseMessage?.Invoke("Failed to find openSSL", "OpenSSL error");
 
 
