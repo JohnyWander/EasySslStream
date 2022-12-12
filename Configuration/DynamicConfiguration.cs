@@ -230,6 +230,10 @@ namespace EasySslStream
     public class OpenSSLConfig_
     {
 
+        public OpenSSLConfig_()
+        {
+            TryToFindOpenSSl();
+        }
         public enum Architecture
         {
             x32,
@@ -252,10 +256,18 @@ namespace EasySslStream
         {
             
             string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)+"\\OpenSSL\\bin";
-            string pathx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\OpenSSl\\bin";
+            string pathx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\OpenSSL\\bin";
             DynamicConfiguration.RaiseMessage?.Invoke("Failed to find openSSL", "OpenSSL error");
 
+            if (File.Exists(pathx32 + "\\openssl.exe"))
+            {
+                OpenSSL_PATH = pathx32;
+            }
 
+            if (File.Exists(pathx64 + "\\openssl.exe"))
+            {
+                OpenSSL_PATH = pathx64;
+            }
         }
         
         

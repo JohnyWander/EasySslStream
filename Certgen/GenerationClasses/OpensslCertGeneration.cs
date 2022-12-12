@@ -32,7 +32,7 @@ CN={base.CACommonName}";
 
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "openssl.exe";
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH+"\\" + "openssl.exe";
 
                 openssl.StartInfo.Arguments = cmdargs;
                 openssl.Start();
