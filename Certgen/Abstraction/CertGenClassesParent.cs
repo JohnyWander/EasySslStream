@@ -16,19 +16,19 @@ namespace EasySslStream.Abstraction
           protected string CALocation;
           protected string CAOrganisation;
           protected string CACommonName;
-
-        public abstract void GenerateCA(string outputpath);
-        
+          protected string CAGenerationEncoding;
+          public abstract void GenerateCA(string outputpath);
+        public abstract Task GenerateCA_Async(string OutputPath);
         public CertGenClassesParent()
-        {
+          {
             LoadCAconfig();
             //Console.WriteLine("parent ctor");
   
-        }
+          }
 
         internal abstract void LoadCAconfig();
-        
 
+       
 
 
 

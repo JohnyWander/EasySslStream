@@ -23,7 +23,7 @@ namespace EasySslStream
             LocalVariable
         }
 
-        public static DEBUG_MODE debug_mode;
+        internal static DEBUG_MODE debug_mode;
 
         public enum SSL_Certgen_mode
         {
@@ -38,7 +38,7 @@ namespace EasySslStream
         /// <summary>
         /// True - Lib will try to output debug Messages through specified 
         /// </summary>
-        public static bool DEBUG = false;
+        internal static bool DEBUG = false;
      
         public static string? debug_message;
         public static string? debug_title;
@@ -131,9 +131,18 @@ namespace EasySslStream
             RSA_2048,
             RSA_4096
         }
+        
+        public enum Encodings
+        {
+            Default,
+            UTF8
+        }
+
 
         public HashAlgorithms? HashAlgorithm;
         public KeyLengths? KeyLength;
+        public Encodings Encoding = Encodings.Default;
+        
 
         public int Days { internal get; set; } // ex. 356
 
