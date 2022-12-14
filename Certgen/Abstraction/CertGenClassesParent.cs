@@ -17,20 +17,28 @@ namespace EasySslStream.Abstraction
           protected string CAOrganisation;
           protected string CACommonName;
           protected string CAGenerationEncoding;
-          public abstract void GenerateCA(string outputpath);
-        public abstract Task GenerateCA_Async(string OutputPath);
         public CertGenClassesParent()
-          {
+        {
             LoadCAconfig();
             //Console.WriteLine("parent ctor");
-  
-          }
 
+        }
         internal abstract void LoadCAconfig();
+      
+
+        //CA
+        public abstract void GenerateCA(string outputpath);
+        public abstract Task GenerateCA_Async(string OutputPath);
+      
+        // CSR
+        public abstract void GenerateCSR(ClientCSRConfiguration config, string OutputPath);
+        public abstract Task GenerateCSRAsync(ClientCSRConfiguration config, string OutputPath);
+
+
+
+        
 
        
-
-
 
 
 

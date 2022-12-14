@@ -144,6 +144,43 @@ CN={base.CACommonName}";
 
         }
 
+
+
+        public override void GenerateCSR(ClientCSRConfiguration config,string OutputPath= "default")
+        {
+            config.VerifyConfiguration();
+            if (OutputPath != "default")
+            {
+                Directory.SetCurrentDirectory(OutputPath);
+            }
+
+            string confile = $@"[req]
+default_bits={config.KeyLength}
+prompt=no
+default_md={config.HashAlgorithm.ToString()}
+req_extensions = req_ext
+distinguieshed_name = dn";
+
+
+
+        }
+
+        public override Task GenerateCSRAsync( ClientCSRConfiguration config, string OutputPath = "default")
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         internal override void LoadCAconfig()
         {
             
