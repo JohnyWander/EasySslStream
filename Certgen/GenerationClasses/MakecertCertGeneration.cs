@@ -8,7 +8,10 @@ namespace EasySslStream.GenerationClasses
 {
     internal class MakecertCertGeneration : Abstraction.CertGenClassesParent
     {
-
+        public override Task GenerateCA_Async(string outpath)
+        {
+            throw new NotImplementedException();
+        }
         public override void GenerateCA(string outputpath)
         {
             throw new NotImplementedException();

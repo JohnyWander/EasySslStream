@@ -18,6 +18,10 @@ namespace EasySslStream
             throw new NotImplementedException();
         }
 
+        public override Task GenerateCA_Async(string outpath)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

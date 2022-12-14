@@ -8,20 +8,85 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.CertGenerationClasses
 {
-    public class OpensslCertGeneration : Abstraction.CertGenClassesParent
+ 
+
+    public partial class OpensslCertGeneration : Abstraction.CertGenClassesParent
     {
           public override Task GenerateCA_Async(string OutputPath="default")
           {
-            TaskCompletionSource generation_completion = new TaskCompletionSource();
+            TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
             if(OutputPath != "default")
             {
                 Directory.SetCurrentDirectory(OutputPath);
             }
 
-          }
+            
+
+            string configFile = @$"[req]
+default_bits= {base.CAKeyLength}
+prompt = no
+default_md = {base.CAHashAlgo}
+distinguished_name = dn
+[dn]
+C={base.CACountry}
+ST={base.CAState}
+L={base.CALocation}
+O={base.CAOrganisation}
+CN={base.CACommonName}";
+
+
+
+            File.WriteAllText("genconf.txt", configFile);
+            string cmdargs = $"req -new -x509 -{base.CAHashAlgo} -nodes -newkey rsa:{base.CAKeyLength} -days {base.CAdays} {base.CAGenerationEncoding} -keyout CA.key -out CA.crt -config genconf.txt";
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.CreateNoWindow = true;
+                openssl.StartInfo.UseShellExecute = false;
+                openssl.StartInfo.Arguments = cmdargs;
+                openssl.EnableRaisingEvents = true;
+                openssl.StartInfo.RedirectStandardError = true;
+
+
+
+                openssl.Exited += (sender, args) =>
+                {
+                    if (openssl.ExitCode != 0)
+                    {
+                        string err = openssl.StandardError.ReadToEnd();
+                        generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                         //Console.WriteLine("EVENT");
+                    }
+                    else
+                    {
+                        generation_completion.SetResult(null);
+                       // Console.WriteLine("EVENT");
+                       
+                    }
+                };
+
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+
+                generation_completion.Task.ConfigureAwait(false);
+                //
+
+
+                openssl.Start();
+                openssl.WaitForExit();
+
+                return generation_completion.Task;
+            }
+
+
+        }
+        /// <summary>
+        /// ///////////////////////////////////////////////////////
+        /// </summary>
+        /// <param name="OutputPath"></param>
           public override void GenerateCA(string OutputPath="default")
           {
-
+          
 
 
 

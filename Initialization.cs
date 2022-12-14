@@ -2,10 +2,7 @@
 {
     internal class Initialization
     {
-        static void Main()
-        {
-
-        }
+     
 
 
 
