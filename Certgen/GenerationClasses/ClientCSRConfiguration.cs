@@ -26,10 +26,19 @@ namespace EasySslStream
             Default,
             UTF8
         }
+        public string CSRFileName="certificate.csr";
+
+     
+        
+        
+
+
+
+
 
         public HashAlgorithms? HashAlgorithm;
         public KeyLengths? KeyLength;
-        public Encodings? Encoding;
+        public Encodings? Encoding = Encodings.Default;
 
         internal string? CountryCodeString;
         public string? CountryCode

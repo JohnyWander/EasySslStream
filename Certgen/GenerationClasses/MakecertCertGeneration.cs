@@ -21,5 +21,16 @@ namespace EasySslStream.GenerationClasses
         {
             throw new NotImplementedException();
         }
+
+
+        public override void GenerateCSR(ClientCSRConfiguration config, string OutputPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task GenerateCSRAsync(ClientCSRConfiguration config, string OutputPath)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

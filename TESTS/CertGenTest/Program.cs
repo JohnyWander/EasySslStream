@@ -23,7 +23,7 @@ namespace CertGenTest
 //DynamicConfiguration.CA_CONFIG.
 
             EasySslStream.CertGenerationClasses.OpensslCertGeneration opensslCertGeneration = new EasySslStream.CertGenerationClasses.OpensslCertGeneration();
-              opensslCertGeneration.GenerateCA();
+             /// opensslCertGeneration.GenerateCA("CA"); synchronouse version
 
             List<Task> tasklist = new List<Task>();
 
@@ -31,17 +31,47 @@ namespace CertGenTest
             {
 
                 tasklist.Add(Task.Run(() => dummytask()));
-                tasklist.Add(Task.Run(() => opensslCertGeneration.GenerateCA_Async()));
+                tasklist.Add(Task.Run(() => opensslCertGeneration.GenerateCA_Async("CA")));
 
 
 
                 await Task.WhenAll(tasklist);
+
+         
             }).GetAwaiter().GetResult();
 
 
 
+            var conf = new ClientCSRConfiguration();
+
+            conf.CSRFileName = "cert.csr";
+            conf.HashAlgorithm = ClientCSRConfiguration.HashAlgorithms.sha256;
+            conf.KeyLength = ClientCSRConfiguration.KeyLengths.RSA_2048;
+            conf.Encoding = ClientCSRConfiguration.Encodings.UTF8;
+            conf.CountryCode = "US";
+            conf.State = "ĘĘĘĘ";
+            conf.City = "ééé";
+            conf.Organization = "Ó Ó Ó";
+            conf.CommonName = "test.domain.com";
+
+            // opensslCertGeneration.GenerateCSR(conf,"CA");
 
 
+            tasklist.Clear();
+            
+            Task.Run(async () =>
+            {
+
+                tasklist.Add(Task.Run(() => dummytask()));
+                tasklist.Add(Task.Run(() => opensslCertGeneration.GenerateCSRAsync(conf,"CA")));
+
+
+
+                await Task.WhenAll(tasklist);
+
+
+            }).GetAwaiter().GetResult();
+            
 
         }
 
