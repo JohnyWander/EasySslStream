@@ -353,10 +353,16 @@ subjectAltName = @alt_names
         }
 
 
+        public override void SignCSR(SignCSRConfig config, string CSRpath, string KeyPath, string Outputpath="default")
+        {
+            throw new NotImplementedException();
+        }
 
 
-
-
+        public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string KeyPath, string Outputpath ="default")
+        {
+            throw new NotImplementedException();
+        }
 
 
 

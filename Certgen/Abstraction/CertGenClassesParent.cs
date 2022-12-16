@@ -36,10 +36,10 @@ namespace EasySslStream.Abstraction
 
 
 
-        
 
+        public abstract void SignCSR(SignCSRConfig config, string CSRpath,string KeyPath, string Outputpath);
        
-
+        public abstract Task SignCSRAsync(SignCSRConfig config,string CSRpath,string KeyPath,string Outputpath);
 
 
 
