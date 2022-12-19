@@ -32,5 +32,19 @@ namespace EasySslStream
         {
             throw new NotImplementedException(); 
         }
+
+        public override void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string Outputpath = "default")
+        {
+            throw new NotImplementedException();
+
+        }
+
+        public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string Outputpath = "default")
+        {
+            throw new NotImplementedException();
+        }
+
+        
+
     }
 }

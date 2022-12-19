@@ -1,6 +1,7 @@
 ﻿using EasySslStream.CertGenerationClasses;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,7 +12,7 @@ namespace EasySslStream
     {
         public static void Main()
         {
-
+            DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
 
             DynamicConfiguration.CA_CONFIG.HashAlgorithm = CA_CertGen.HashAlgorithms.sha256;
             DynamicConfiguration.CA_CONFIG.KeyLength = CA_CertGen.KeyLengths.RSA_1024;
@@ -25,11 +26,36 @@ namespace EasySslStream
             DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
 
             EasySslStream.CertGenerationClasses.OpensslCertGeneration opensslCertGeneration = new EasySslStream.CertGenerationClasses.OpensslCertGeneration();
-            opensslCertGeneration.GenerateCA_Async();
+            opensslCertGeneration.GenerateCA_Async("CA");
+            var conf = new ClientCSRConfiguration();
+            List<Task> tasklist = new List<Task>();
+
+            conf.CSRFileName = "cert.csr";
+            conf.HashAlgorithm = ClientCSRConfiguration.HashAlgorithms.sha256;
+            conf.KeyLength = ClientCSRConfiguration.KeyLengths.RSA_2048;
+            conf.Encoding = ClientCSRConfiguration.Encodings.UTF8;
+            conf.CountryCode = "US";
+            conf.State = "hhhĘdsdhhh";
+            conf.City = "héésds";
+            conf.Organization = "ÓsssÓhh";
+            conf.CommonName = "certtt.com";
+            conf.alt_names.Add("wp.com");
+             opensslCertGeneration.GenerateCSR(conf,"CA");
+
+
+        
 
 
         }
+        public static async Task dummytask()
+        {
 
+            Console.WriteLine("dummy task start");
+            await Task.Delay(2000);
+            Console.WriteLine("dummy task end");
+
+
+        }
 
     }
 }

@@ -67,7 +67,7 @@ namespace EasySslStream
         public string? City { internal get; set; }
         public string? Organization { internal get; set; }
         public string? CommonName { internal get; set; }
-        public List<string> alt_names { internal get; set; } = new List<string>();
+        public List<string> alt_names {  get; set; } = new List<string>();
 
 
         private bool VerifyCountryCode(string CountryCode, out int length)

@@ -1,4 +1,7 @@
 ﻿using EasySslStream;
+using EasySslStream.CertGenerationClasses;
+using System.Security.Cryptography.X509Certificates;
+
 namespace CertGenTest
 {
     internal class Program
@@ -10,13 +13,13 @@ namespace CertGenTest
 
          
             DynamicConfiguration.CA_CONFIG.HashAlgorithm = CA_CertGen.HashAlgorithms.sha256;
-            DynamicConfiguration.CA_CONFIG.KeyLength = CA_CertGen.KeyLengths.RSA_1024;
+            DynamicConfiguration.CA_CONFIG.KeyLength = CA_CertGen.KeyLengths.RSA_2048;
             DynamicConfiguration.CA_CONFIG.Days = 365;
             DynamicConfiguration.CA_CONFIG.CountryCode = "US";
             DynamicConfiguration.CA_CONFIG.CountryState = "WLKP";
             DynamicConfiguration.CA_CONFIG.Location = "ĘĘĘĘĘĘĘĘĘĘ";
             DynamicConfiguration.CA_CONFIG.Organisation = "bppĘĘĘ";
-            DynamicConfiguration.CA_CONFIG.CommonName = "test.domain.com";
+            DynamicConfiguration.CA_CONFIG.CommonName = "signercertdefaultdebub.com";
 
             DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
 
@@ -49,11 +52,11 @@ namespace CertGenTest
             conf.KeyLength = ClientCSRConfiguration.KeyLengths.RSA_2048;
             conf.Encoding = ClientCSRConfiguration.Encodings.UTF8;
             conf.CountryCode = "US";
-            conf.State = "ĘĘĘĘ";
-            conf.City = "ééé";
-            conf.Organization = "Ó Ó Ó";
-            conf.CommonName = "test.domain.com";
-
+            conf.State = "ĘĘĘdsdĘ";
+            conf.City = "ééésds";
+            conf.Organization = "ÓsssÓÓ";
+            conf.CommonName = "certtt.com";
+            conf.alt_names.Add("Xl.com");
             // opensslCertGeneration.GenerateCSR(conf,"CA");
 
 
@@ -71,10 +74,26 @@ namespace CertGenTest
 
 
             }).GetAwaiter().GetResult();
-            
 
+
+            var config = new SignCSRConfig();
+            config.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Enduser);
+            config.AddAltName(SignCSRConfig.AltNames.DNS, "X.com");
+            opensslCertGeneration.SignCSR(config, "cert.csr","CA.crt","CA.key","certificate_SYNC.crt","CA");
+
+
+           Task.Run(async () =>
+            {
+                tasklist.Add(Task.Run(() => dummytask()));
+                tasklist.Add(Task.Run(() => opensslCertGeneration.SignCSRAsync(config, "cert.csr", "CA.crt", "CA.key", "certificate_ASYNC.crt", "CA")));
+
+                await Task.WhenAll(tasklist);
+
+            }).GetAwaiter().GetResult();
         }
 
+
+        
 
         public static async Task dummytask()
         {

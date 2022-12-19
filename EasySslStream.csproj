@@ -5,12 +5,25 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="TESTS\**" />
     <EmbeddedResource Remove="TESTS\**" />
     <None Remove="TESTS\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\Nowy folder\" />
   </ItemGroup>
 
 </Project>

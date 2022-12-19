@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -63,6 +64,11 @@ namespace EasySslStream
 
         }
 
+        public enum DefaultConfigs
+        {
+            Enduser
+        }
+
         public int days;
         public bool copyallextensions = false;
 
@@ -72,13 +78,20 @@ namespace EasySslStream
 
         public List<string> keyUsageList { private set; get; } = new List<string>();
 
-        public List<string> ExtendedkeyUsageList { private set; get; }
+        public List<string> ExtendedkeyUsageList { private set; get; } = new List<string>();
 
         public List<KeyValuePair<AltNames,string>> subjectAltNamesList = new List<KeyValuePair<AltNames,string>>();
 
         public void SetAuthorityKeyIdentifiers(authorityKeyIdentifiers AuthoritykeyIdentifier)
         {
-            authorityKeyIdentifiersList.Add(AuthoritykeyIdentifier.ToString());
+            if (AuthoritykeyIdentifier == authorityKeyIdentifiers.keyid || AuthoritykeyIdentifier == authorityKeyIdentifiers.issuer)
+            {
+                authorityKeyIdentifiersList.Add(AuthoritykeyIdentifier.ToString());
+            }
+            else
+            {
+                authorityKeyIdentifiersList.Add(authorityKeyIdentifiers.keyid.ToString()); authorityKeyIdentifiersList.Add(authorityKeyIdentifiers.issuer.ToString());
+            }
         }
         public void SetAuthorityKeyIdentifiers(authorityKeyIdentifiers[] AuthorityKeyIdentifiers)
         {
@@ -111,6 +124,51 @@ namespace EasySslStream
                 }
             }
         }
+        public void SetBasicConstrainsList(basicConstrains basicConstrains_)
+        {
+
+            if (basicConstrains_ != basicConstrains.pathlen)
+            {
+                if (basicConstrains_ == basicConstrains.CATrue)
+                {
+                    basicConstrainsList.Add("CA:TRUE");
+                }
+                else
+                {
+                    basicConstrainsList.Add("CA:FALSE");
+                }
+
+            }
+            else
+            {
+                throw new Exceptions.SignCSRConfigurationException("Can't add pathlen without int argument, use overload with int argument");
+            }
+
+
+        }
+
+        public void SetBasicConstrainsList(basicConstrains basicConstrains_,int len)
+        {
+
+            if (basicConstrains_ != basicConstrains.pathlen)
+            {
+                if (basicConstrains_ == basicConstrains.CATrue)
+                {
+                    basicConstrainsList.Add("CA:TRUE");
+                }
+                else
+                {
+                    basicConstrainsList.Add("CA:FALSE");
+                }
+
+            }
+            else
+            {
+                basicConstrainsList.Add("pathlen:" + len);
+            }
+
+
+        }
 
         public void SetBasicConstrainsList(basicConstrains[] basicConstrains_, int len)
         {
@@ -118,11 +176,19 @@ namespace EasySslStream
             {
                 if (bc != basicConstrains.pathlen)
                 {
-                    basicConstrainsList.Add(bc.ToString());
+                    if (bc == basicConstrains.CATrue)
+                    {
+                        basicConstrainsList.Add("CA:TRUE");
+                    }
+                    else
+                    {
+                        basicConstrainsList.Add("CA:FALSE");
+                    }
+
                 }
                 else if (bc == basicConstrains.pathlen)
                 {
-                    throw new Exceptions.SignCSRConfigurationException("Can't add pathlen without int argument, use overload with int argument");
+                    basicConstrainsList.Add("pathlen:" + len);
                 }
             }
         }
@@ -159,6 +225,37 @@ namespace EasySslStream
 
         }
 
+        /// <summary>
+        /// Sets default configuration values of CSR signing to specified type.
+        /// </summary>
+        /// <param name="conf"></param>
+        public void SetDefaultConfig(DefaultConfigs conf)
+        {
+            switch (conf)
+            {
+                case DefaultConfigs.Enduser:
+                    SetAuthorityKeyIdentifiers(authorityKeyIdentifiers.keyid_and_issuer);
+                    SetBasicConstrainsList(basicConstrains.CAFalse);
+                    SetKeyUsageList(new KeyUsage[] {
+                        KeyUsage.digitalSignature,
+                        KeyUsage.nonRepudiation,
+                        KeyUsage.keyEncipherment,
+                        KeyUsage.dataEncipherment
+                    });
+                    days = 365;
+                    copyallextensions = true;
+                    
+                    
+               break;
+                
+            }
+
+
+        }
+
+
+
+
 
         internal string BuildConfFile()
         {
@@ -171,7 +268,7 @@ namespace EasySslStream
                 {
                     aki_string += aki + ",";
                 }
-                aki_string.Trim(',');
+                aki_string = aki_string.Trim(',');
                 confile.Append(aki_string+"\n");
             }
             ////////////////////////////////////////////
@@ -183,7 +280,7 @@ namespace EasySslStream
                 {
                     constrains_string += basicConstrains + ",";
                 }
-                constrains_string.Trim(',');
+                constrains_string = constrains_string.Trim(',');
                 confile.Append(constrains_string+"\n");
             }
             ////////////////////////////////////////////
@@ -195,7 +292,7 @@ namespace EasySslStream
                 {
                     keyusage_string += keyusage + ",";
                 }
-                keyusage_string.Trim(',');
+                keyusage_string = keyusage_string.Trim(',');
                 confile.Append(keyusage_string+'\n');
             }
             ///////////////////////////////////////////
@@ -207,7 +304,7 @@ namespace EasySslStream
                 {
                     extendedkeyusage += ekeysuage + ",";
                 }
-                extendedkeyusage.Trim(',');
+                extendedkeyusage=extendedkeyusage.Trim(',');
                 confile.Append(extendedkeyusage+'\n');
             }
             ///////////////////////////////////////////

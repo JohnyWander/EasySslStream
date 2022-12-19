@@ -164,15 +164,20 @@ CN={base.CACommonName}";
                 try { Directory.SetCurrentDirectory(OutputPath); }
                 catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
             }
-
+            else
+            {
+              
+            }
 
 
             string confile = $@"[req]
 default_bits={config.KeyLength.ToString().Split('_')[1]}
 prompt=no
 default_md={config.HashAlgorithm.ToString()}
-req_extensions = req_ext
-distinguieshed_name = dn
+";
+            confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
+
+confile+=@$"distinguished_name = dn
 
 [ dn ]
 C={config.CountryCodeString}
@@ -186,9 +191,10 @@ CN={config.CommonName}
             {
                 confile += $@"[req_ext]
 subjectAltName = @alt_names
+[alt_names]
 ";
                 int alt_count = 1;
-                foreach(string altName in config.alt_names)
+                foreach (string altName in config.alt_names)
                 {
                     confile += "DNS." + Convert.ToString(alt_count) + "= " + altName + "\n";
                     alt_count++;
@@ -207,7 +213,7 @@ subjectAltName = @alt_names
             }
 
 
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconf.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconfcsr.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
@@ -224,7 +230,7 @@ subjectAltName = @alt_names
                     openssl.StartInfo.WorkingDirectory = OutputPath;
                 }
                 openssl.WaitForExit();
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+              
 
 
                 if (openssl.ExitCode != 0)
@@ -233,7 +239,7 @@ subjectAltName = @alt_names
              
                 }
                 // Console.WriteLine(openssl.StandardError.ReadToEnd());
-
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
             }
 
@@ -263,8 +269,10 @@ subjectAltName = @alt_names
 default_bits={config.KeyLength.ToString().Split('_')[1]}
 prompt=no
 default_md={config.HashAlgorithm.ToString()}
-req_extensions = req_ext
-distinguieshed_name = dn
+";
+            confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
+
+            confile += @$"distinguished_name = dn
 
 [ dn ]
 C={config.CountryCodeString}
@@ -278,6 +286,7 @@ CN={config.CommonName}
             {
                 confile += $@"[req_ext]
 subjectAltName = @alt_names
+[alt_names]
 ";
                 int alt_count = 1;
                 foreach (string altName in config.alt_names)
@@ -289,6 +298,7 @@ subjectAltName = @alt_names
             }
 
 
+
             File.WriteAllText("genconfcsr.txt", confile);
 
             string encoding = "";
@@ -298,7 +308,7 @@ subjectAltName = @alt_names
                 encoding = "-utf8";
             }
 
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconf.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconfcsr.txt";
 
             using (Process openssl = new Process())
             {
@@ -316,7 +326,7 @@ subjectAltName = @alt_names
                     if (openssl.ExitCode != 0)
                     {
                         string err = openssl.StandardError.ReadToEnd();
-                        //Console.WriteLine(err);
+                        Console.WriteLine(err);
                         CSRgenCompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
                         //Console.WriteLine("EVENT");
                     }
@@ -352,16 +362,129 @@ subjectAltName = @alt_names
             
         }
 
-
-        public override void SignCSR(SignCSRConfig config, string CSRpath, string KeyPath, string Outputpath="default")
+        /// <summary>
+        /// Signs specified certificate and exports it as x509 type
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="CSRpath"></param>
+        /// <param name="KeyPath"></param>
+        /// <param name="OutputPath"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public override void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertName, string OutputPath = "default")
         {
-            throw new NotImplementedException();
-        }
+            if (OutputPath != "default")
+            {
+                try { Directory.SetCurrentDirectory(OutputPath); }
+                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+            }
+
+           
+            if (!CertName.Contains(".crt")) { CertName += ".crt"; }
+            string copyExtensions = "";
+            if (config.copyallextensions == true) { copyExtensions = "-copy_extensions copyall"; }
+
+            File.WriteAllText("signconf.txt",config.BuildConfFile());
+            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {CertName} -days {config.days} -copy_extensions copyall -config signconf.txt";
 
 
-        public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string KeyPath, string Outputpath ="default")
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.CreateNoWindow = true;
+                //  openssl.StartInfo.UseShellExecute = false;
+                openssl.StartInfo.Arguments = command;
+                openssl.StartInfo.RedirectStandardOutput = true;
+                openssl.StartInfo.RedirectStandardError = true;
+
+
+                openssl.Start();
+                if (OutputPath != "default")
+                {
+                    openssl.StartInfo.WorkingDirectory = OutputPath;
+                }
+                openssl.WaitForExit();
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+
+                if (openssl.ExitCode != 0)
+                {
+                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+
+                }
+
+
+
+
+
+            }
+            }
+
+
+        public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string OutputPath = "default")
         {
-            throw new NotImplementedException();
+            
+            TaskCompletionSource<object> SignCompletion = new TaskCompletionSource<object>();
+
+            if (OutputPath != "default")
+            {
+                try { Directory.SetCurrentDirectory(OutputPath); }
+                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+            }
+            if (!CertName.Contains(".crt")) { CertName += ".crt"; }
+            string copyExtensions = "";
+            if (config.copyallextensions == true) { copyExtensions = "-copy_extensions copyall"; }
+
+            File.WriteAllText("signconf.txt", config.BuildConfFile());
+            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {CertName} -days {config.days} -copy_extensions copyall -config signconf.txt";
+            Console.WriteLine(command);
+
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.CreateNoWindow = true;
+                //  openssl.StartInfo.UseShellExecute = false;
+                openssl.StartInfo.Arguments = command;
+                openssl.StartInfo.RedirectStandardOutput = true;
+                openssl.StartInfo.RedirectStandardError = true;
+                openssl.EnableRaisingEvents = true;
+
+                openssl.Exited += (sender, args) =>
+                {
+
+                    if (openssl.ExitCode != 0)
+                    {
+                        string err = openssl.StandardError.ReadToEnd();
+                        //Console.WriteLine(err);
+                        SignCompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        //Console.WriteLine("EVENT");
+                    }
+                    else
+                    {
+                        SignCompletion.SetResult(null);
+                        // Console.WriteLine("EVENT");
+
+                    }
+                };
+
+
+                openssl.Start();
+                if (OutputPath != "default")
+                {
+                    openssl.StartInfo.WorkingDirectory = OutputPath;
+                }
+                openssl.WaitForExit();
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+
+                if (openssl.ExitCode != 0)
+                {
+                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+
+                }
+                // Console.WriteLine(openssl.StandardError.ReadToEnd());
+                return SignCompletion.Task;
+
+            }
         }
 
 
