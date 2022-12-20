@@ -489,8 +489,108 @@ subjectAltName = @alt_names
 
 
 
+        public override void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string OutputPath = "default")
+        {
+            if (OutputPath != "default")
+            {
+                try { Directory.SetCurrentDirectory(OutputPath); }
+                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+            }
+
+            if (Certname.Contains(".pfx"))
+            {
+                Certname += ".pfx";
+            }
 
 
+            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout:{Password}";
+
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.CreateNoWindow = true;
+
+                openssl.StartInfo.Arguments = command;
+                openssl.StartInfo.RedirectStandardOutput = true;
+                openssl.StartInfo.RedirectStandardError = true;
+                openssl.Start();
+                if (OutputPath != "default")
+                {
+                    openssl.StartInfo.WorkingDirectory = OutputPath;
+                }
+                openssl.WaitForExit();
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+                if (openssl.ExitCode != 0)
+                {
+                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+                }
+            }
+        }
+
+
+        public override Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Password, string Certname, string OutputPath)
+        {
+            TaskCompletionSource<object> convertcompletion = new TaskCompletionSource<object>();
+            if (OutputPath != "default")
+            {
+                try { Directory.SetCurrentDirectory(OutputPath); }
+                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+            }
+           
+            if (Certname.Contains(".pfx"))
+            {
+                Certname += ".pfx";
+            }
+            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout:{Password}";
+
+            using (Process openssl = new Process())
+            {
+                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.CreateNoWindow = true;
+                //  openssl.StartInfo.UseShellExecute = false;
+                openssl.StartInfo.Arguments = command;
+                openssl.StartInfo.RedirectStandardOutput = true;
+                openssl.StartInfo.RedirectStandardError = true;
+                openssl.EnableRaisingEvents = true;
+
+                openssl.Exited += (sender, args) =>
+                {
+
+                    if (openssl.ExitCode != 0)
+                    {
+                        string err = openssl.StandardError.ReadToEnd();
+                        //Console.WriteLine(err);
+                        convertcompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        //Console.WriteLine("EVENT");
+                    }
+                    else
+                    {
+                        convertcompletion.SetResult(null);
+                        // Console.WriteLine("EVENT");
+
+                    }
+                };
+
+
+                openssl.Start();
+                if (OutputPath != "default")
+                {
+                    openssl.StartInfo.WorkingDirectory = OutputPath;
+                }
+                openssl.WaitForExit();
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
+
+                if (openssl.ExitCode != 0)
+                {
+                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+
+                }
+                // Console.WriteLine(openssl.StandardError.ReadToEnd());
+                return convertcompletion.Task;
+
+            }
+        }
 
         internal override void LoadCAconfig()
         {

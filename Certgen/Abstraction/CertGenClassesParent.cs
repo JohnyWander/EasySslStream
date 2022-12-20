@@ -41,7 +41,9 @@ namespace EasySslStream.Abstraction
        
         public abstract Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string Outputpath = "default");
 
+        public abstract void ConvertX509ToPfx(string Certpath, string KeyPath, string Password, string Certname, string OutputPath);
 
+        public abstract Task ConvertX509ToPfxAsync(string Certpath,string KeyPath,string Password,string Certname,string OutputPath);
 
 
 
