@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 
 namespace EasySslStream
 {
+    [Obsolete]
     internal class DotNetCertGeneration : Abstraction.CertGenClassesParent
     {
+        
         public override void GenerateCA(string outputpath)
         {
-            throw new NotImplementedException();
+          throw new NotImplementedException();
+
         }
 
         internal override void LoadCAconfig()
