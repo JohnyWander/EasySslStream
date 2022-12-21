@@ -23,12 +23,12 @@ namespace EasySslStream
             throw new NotImplementedException();
         }
 
-        public override Task GenerateCSRAsync(ClientCSRConfiguration config, string OutputPath)
+        public override Task GenerateCSRAsync(CSRConfiguration config, string OutputPath)
         {
             throw new NotImplementedException();
         }
 
-        public override void GenerateCSR(ClientCSRConfiguration config, string OutputPath)
+        public override void GenerateCSR(CSRConfiguration config, string OutputPath)
         {
             throw new NotImplementedException(); 
         }
@@ -44,7 +44,15 @@ namespace EasySslStream
             throw new NotImplementedException();
         }
 
-        
+        public override void ConvertX509ToPfx(string Certpath, string KeyPath, string Password, string Certname, string OutputPath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Password, string Certname, string OutputPath)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

@@ -14,9 +14,17 @@ namespace EasySslStream.CertGenerationClasses
 
     public partial class OpensslCertGeneration : Abstraction.CertGenClassesParent
     {
-          public override Task GenerateCA_Async(string OutputPath="default")
+
+
+        /// <summary>
+        /// Asynchronously Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
+        /// </summary>
+        /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+        /// <returns></returns>
+        public override Task GenerateCA_Async(string OutputPath="default")
           {
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
+           // generation_completion.Task.ConfigureAwait(false);
             if (OutputPath != "default")
             {
                 try { Directory.SetCurrentDirectory(OutputPath); }
@@ -53,46 +61,35 @@ CN={base.CACommonName}";
                 {
                     openssl.StartInfo.WorkingDirectory = OutputPath;
                 }
-
-
-
                 openssl.Exited += (sender, args) =>
                 {
                     if (openssl.ExitCode != 0)
                     {
-                        string err = openssl.StandardError.ReadToEnd();
-                       // Console.WriteLine(err);
-                        generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
-                         //Console.WriteLine("EVENT");
+                        string err = openssl.StandardError.ReadToEnd();                     
+                        generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));                        
                     }
                     else
                     {
-                        generation_completion.SetResult(null);
-                       // Console.WriteLine("EVENT");
-                       
+                        generation_completion.SetResult(null); 
                     }
                 };
 
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-
-
-                generation_completion.Task.ConfigureAwait(false);
-                //
-
-
                 openssl.Start();
                 openssl.WaitForExit();
-
                 return generation_completion.Task;
             }
 
 
         }
+
+
+
         /// <summary>
-        /// ///////////////////////////////////////////////////////
+        /// Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
-        /// <param name="OutputPath"></param>
-          public override void GenerateCA(string OutputPath="default")
+        /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+        public override void GenerateCA(string OutputPath="default")
           {
             if (OutputPath != "default")
             {
@@ -155,8 +152,12 @@ CN={base.CACommonName}";
 
 
         
-
-        public override void GenerateCSR(ClientCSRConfiguration config,string OutputPath= "default")
+        /// <summary>
+        /// Generates csr based on settings from CSRConfiguration class
+        /// </summary>
+        /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
+        /// <param name="OutputPath">Output path</param>
+        public override void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
         {
             config.VerifyConfiguration();
             if (OutputPath != "default")
@@ -207,7 +208,7 @@ subjectAltName = @alt_names
 
             string encoding="";
 
-            if(config.Encoding == ClientCSRConfiguration.Encodings.UTF8)
+            if(config.Encoding == CSRConfiguration.Encodings.UTF8)
             {
                 encoding = "-utf8";
             }
@@ -246,7 +247,13 @@ subjectAltName = @alt_names
 
         }
 
-        public override Task GenerateCSRAsync( ClientCSRConfiguration config, string OutputPath = "default")
+        /// <summary>
+        /// Asynchronously generates csr based on settings from CSRConfiguration class
+        /// </summary>
+        /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
+        /// <param name="OutputPath">Output path</param>
+        /// <returns>Task object that indicates task completion</returns>
+        public override Task GenerateCSRAsync(CSRConfiguration config, string OutputPath = "default")
         {
             TaskCompletionSource<object> CSRgenCompletion = new TaskCompletionSource<object>();
             try
@@ -303,7 +310,7 @@ subjectAltName = @alt_names
 
             string encoding = "";
 
-            if (config.Encoding == ClientCSRConfiguration.Encodings.UTF8)
+            if (config.Encoding == CSRConfiguration.Encodings.UTF8)
             {
                 encoding = "-utf8";
             }
@@ -362,14 +369,17 @@ subjectAltName = @alt_names
             
         }
 
+
+
         /// <summary>
-        /// Signs specified certificate and exports it as x509 type
+        /// Signs certificate signing request
         /// </summary>
         /// <param name="config"></param>
         /// <param name="CSRpath"></param>
-        /// <param name="KeyPath"></param>
+        /// <param name="CAPath"></param>
+        /// <param name="CAKeyPath"></param>
+        /// <param name="CertName"></param>
         /// <param name="OutputPath"></param>
-        /// <exception cref="NotImplementedException"></exception>
         public override void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertName, string OutputPath = "default")
         {
             if (OutputPath != "default")
@@ -419,7 +429,16 @@ subjectAltName = @alt_names
             }
             }
 
-
+        /// <summary>
+        /// Asynchrounously signs certificate signing request
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="CSRpath"></param>
+        /// <param name="CAPath"></param>
+        /// <param name="CAKeyPath"></param>
+        /// <param name="CertName"></param>
+        /// <param name="OutputPath"></param>
+        /// <returns></returns>
         public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string OutputPath = "default")
         {
             
@@ -503,7 +522,7 @@ subjectAltName = @alt_names
             }
 
 
-            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout:{Password}";
+            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout pass:{Password}";
 
             using (Process openssl = new Process())
             {
@@ -541,7 +560,7 @@ subjectAltName = @alt_names
             {
                 Certname += ".pfx";
             }
-            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout:{Password}";
+            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout pass:{Password}";
 
             using (Process openssl = new Process())
             {

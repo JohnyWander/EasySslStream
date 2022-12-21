@@ -8,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
+#if DEBUG
     internal static class Program
     {
         public static void Main()
         {
+            
             DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
 
             DynamicConfiguration.CA_CONFIG.HashAlgorithm = CA_CertGen.HashAlgorithms.sha256;
@@ -27,13 +29,13 @@ namespace EasySslStream
 
             EasySslStream.CertGenerationClasses.OpensslCertGeneration opensslCertGeneration = new EasySslStream.CertGenerationClasses.OpensslCertGeneration();
             opensslCertGeneration.GenerateCA_Async("CA");
-            var conf = new ClientCSRConfiguration();
+            var conf = new CSRConfiguration();
             List<Task> tasklist = new List<Task>();
 
             conf.CSRFileName = "cert.csr";
-            conf.HashAlgorithm = ClientCSRConfiguration.HashAlgorithms.sha256;
-            conf.KeyLength = ClientCSRConfiguration.KeyLengths.RSA_2048;
-            conf.Encoding = ClientCSRConfiguration.Encodings.UTF8;
+            conf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
+            conf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
+            conf.Encoding = CSRConfiguration.Encodings.UTF8;
             conf.CountryCode = "US";
             conf.State = "hhhĘdsdhhh";
             conf.City = "héésds";
@@ -58,4 +60,5 @@ namespace EasySslStream
         }
 
     }
+#endif
 }

@@ -45,12 +45,12 @@ namespace CertGenTest
 
 
 
-            var conf = new ClientCSRConfiguration();
+            var conf = new CSRConfiguration();
 
             conf.CSRFileName = "cert.csr";
-            conf.HashAlgorithm = ClientCSRConfiguration.HashAlgorithms.sha256;
-            conf.KeyLength = ClientCSRConfiguration.KeyLengths.RSA_2048;
-            conf.Encoding = ClientCSRConfiguration.Encodings.UTF8;
+            conf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
+            conf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
+            conf.Encoding = CSRConfiguration.Encodings.UTF8;
             conf.CountryCode = "US";
             conf.State = "ĘĘĘdsdĘ";
             conf.City = "ééésds";
@@ -90,6 +90,12 @@ namespace CertGenTest
                 await Task.WhenAll(tasklist);
 
             }).GetAwaiter().GetResult();
+
+
+
+
+            opensslCertGeneration.ConvertX509ToPfx("certificate_SYNC.crt", "cert.csr.key","pfxcert.pfx","231","CA");
+
         }
 
 

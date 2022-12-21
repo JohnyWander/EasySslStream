@@ -8,6 +8,9 @@ using static EasySslStream.SignCSRConfig;
 
 namespace EasySslStream
 {
+    /// <summary>
+    /// Class that contains configuration for CSR signing with OpenSSL
+    /// </summary>
     public class SignCSRConfig
     {
 

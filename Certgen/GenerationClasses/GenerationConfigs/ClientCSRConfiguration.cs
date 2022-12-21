@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-      public class ClientCSRConfiguration
+      public class CSRConfiguration
     {
         public enum HashAlgorithms
         {

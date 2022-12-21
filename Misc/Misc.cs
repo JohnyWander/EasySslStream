@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Misc
 {
+    /// <summary>
+    /// Tests debug mode
+    /// </summary>
     public class Misc
     {
 
