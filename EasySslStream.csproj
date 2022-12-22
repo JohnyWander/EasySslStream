@@ -22,8 +22,4 @@
     <None Remove="TESTS\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Exceptions\Nowy folder\" />
-  </ItemGroup>
-
 </Project>
