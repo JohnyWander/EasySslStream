@@ -69,6 +69,7 @@ namespace EasySslStream.Connection.Full
         string ClientIP;
         int ClientPort;
 
+        private string Terminatorstring = "<ENDOFTEXT>";
 
         TcpClient client_ = null;
         SslStream sslstream_ = null;
@@ -127,10 +128,18 @@ namespace EasySslStream.Connection.Full
                 {
                     Console.WriteLine("Waiting for steer");
                     int steer = await ConnSteer();
-                    Console.WriteLine(steer);
                     
+                    Console.WriteLine(steer);
 
 
+                    switch (steer)
+                    {
+                        case 1:
+                            string x;
+                            x = await GetText();
+                            Console.WriteLine(x);
+                        break;
+                    }
 
 
 
@@ -151,7 +160,7 @@ namespace EasySslStream.Connection.Full
                 bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
                 steer = BitConverter.ToInt32(buffer,0);
                 await sslstream_.FlushAsync();
-
+                
             
            
 
@@ -160,7 +169,39 @@ namespace EasySslStream.Connection.Full
 
         }
 
+        private async Task<string> GetText()
+        {
+            
+            byte[] buffer = new byte[64];
 
+            int bytes_count = -1;
+            StringBuilder Message = new StringBuilder();
+
+
+
+
+            Decoder decoder = Encoding.UTF8.GetDecoder();
+            do
+            {
+                bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
+
+                char[] messagechars = new char[decoder.GetCharCount(buffer, 0, bytes_count, true)];
+                decoder.GetChars(buffer, 0, bytes_count, messagechars, 0);
+                Message.Append(messagechars);
+
+               // Console.WriteLine(Message.ToString());
+
+                if (Message.ToString().IndexOf(Terminatorstring) != -1) { break; } 
+
+
+
+            } while (bytes_count != 0);
+
+            string toreturn = Message.ToString();
+            toreturn = toreturn.Substring( 0, toreturn.IndexOf(Terminatorstring));
+            return toreturn;
+
+        }
 
 
     }

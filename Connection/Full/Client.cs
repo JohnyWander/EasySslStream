@@ -9,14 +9,23 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
+
 namespace EasySslStream.Connection.Full
 {
     public class Client
     {
+        string Terminator= "<ENDOFTEXT>";
         private Channel<Action> work = Channel.CreateUnbounded<Action>();
 
         public TcpClient client;
         public  SslStream stream;
+
+        private enum SteerCodes
+        {
+            SendText = 1,
+            
+        }
+
         public static bool ValidateServerCertificate(object sender,X509Certificate certificate,X509Chain chain,SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
@@ -72,20 +81,29 @@ namespace EasySslStream.Connection.Full
             cThread.Start();
         }
 
-        public void write(byte[] message)
+
+        public void WriteFile(string filePath)
         {
+
+        }
+
+
+        public void WriteText(byte[] message)
+        {
+
+            List<byte> messagebytes = new List<byte>();
+            messagebytes.AddRange(message);
+            messagebytes.AddRange(Encoding.UTF8.GetBytes(Terminator));
+           
 
             Action WR= () =>
             {
 
-                stream.Write(message);
-               
-
+                stream.Write(BitConverter.GetBytes((int)SteerCodes.SendText));
+                stream.Write(messagebytes.ToArray());
+                
             };
-
-            work.Writer.TryWrite( WR );
-
-            
+            work.Writer.TryWrite( WR ); 
         }
 
 
