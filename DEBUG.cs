@@ -18,9 +18,10 @@ namespace EasySslStream
         static void Main()
         {
 
-            Server srv = new Server(IPAddress.Any, 10000, "pfxcert.pfx.pfx","231",false);
-            Console.WriteLine(srv.serverCert.GetCertHashString());
-            
+
+            Server server = new Server();
+            server.CertificateCheckSettings.VerifyCertificateName = false;
+            server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx","231",false);
 
 
 

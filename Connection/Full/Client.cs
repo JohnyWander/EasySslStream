@@ -20,33 +20,51 @@ namespace EasySslStream.Connection.Full
         public TcpClient client;
         public  SslStream stream;
 
+        public bool VerifyCertificateName = true;
+        public bool VerifyCertificateChain = true;
         private enum SteerCodes
         {
             SendText = 1,
             
         }
 
-        public static bool ValidateServerCertificate(object sender,X509Certificate certificate,X509Chain chain,SslPolicyErrors sslPolicyErrors)
+        public bool ValidateServerCertificate(object sender,X509Certificate certificate,X509Chain chain,SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
+            {
                 return true;
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && VerifyCertificateName == false)
+            {
+                return true;
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && VerifyCertificateChain == false)
+            {
+                return true;
+            }
             else
             {
-                Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
-                return true; // debug purposes
+                return false;
             }
-            
 
-        
+
+
+
+        }
+        public Client()
+        {
            
         }
-        public Client(string ip,int port)
+       
+        public void Connect(string ip, int port)
         {
+            X509Certificate x = null;
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
 
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
+                
                 try
                 {
                     stream.WriteTimeout = 10000;
@@ -65,8 +83,6 @@ namespace EasySslStream.Connection.Full
                             w.Invoke();
 
                         }
-
-
                     }).GetAwaiter().GetResult();
 
 
@@ -81,6 +97,53 @@ namespace EasySslStream.Connection.Full
             cThread.Start();
         }
 
+        public void Connect(string ip, int port,string clientCertLocation,string certPassword)
+        {
+            X509Certificate x = null;
+            Thread cThread = new Thread(() =>
+            {
+                client = new TcpClient(ip, port);
+
+                stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
+                
+                X509Certificate2 clientCert = new X509Certificate2(clientCertLocation, certPassword, X509KeyStorageFlags.PersistKeySet);
+
+
+
+                X509Certificate2Collection certs = new X509Certificate2Collection(clientCert);
+                
+                stream.AuthenticateAsClient(ip,certs,false);
+                try
+                {
+                    stream.WriteTimeout = 10000;
+                    stream.AuthenticateAsClient(ip);
+                    stream.ReadTimeout = 10000;
+
+                    Task.Run(async () =>
+                    {
+                        while (true)
+                        {
+
+                            Console.WriteLine("WAITING FOR JOB");
+                            await work.Reader.WaitToReadAsync();
+                            Action w = await work.Reader.ReadAsync();
+                            await Task.Delay(100);
+                            w.Invoke();
+
+                        }
+                    }).GetAwaiter().GetResult();
+
+
+                    stream.Close();
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+            });
+            cThread.Start();
+        }
 
         public void WriteFile(string filePath)
         {

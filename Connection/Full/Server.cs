@@ -12,19 +12,27 @@ namespace EasySslStream.Connection.Full
 {
     public class Server
     {
-
         List<SSLClient> ConnectedClients = new List<SSLClient>();
-
         public X509Certificate2 serverCert = null;
         private TcpListener listener = null;
 
         private CancellationTokenSource cts = new CancellationTokenSource();
+
+
+        public CertificateCheckSettings CertificateCheckSettings = new CertificateCheckSettings();
         
 
-        public Server(string ListenOnIp,int port,string ServerPFXCertificatePath,string CertPassword,bool VerifyClients)
-        {
+       
 
-            serverCert = new X509Certificate2(ServerPFXCertificatePath,CertPassword, X509KeyStorageFlags.PersistKeySet);
+        public Server()
+        {
+       
+          
+        }
+
+        public void StartServer(string ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
+        {
+            serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(IPAddress.Parse(ListenOnIp), port);
             Thread listenerThread = new Thread(() =>
             {
@@ -35,15 +43,14 @@ namespace EasySslStream.Connection.Full
                 while (listener.Server.IsBound)
                 {
                     TcpClient client = listener.AcceptTcpClient();
-                    ConnectedClients.Add(new SSLClient(client, serverCert, VerifyClients));
+                    ConnectedClients.Add(new SSLClient(client, serverCert, VerifyClients,this));
                 }
             });
             listenerThread.Start();
         }
-
-        public Server(IPAddress ListenOnIp,int port,string ServerPFXCertificatePath,string CertPassword,bool VerifyClients)
+        public void StartServer(IPAddress ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
-            this.serverCert = new X509Certificate2(ServerPFXCertificatePath,CertPassword,X509KeyStorageFlags.PersistKeySet);
+            this.serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(ListenOnIp, port);
             listener.Start();
 
@@ -53,11 +60,15 @@ namespace EasySslStream.Connection.Full
                 while (listener.Server.IsBound)
                 {
                     TcpClient client = listener.AcceptTcpClient();
-                    ConnectedClients.Add(new SSLClient(client, serverCert, VerifyClients));
+                    ConnectedClients.Add(new SSLClient(client, serverCert, VerifyClients,this));
                 }
             });
-              listenerThrewad.Start();
+            listenerThrewad.Start();
         }
+
+
+
+       
 
 
       
@@ -68,6 +79,9 @@ namespace EasySslStream.Connection.Full
     {
         string ClientIP;
         int ClientPort;
+
+        private Server srv;
+
 
         private string Terminatorstring = "<ENDOFTEXT>";
 
@@ -80,8 +94,18 @@ namespace EasySslStream.Connection.Full
             {
                 return true;
             }
+            else if(sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && srv.CertificateCheckSettings.VerifyCertificateName == false)
+            {
+                return true;
+            }else if(sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && srv.CertificateCheckSettings.VerifyCertificateChain == false)
+            {
+                return true;
+            }
             else
-            { return false; }
+            {
+                return false;
+            }
+           
         }
 
         enum OrderCodes
@@ -93,10 +117,10 @@ namespace EasySslStream.Connection.Full
         }
 
 
-        public SSLClient(TcpClient client,X509Certificate2 serverCert,bool VerifyClients)
+        public SSLClient(TcpClient client,X509Certificate2 serverCert,bool VerifyClients,Server srvinstance=null)
         {
             client_ = client;
-            
+            srv = srvinstance;
             if(VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
@@ -135,9 +159,9 @@ namespace EasySslStream.Connection.Full
                     switch (steer)
                     {
                         case 1:
-                            string x;
-                            x = await GetText();
-                            Console.WriteLine(x);
+                            
+                              await GetText();
+                            
                         break;
                     }
 
