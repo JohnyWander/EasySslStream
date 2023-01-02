@@ -22,10 +22,13 @@ namespace EasySslStream.Connection.Full
 
         public bool VerifyCertificateName = true;
         public bool VerifyCertificateChain = true;
+
+        public Encoding FilenameEncoding = Encoding.UTF8;
+
         private enum SteerCodes
         {
             SendText = 1,
-            
+            SendFile = 2
         }
 
         public bool ValidateServerCertificate(object sender,X509Certificate certificate,X509Chain chain,SslPolicyErrors sslPolicyErrors)
@@ -168,7 +171,53 @@ namespace EasySslStream.Connection.Full
             };
             work.Writer.TryWrite( WR ); 
         }
+        
 
+        public void SendFile(string path)
+        {
+            // informs server that file will be sent
+            Action SendSteer = () =>
+            {
+                stream.Write(BitConverter.GetBytes((int)SteerCodes.SendFile));
+            };
+            work.Writer.TryWrite(SendSteer);
+
+
+            string filename = Path.GetFileName(path);
+
+
+
+
+
+            byte[] chunk = new byte[512];
+
+
+            FileStream fs = new FileStream(path,FileMode.Open,FileAccess.Read);
+            FileStream write = new FileStream("result.txt", FileMode.Append);
+
+            int bytesLeft = (int)fs.Length;
+            int Readed = 0;
+
+           while(bytesLeft > 0)
+            {
+                Readed = fs.Read(chunk,0,chunk.Length);
+
+               // Console.WriteLine(Readed);
+
+                bytesLeft -= Readed;
+
+                write.Write(chunk);
+            }
+
+
+
+
+      
+
+
+            write.Dispose();
+            fs.Dispose();
+        }
 
 
 

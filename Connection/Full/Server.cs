@@ -19,9 +19,17 @@ namespace EasySslStream.Connection.Full
         private CancellationTokenSource cts = new CancellationTokenSource();
 
 
-        public CertificateCheckSettings CertificateCheckSettings = new CertificateCheckSettings();
-        
+        public Encoding TextReceiveEncoding = Encoding.UTF8;
 
+
+        public CertificateCheckSettings CertificateCheckSettings = new CertificateCheckSettings();
+
+        public Action<string> HandleReceivedText = (string text) =>
+        {
+            Console.WriteLine(text);
+        };
+
+        public string ReceivedFilesLocation = "";
        
 
         public Server()
@@ -158,11 +166,13 @@ namespace EasySslStream.Connection.Full
 
                     switch (steer)
                     {
-                        case 1:
-                            
-                              await GetText();
-                            
+                        case 1:          
+                             srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));                           
                         break;
+                        case 2:
+
+                            break;
+                        
                     }
 
 
@@ -193,7 +203,7 @@ namespace EasySslStream.Connection.Full
 
         }
 
-        private async Task<string> GetText()
+        private async Task<string> GetText(Encoding enc)
         {
             
             byte[] buffer = new byte[64];
@@ -204,7 +214,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-            Decoder decoder = Encoding.UTF8.GetDecoder();
+            Decoder decoder = enc.GetDecoder();
             do
             {
                 bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
@@ -226,6 +236,21 @@ namespace EasySslStream.Connection.Full
             return toreturn;
 
         }
+
+
+        private async Task GetFile()
+        {
+
+
+            byte[] filenamebuffer = new byte[128];
+            byte[] Filebuffer = new byte[512];
+            int bytes_count = -1;
+
+            
+
+
+        }
+
 
 
     }
