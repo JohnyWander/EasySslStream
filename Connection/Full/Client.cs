@@ -175,6 +175,8 @@ namespace EasySslStream.Connection.Full
 
         public void SendFile(string path)
         {
+            byte[] chunk = new byte[512];
+
             // informs server that file will be sent
             Action SendSteer = () =>
             {
@@ -182,18 +184,24 @@ namespace EasySslStream.Connection.Full
             };
             work.Writer.TryWrite(SendSteer);
 
-
+            // informs server what the filename is
             string filename = Path.GetFileName(path);
+            Action SendFilename = () =>
+            {
+                stream.Write(FilenameEncoding.GetBytes(filename));
+            };work.Writer.TryWrite(SendFilename);
 
-
-
-
-
-            byte[] chunk = new byte[512];
 
 
             FileStream fs = new FileStream(path,FileMode.Open,FileAccess.Read);
-            FileStream write = new FileStream("result.txt", FileMode.Append);
+            //  FileStream write = new FileStream("result.txt", FileMode.Append);
+
+
+            Action SendFileLength = () =>
+            {
+                stream.Write(BitConverter.GetBytes((int)fs.Length));
+            };work.Writer.TryWrite(SendFileLength);
+
 
             int bytesLeft = (int)fs.Length;
             int Readed = 0;
@@ -206,7 +214,13 @@ namespace EasySslStream.Connection.Full
 
                 bytesLeft -= Readed;
 
-                write.Write(chunk);
+               // write.Write(chunk);
+
+                Action SendChunk = () =>
+                {
+                    stream.Write(chunk);
+                };work.Writer.TryWrite(SendChunk);
+
             }
 
 
@@ -215,7 +229,7 @@ namespace EasySslStream.Connection.Full
       
 
 
-            write.Dispose();
+           // write.Dispose();
             fs.Dispose();
         }
 

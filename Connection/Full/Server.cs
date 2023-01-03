@@ -170,7 +170,7 @@ namespace EasySslStream.Connection.Full
                              srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));                           
                         break;
                         case 2:
-
+                            await GetFile();
                             break;
                         
                     }
@@ -240,14 +240,17 @@ namespace EasySslStream.Connection.Full
 
         private async Task GetFile()
         {
-
-
+            // file name
+            int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
-            byte[] Filebuffer = new byte[512];
-            int bytes_count = -1;
+            filenamebytes = await sslstream_.ReadAsync(filenamebuffer, 0, filenamebuffer.Length);
 
+
+            int lengthbytes = -1;
+            byte[] file_length_buffer = new byte[512];
+
+            lengthbytes = await sslstream_.ReadAsync(file_length_buffer, 0, file_length_buffer.Length);
             
-
 
         }
 
