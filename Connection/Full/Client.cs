@@ -148,11 +148,7 @@ namespace EasySslStream.Connection.Full
             cThread.Start();
         }
 
-        public void WriteFile(string filePath)
-        {
-
-        }
-
+   
 
         public void WriteText(byte[] message)
         {

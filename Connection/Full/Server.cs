@@ -29,15 +29,13 @@ namespace EasySslStream.Connection.Full
             Console.WriteLine(text);
         };
 
+
+
+
         public string ReceivedFilesLocation = "";
        
 
-        public Server()
-        {
-       
-          
-        }
-
+    
         public void StartServer(string ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
             serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
@@ -170,7 +168,7 @@ namespace EasySslStream.Connection.Full
                              srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));                           
                         break;
                         case 2:
-                            await GetFile();
+                            await GetFile(srv);
                             break;
                         
                     }
@@ -238,7 +236,7 @@ namespace EasySslStream.Connection.Full
         }
 
 
-        private async Task GetFile()
+        private async Task GetFile(Server srv)
         {
             // file name
             int filenamebytes = -1;
@@ -250,7 +248,21 @@ namespace EasySslStream.Connection.Full
             byte[] file_length_buffer = new byte[512];
 
             lengthbytes = await sslstream_.ReadAsync(file_length_buffer, 0, file_length_buffer.Length);
-            
+
+
+
+            int bytesReceived = 0;
+
+
+            Directory.GetFiles(srv.ReceivedFilesLocation);
+
+
+            FileStream fs = new FileStream(srv.ReceivedFilesLocation, FileMode.OpenOrCreate);
+
+            while (bytesReceived != lengthbytes)
+            {
+
+            }
 
         }
 
