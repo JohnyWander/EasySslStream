@@ -248,7 +248,7 @@ namespace EasySslStream.Connection.Full
             byte[] filenamebuffer = new byte[128];
             filenamebytes = await sslstream_.ReadAsync(filenamebuffer, 0, filenamebuffer.Length);
             string filename = srv.FileNameEncoding.GetString(filenamebuffer);
-            Console.WriteLine(filename);
+            Console.WriteLine("filename is: "+filename);
 
 
 
@@ -257,7 +257,7 @@ namespace EasySslStream.Connection.Full
             lengthbytes = await sslstream_.ReadAsync(file_length_buffer, 0, file_length_buffer.Length);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            Console.WriteLine(FileLength);
+            Console.WriteLine("File lenhth is: "+FileLength);
 
 
             string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
@@ -284,11 +284,13 @@ namespace EasySslStream.Connection.Full
             byte[] ReceiveBuffer = new byte[512];
             FileStream fs = new FileStream("OK.txt", FileMode.Create);
 
+            await sslstream_.FlushAsync();
             while (bytesReceived != lengthbytes)
             {
+                
                 bytesReceived+= await sslstream_.ReadAsync(ReceiveBuffer,0, ReceiveBuffer.Length);
-                fs.Write(ReceiveBuffer);
-                Console.WriteLine("Received chunk");
+                await fs.WriteAsync(ReceiveBuffer);
+                Console.WriteLine(fs.Length);
             }
             fs.Close();
             fs.Dispose();
