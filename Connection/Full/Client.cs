@@ -79,14 +79,15 @@ namespace EasySslStream.Connection.Full
                         while (true)
                         {
 
-                            Console.WriteLine("WAITING FOR JOB");
+                           
                             await work.Reader.WaitToReadAsync();
                             Action w = await work.Reader.ReadAsync();
                             await Task.Delay(100);
                             w.Invoke();
+                            w = null;
 
                         }
-                    }).GetAwaiter().GetResult();
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
 
 
                     stream.Close();
@@ -126,15 +127,14 @@ namespace EasySslStream.Connection.Full
                     {
                         while (true)
                         {
-
-                            Console.WriteLine("WAITING FOR JOB");
                             await work.Reader.WaitToReadAsync();
                             Action w = await work.Reader.ReadAsync();
                             await Task.Delay(100);
                             w.Invoke();
+                            w = null;
 
                         }
-                    }).GetAwaiter().GetResult();
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
 
 
                     stream.Close();
@@ -171,62 +171,67 @@ namespace EasySslStream.Connection.Full
 
         public void SendFile(string path)
         {
-            byte[] chunk = new byte[512];
-
-            // informs server that file will be sent
-            Action SendSteer = () =>
+            Task.Run(async () =>
             {
-                stream.Write(BitConverter.GetBytes((int)SteerCodes.SendFile));
-            };
-            work.Writer.TryWrite(SendSteer);
+                SslStream str = stream;
+                byte[] chunk = new byte[512];
 
-            // informs server what the filename is
-            string filename = Path.GetFileName(path);
-            Action SendFilename = () =>
-            {
-                stream.Write(FilenameEncoding.GetBytes(filename));
-            };work.Writer.TryWrite(SendFilename);
-
-
-
-            FileStream fs = new FileStream(path,FileMode.Open,FileAccess.Read);
-            //  FileStream write = new FileStream("result.txt", FileMode.Append);
-
-
-            Action SendFileLength = () =>
-            {
-                stream.Write(BitConverter.GetBytes((int)fs.Length));
-            };work.Writer.TryWrite(SendFileLength);
-
-
-            int bytesLeft = (int)fs.Length;
-            int Readed = 0;
-
-           while(bytesLeft > 0)
-            {
-                Readed = fs.Read(chunk,0,chunk.Length);
-
-               // Console.WriteLine(Readed);
-
-                bytesLeft -= Readed;
-
-               // write.Write(chunk);
-
-                Action SendChunk = () =>
+                // informs server that file will be sent
+                Action SendSteer = () =>
                 {
-                    stream.Write(chunk);
-                };work.Writer.TryWrite(SendChunk);
-
-            }
-
-
+                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendFile));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendSteer);
 
 
-      
+                // informs server what the filename is
+                string filename = Path.GetFileName(path);
+                Action SendFilename = () =>
+                {
+                    stream.Write(FilenameEncoding.GetBytes(filename));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendFilename);
 
 
+
+                FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+               
+
+
+                Action SendFileLength = () =>
+                {
+                    stream.Write(BitConverter.GetBytes((int)fs.Length));
+                }; await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendFileLength);
+
+                Console.WriteLine(fs.Length);
+                int bytesLeft = (int)fs.Length;
+                int Readed = 0;
+
+              
+
+                
+                while((await fs.ReadAsync(chunk))!=0)
+                {
+
+                    Console.WriteLine(str.CanWrite);
+                    Console.WriteLine("CHUNK");
+                    Console.WriteLine(chunk.Length);
+                    await str.WriteAsync(chunk);       
+                    
+                    await Task.Delay(100);
+                }
+
+
+
+
+
+
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
            // write.Dispose();
-            fs.Dispose();
+           //  fs.Dispose();
         }
 
 

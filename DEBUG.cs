@@ -18,15 +18,14 @@ namespace EasySslStream
         static void Main()
         {
 
+          
+                Server server = new Server();
+                server.CertificateCheckSettings.VerifyCertificateName = false;
+                server.CertificateCheckSettings.VerifyCertificateChain = false;
+                server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
+          
 
-            //  Server server = new Server();
-            // server.CertificateCheckSettings.VerifyCertificateName = false;
-            // server.CertificateCheckSettings.VerifyCertificateChain = false;
-            //  server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx","231",false);
-
-            Client client = new Client();
-
-            client.SendFile("testfile.txt");
+          
 
 
         }

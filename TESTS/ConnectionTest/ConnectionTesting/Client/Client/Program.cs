@@ -10,7 +10,7 @@ namespace Client
             EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
             client.VerifyCertificateChain = false;
             client.VerifyCertificateName = false;
-           // client.Connect("127.0.0.1", 10000);
+            client.Connect("127.0.0.1", 10000);
 
 
             // client.WriteText(BitConverter.GetBytes(1));
@@ -19,7 +19,8 @@ namespace Client
             // client.WriteText(BitConverter.GetBytes(2)); client.WriteText(BitConverter.GetBytes(1));
             // client.WriteText(BitConverter.GetBytes(2));
 
-            //client.WriteText(Encoding.UTF8.GetBytes("ooga booga"));
+            client.WriteText(Encoding.UTF8.GetBytes("ooga booga"));
+            Thread.Sleep(2000);
 
             client.SendFile("testfile.txt");
         }

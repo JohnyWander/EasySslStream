@@ -20,7 +20,7 @@ namespace EasySslStream.Connection.Full
 
 
         public Encoding TextReceiveEncoding = Encoding.UTF8;
-
+        public Encoding FileNameEncoding = Encoding.UTF8;
 
         public CertificateCheckSettings CertificateCheckSettings = new CertificateCheckSettings();
 
@@ -32,7 +32,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-        public string ReceivedFilesLocation = "";
+        public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
        
 
     
@@ -153,30 +153,35 @@ namespace EasySslStream.Connection.Full
 
             Task.Run(async () =>
             {
-
-                while (cancelConnection == false)
-                {
-                    Console.WriteLine("Waiting for steer");
-                    int steer = await ConnSteer();
-                    
-                    Console.WriteLine(steer);
-
-
-                    switch (steer)
+              //  try
+              //  {
+                    while (cancelConnection == false)
                     {
-                        case 1:          
-                             srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));                           
-                        break;
-                        case 2:
-                            await GetFile(srv);
-                            break;
-                        
+                        Console.WriteLine("Waiting for steer");
+                        int steer = await ConnSteer();
+
+                        Console.WriteLine(steer);
+
+
+                        switch (steer)
+                        {
+                            case 1:
+                                srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
+                                break;
+                            case 2:
+                                await GetFile(srv);
+                                break;
+
+                        }
+
+
+
                     }
-
-
-
-                }
-
+              //  }
+              //  catch (Exception e)
+              //  {
+               //     Console.WriteLine(e.Message);
+              //  }
             }).GetAwaiter().GetResult();
 
         }
@@ -242,28 +247,52 @@ namespace EasySslStream.Connection.Full
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
             filenamebytes = await sslstream_.ReadAsync(filenamebuffer, 0, filenamebuffer.Length);
+            string filename = srv.FileNameEncoding.GetString(filenamebuffer);
+            Console.WriteLine(filename);
+
 
 
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
-
             lengthbytes = await sslstream_.ReadAsync(file_length_buffer, 0, file_length_buffer.Length);
+            int FileLength = BitConverter.ToInt32(file_length_buffer);
 
+            Console.WriteLine(FileLength);
+
+
+            string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
+
+            bool correct = false;
+            int number_of_occurence = 1;
+            while(correct == false)
+            {
+                if (FilesInDirectory.Contains(filename))
+                {
+                    filename = filename + number_of_occurence;
+                    number_of_occurence++;
+                    Console.WriteLine("contains");
+                }
+                else
+                {
+                    correct = true;
+                    Console.WriteLine("CORRECT");
+                }
+            }
 
 
             int bytesReceived = 0;
-
-
-            Directory.GetFiles(srv.ReceivedFilesLocation);
-
-
-            FileStream fs = new FileStream(srv.ReceivedFilesLocation, FileMode.OpenOrCreate);
+            byte[] ReceiveBuffer = new byte[512];
+            FileStream fs = new FileStream("OK.txt", FileMode.Create);
 
             while (bytesReceived != lengthbytes)
             {
-
+                bytesReceived+= await sslstream_.ReadAsync(ReceiveBuffer,0, ReceiveBuffer.Length);
+                fs.Write(ReceiveBuffer);
+                Console.WriteLine("Received chunk");
             }
-
+            fs.Close();
+            fs.Dispose();
+          
         }
 
 
