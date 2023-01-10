@@ -175,7 +175,7 @@ namespace EasySslStream.Connection.Full
             Task.Run(async () =>
             {
                 SslStream str = stream;
-                byte[] chunk = new byte[512];
+                byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
 
                 // informs server that file will be sent
                 Action SendSteer = () =>

@@ -15,7 +15,9 @@ namespace EasySslStream
     {
         public static CA_CertGen CA_CONFIG = new CA_CertGen();
         public static OpenSSLConfig_ OpenSSl_config = new OpenSSLConfig_();
-     
+
+
+        public static int  TransportBufferSize = 2048;
         public enum DEBUG_MODE
         {
             Console,

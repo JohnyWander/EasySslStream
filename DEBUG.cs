@@ -64,8 +64,8 @@ namespace EasySslStream
 
             //gen.ConvertX509ToPfx("cert.crt", "certificate.csr.key", "cert.pfx", "123");
 
-            
 
+            DynamicConfiguration.TransportBufferSize = 4096;
 
           
                 Server server = new Server();

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using EasySslStream;
+using System.Text;
 
 namespace Client
 {
@@ -6,7 +7,7 @@ namespace Client
     {
         static void Main(string[] args)
         {
-
+            DynamicConfiguration.TransportBufferSize = 4096;
             EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
             client.VerifyCertificateChain = false;
             client.VerifyCertificateName = false;

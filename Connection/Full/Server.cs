@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
@@ -279,7 +280,7 @@ namespace EasySslStream.Connection.Full
 
 
             int bytesReceived = 0;
-            byte[] ReceiveBuffer = new byte[512];
+            byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
 
             if(srv.ReceivedFilesLocation != "")
             {
@@ -288,6 +289,9 @@ namespace EasySslStream.Connection.Full
             //File.WriteAllText("debugfilename.txt", filename);
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create) ;
 
+            var watch = new Stopwatch();
+
+            watch.Start();
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
@@ -300,16 +304,13 @@ namespace EasySslStream.Connection.Full
                     break;
                 }
             }
-         //   Console.WriteLine("OK?");
+            watch.Stop();
+            Console.WriteLine("Time elapsed: "+watch.ElapsedMilliseconds + " ms");
 
             long ReceivedFileLength = fs.Length;
             
             if(ReceivedFileLength > FileLength)
             {
-               // Console.WriteLine("TOO LONG");
-
-               
-
                 fs.SetLength(FileLength);
             }
 
