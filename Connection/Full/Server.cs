@@ -240,62 +240,88 @@ namespace EasySslStream.Connection.Full
 
         }
 
-
-        private async Task GetFile(Server srv)
+        private Task GetFile(Server srv)
         {
-            // file name
+            //file name
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
-            filenamebytes = await sslstream_.ReadAsync(filenamebuffer, 0, filenamebuffer.Length);
-            string filename = srv.FileNameEncoding.GetString(filenamebuffer);
-            Console.WriteLine("filename is: "+filename);
+            filenamebytes = sslstream_.Read(filenamebuffer);
+            
 
-
+            string filename = srv.FileNameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
+           // Console.WriteLine("filename is: " + filename);
 
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
-            lengthbytes = await sslstream_.ReadAsync(file_length_buffer, 0, file_length_buffer.Length);
+            lengthbytes =  sslstream_.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            Console.WriteLine("File lenhth is: "+FileLength);
-
-
+           // Console.WriteLine("File lenhth is: " + FileLength);
+            /////////
             string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
 
             bool correct = false;
             int number_of_occurence = 1;
-            while(correct == false)
+            while (correct == false)
             {
                 if (FilesInDirectory.Contains(filename))
                 {
                     filename = filename + number_of_occurence;
                     number_of_occurence++;
-                    Console.WriteLine("contains");
+                   // Console.WriteLine("contains");
                 }
                 else
                 {
                     correct = true;
-                    Console.WriteLine("CORRECT");
+                   // Console.WriteLine("CORRECT");
                 }
             }
 
 
             int bytesReceived = 0;
             byte[] ReceiveBuffer = new byte[512];
-            FileStream fs = new FileStream("OK.txt", FileMode.Create);
 
-            await sslstream_.FlushAsync();
-            while (bytesReceived != lengthbytes)
+            if(srv.ReceivedFilesLocation != "")
             {
-                
-                bytesReceived+= await sslstream_.ReadAsync(ReceiveBuffer,0, ReceiveBuffer.Length);
-                await fs.WriteAsync(ReceiveBuffer);
-                Console.WriteLine(fs.Length);
+                Directory.SetCurrentDirectory(srv.ReceivedFilesLocation);
             }
-            fs.Close();
+            //File.WriteAllText("debugfilename.txt", filename);
+            FileStream fs = new FileStream(filename.Trim(), FileMode.Create) ;
+
+            while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
+            {
+
+
+                fs.Write(ReceiveBuffer);
+              //  Console.WriteLine(fs.Length + "/" + FileLength);
+                if (fs.Length >= FileLength)
+                {
+              //      Console.WriteLine("END");
+                    break;
+                }
+            }
+         //   Console.WriteLine("OK?");
+
+            long ReceivedFileLength = fs.Length;
+            
+            if(ReceivedFileLength > FileLength)
+            {
+               // Console.WriteLine("TOO LONG");
+
+               
+
+                fs.SetLength(FileLength);
+            }
+
+
             fs.Dispose();
-          
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+            return Task.CompletedTask;
         }
+
+    
 
 
 

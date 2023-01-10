@@ -22,7 +22,9 @@ namespace Client
             client.WriteText(Encoding.UTF8.GetBytes("ooga booga"));
             Thread.Sleep(2000);
 
-            client.SendFile("testfile.txt");
+            client.SendFile("86998.zip");
+
+                 // client.WriteText(Encoding.UTF8.GetBytes("ooga booga")); ;
         }
     }
 }

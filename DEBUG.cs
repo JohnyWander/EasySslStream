@@ -25,7 +25,7 @@ namespace EasySslStream
             DynamicConfiguration.CA_CONFIG.HashAlgorithm = CA_CertGen.HashAlgorithms.sha256;
             DynamicConfiguration.CA_CONFIG.Location = "New York";
             DynamicConfiguration.CA_CONFIG.Organisation = "White Hause";
-            DynamicConfiguration.CA_CONFIG.CommonName = "Dupa.com";
+            DynamicConfiguration.CA_CONFIG.CommonName = "gfvgv.com";
             DynamicConfiguration.CA_CONFIG.CountryCode = "US";
             DynamicConfiguration.CA_CONFIG.CountryState = "Florida";
             DynamicConfiguration.CA_CONFIG.Days = 365;
@@ -71,7 +71,7 @@ namespace EasySslStream
                 Server server = new Server();
                 server.CertificateCheckSettings.VerifyCertificateName = false;
                server.CertificateCheckSettings.VerifyCertificateChain = false;
-                server.StartServer(IPAddress.Any, 10000, "cert.pfx.pfx", "123", false);
+                server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
           
 
           
