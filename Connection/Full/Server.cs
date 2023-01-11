@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace EasySslStream.Connection.Full
@@ -82,8 +83,10 @@ namespace EasySslStream.Connection.Full
     }
 
 
-    public sealed class SSLClient
+    public sealed class SSLClient : ConnectionMethods
     {
+        private Channel<Action> ServerSendingQueue = Channel.CreateUnbounded<Action>();
+
         string ClientIP;
         int ClientPort;
 
@@ -139,15 +142,27 @@ namespace EasySslStream.Connection.Full
                 sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true);
             }
 
-            try
-            {
-                
+        
 
-            }catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
 
+            Thread ServerSender = new Thread(() =>
+            {
+                Task.Run(async () =>
+                {
+                    while (true)
+                    {
+                        await ServerSendingQueue.Reader.WaitToReadAsync();
+                        Action w = await ServerSendingQueue.Reader.ReadAsync();
+                        await Task.Delay(100);
+                        w.Invoke();
+                        w = null;
+
+                    }
+                }).ConfigureAwait(false).GetAwaiter().GetResult();
+
+
+            });
+            ServerSender.Start();
 
 
             bool cancelConnection = false;

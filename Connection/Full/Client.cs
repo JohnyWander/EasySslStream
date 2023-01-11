@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Connection.Full
 {
-    public class Client
+    public class Client : ConnectionMethods
     {
         string Terminator= "<ENDOFTEXT>";
         private Channel<Action> work = Channel.CreateUnbounded<Action>();

@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Connection.Full
 {
-    internal class ConnectionMethods
+    public abstract class ConnectionMethods
     {
+
+
+
     }
 }
