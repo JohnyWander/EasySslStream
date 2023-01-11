@@ -75,10 +75,13 @@ namespace EasySslStream
          
 
                 server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
-          
 
-          
+           
+                 Thread.Sleep(10000);
 
+            server.TestList();
+          
+            
 
         }
 
