@@ -14,6 +14,7 @@ namespace EasySslStream.Connection.Full
 {
     public class Client : ConnectionMethods
     {
+
         string Terminator= "<ENDOFTEXT>";
         private Channel<Action> work = Channel.CreateUnbounded<Action>();
 
