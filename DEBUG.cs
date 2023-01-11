@@ -70,7 +70,10 @@ namespace EasySslStream
           
                 Server server = new Server();
                 server.CertificateCheckSettings.VerifyCertificateName = false;
-               server.CertificateCheckSettings.VerifyCertificateChain = false;
+                server.CertificateCheckSettings.VerifyCertificateChain = false;
+
+         
+
                 server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
           
 
