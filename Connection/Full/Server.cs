@@ -40,8 +40,23 @@ namespace EasySslStream.Connection.Full
         public void TestList()
         {
             Console.WriteLine("?:"+ConnectedClients.Count);
+            Console.WriteLine("?:" + ConnectedClientsByNumber.Count);
+            Console.WriteLine("?:" +ConnectedClientsByIP.Count);
             ConnectedClients[0].WriteText(Encoding.UTF8.GetBytes("BOOGA UUGA"));
         }
+
+
+        public void WriteTextToClient(int ConnectionID, byte[] Message)
+        {
+            ConnectedClients[ConnectionID].WriteText(Message);
+        }
+
+        public void WriteTextToClient(string ip, byte[] Message)
+        {
+            ConnectedClientsByIP[ip].WriteText(Message);
+        }
+
+
 
 
         public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
@@ -63,9 +78,11 @@ namespace EasySslStream.Connection.Full
                     
                     TcpClient client = listener.AcceptTcpClient();
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
-                    ConnectedClients.Add(connection);
+                  //  ConnectedClients.Add(connection);
                     ConnectedClientsByNumber.TryAdd(connected, connection);
-                    ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString().Split(':')[0], connection);
+
+                    ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString(), connection);
+                    Console.WriteLine(client.Client.RemoteEndPoint.ToString());
                 }
                 connected++;
             });
@@ -87,9 +104,8 @@ namespace EasySslStream.Connection.Full
 
                     TcpClient client = listener.AcceptTcpClient();
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
-                    ConnectedClients.Add(connection);
-                    ConnectedClientsByNumber.TryAdd(connected, connection);
-                    ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString().Split(':')[0], connection);
+                   // ConnectedClients.Add(connection);
+              
                 }
                 connected++;
             });
@@ -146,6 +162,7 @@ namespace EasySslStream.Connection.Full
         {
             SendText = 1,
             SendFile = 2
+            
         }
 
 
@@ -157,7 +174,9 @@ namespace EasySslStream.Connection.Full
             srv = srvinstance;
 
             srv.ConnectedClients.Add(this);
-           // Console.WriteLine("?: "+srv.ConnectedClients.Count);
+            srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
+            srv.ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString(), this);
+            // Console.WriteLine("?: "+srv.ConnectedClients.Count);
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
