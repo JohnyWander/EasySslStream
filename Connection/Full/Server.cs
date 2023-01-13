@@ -34,8 +34,14 @@ namespace EasySslStream.Connection.Full
         public Action<string> HandleReceivedText = (string text) =>
         {
             Console.WriteLine(text);
+            
         };
 
+        public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
+        {
+            foreach(byte b in bytes) { Console.Write(Convert.ToInt32(b)+" "); }
+            //return bytes
+        };
         
         public void TestList()
         {
@@ -161,8 +167,8 @@ namespace EasySslStream.Connection.Full
         private enum SteerCodes
         {
             SendText = 1,  
-            SendFile = 2
-            
+            SendFile = 2,
+            SendRawBytes =3
         }
 
 
@@ -233,7 +239,9 @@ namespace EasySslStream.Connection.Full
                         case 2:
                             await GetFile(srv);
                             break;
-
+                        case 3:
+                            srv.HandleReceivedBytes.Invoke(await GetRawBytes());
+                            break;
                     }
 
 
@@ -383,6 +391,53 @@ namespace EasySslStream.Connection.Full
             return Task.CompletedTask;
         }
 
+
+        private async Task<byte[]> GetRawBytes()
+        {
+            byte[] lenghtBuffer = new byte[2048];
+            int received = 0;
+            received = await sslstream_.ReadAsync(lenghtBuffer, 0, lenghtBuffer.Length);
+
+            Console.WriteLine(BitConverter.ToInt32(lenghtBuffer));
+
+            byte[] MessageBytes = new byte[BitConverter.ToInt32(lenghtBuffer)];
+
+            int MessageReceivedBytes = await sslstream_.ReadAsync(MessageBytes);
+
+            return MessageBytes;
+         
+        }
+
+        public void SendRawBytes(byte[] Message)
+        {
+            Task.Run(async () =>
+            {
+                Action SendSteer = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendRawBytes));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendSteer);
+
+                Action SendLength = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes(Message.Length));
+                }; await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendLength);
+
+
+                Action Send = () =>
+                {
+                    sslstream_.Write(Message);
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(Send);
+
+
+            });
+        }
+
+
         public void WriteText(byte[] message)
         {
 
@@ -400,7 +455,6 @@ namespace EasySslStream.Connection.Full
             };
             ServerSendingQueue.Writer.TryWrite(WR);
         }
-
 
         public void SendFile(string path)
         {
