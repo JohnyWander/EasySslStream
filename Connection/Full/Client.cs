@@ -20,6 +20,12 @@ namespace EasySslStream.Connection.Full
             Console.WriteLine(text);
         };
 
+        public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
+        {
+            foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
+            //return bytes
+        };
+
         string Terminator = "<ENDOFTEXT>";
         private Channel<Action> work = Channel.CreateUnbounded<Action>();
 
@@ -40,8 +46,10 @@ namespace EasySslStream.Connection.Full
         private enum SteerCodes
         {
             SendText = 1,
-            SendFile = 2
+            SendFile = 2,
+            SendRawBytes = 3
         }
+       
 
         public bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
@@ -108,6 +116,9 @@ namespace EasySslStream.Connection.Full
                                         break;
                                     case 2:
                                         await GetFile();
+                                        break;
+                                    case 3:
+                                        HandleReceivedBytes.Invoke(await GetRawBytes());
                                         break;
 
                                 }
@@ -432,6 +443,46 @@ namespace EasySslStream.Connection.Full
 
             return Task.CompletedTask;
         }
+        public async Task<byte[]> GetRawBytes()
+        {
+            byte[] lenghtBuffer = new byte[2048];
+            int received = 0;
+            received = await stream.ReadAsync(lenghtBuffer, 0, lenghtBuffer.Length);
 
+            byte[] MessageBytes = new byte[BitConverter.ToInt32(lenghtBuffer)];
+
+            int MessageReceivedBytes = await stream.ReadAsync(MessageBytes);
+
+            return MessageBytes;
+
+        }
+
+        public void SendRawBytes(byte[] Message)
+        {
+            Task.Run(async () =>
+            {
+                Action SendSteer = () =>
+                {
+                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendRawBytes));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendSteer);
+
+                Action SendLength = () =>
+                {
+                    stream.Write(BitConverter.GetBytes(Message.Length));
+                }; await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendLength);
+
+                Action Send = () =>
+                {
+                    stream.Write(Message);
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(Send);
+
+
+            });
+        }
     }
 }

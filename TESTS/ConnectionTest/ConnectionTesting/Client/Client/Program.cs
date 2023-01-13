@@ -23,7 +23,8 @@ namespace Client
             client.WriteText(Encoding.UTF8.GetBytes("ooga booga"));
             Thread.Sleep(2000);
 
-            client.SendFile("86998.zip");
+            //client.SendFile("86998.zip");
+            client.SendRawBytes(Encoding.UTF8.GetBytes("wqeweqweq"));
 
                  // client.WriteText(Encoding.UTF8.GetBytes("ooga booga")); ;
         }
