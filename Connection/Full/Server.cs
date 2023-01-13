@@ -160,7 +160,7 @@ namespace EasySslStream.Connection.Full
 
         private enum SteerCodes
         {
-            SendText = 1,
+            SendText = 1,  
             SendFile = 2
             
         }
