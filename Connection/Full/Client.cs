@@ -103,7 +103,7 @@ namespace EasySslStream.Connection.Full
                             //  {
                             while (cancelConnection == false)
                             {
-                                Console.WriteLine("Waiting for steer");
+                               // Console.WriteLine("Waiting for steer");
                                 int steer = await ConnSteer();
 
                                 Console.WriteLine(steer);
@@ -413,7 +413,7 @@ namespace EasySslStream.Connection.Full
 
             var watch = new Stopwatch();
 
-            watch.Start();
+           // watch.Start();
             while ((stream.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
@@ -426,8 +426,8 @@ namespace EasySslStream.Connection.Full
                     break;
                 }
             }
-            watch.Stop();
-            Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
+           // watch.Stop();
+           // Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
 
             long ReceivedFileLength = fs.Length;
 

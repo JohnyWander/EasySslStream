@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 namespace EasySslStream.Interop
 {
+    /// <summary>
+    /// Contains functions invoked from User32.dll
+    /// </summary>
     internal class User32
     {
         [DllImport("User32.dll", CharSet = CharSet.Unicode)]

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EasySslStream.Misc
 {
     /// <summary>
-    /// Tests debug mode
+    /// Miscellaneous methods
     /// </summary>
     public class Misc
     {
