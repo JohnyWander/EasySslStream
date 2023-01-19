@@ -15,11 +15,18 @@ namespace EasySslStream.Connection.Full
 {
     public class Client 
     {
+        /// <summary>
+        /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
+        /// </summary>
         public Action<string> HandleReceivedText = (string text) =>
         {
             Console.WriteLine(text);
         };
 
+
+        /// <summary>
+        /// Action Delegate for handling bytes received from client, by default it prints int representation of them in console
+        /// </summary>
         public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
         {
             foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
@@ -32,11 +39,29 @@ namespace EasySslStream.Connection.Full
         public TcpClient client;
         public SslStream stream;
 
+        /// <summary>
+        /// True if server hostname must match subject name on the certificate. True by default
+        /// </summary>
         public bool VerifyCertificateName = true;
+
+        /// <summary>
+        /// True if certificate sign chain should be valid, True by default
+        /// </summary>
         public bool VerifyCertificateChain = true;
 
+        /// <summary>
+        /// Encoding of filenames UTF8 is default
+        /// </summary>
         public Encoding FilenameEncoding = Encoding.UTF8;
+
+        /// <summary>
+        /// Encoding of received text from server, UTF8 is default
+        /// </summary>
         public Encoding TextReceiveEncoding = Encoding.UTF8;
+
+        /// <summary>
+        /// Location of the received files
+        /// </summary>
         public string ReceivedFilesLocation = "";
 
 
@@ -50,8 +75,8 @@ namespace EasySslStream.Connection.Full
             SendRawBytes = 3
         }
        
-
-        public bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+       
+        internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
@@ -79,7 +104,11 @@ namespace EasySslStream.Connection.Full
         {
 
         }
-
+        /// <summary>
+        /// Connects to the server
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
         public void Connect(string ip, int port)
         {
             X509Certificate x = null;
@@ -106,7 +135,7 @@ namespace EasySslStream.Connection.Full
                                // Console.WriteLine("Waiting for steer");
                                 int steer = await ConnSteer();
 
-                                Console.WriteLine(steer);
+                                
 
 
                                 switch (steer)
@@ -170,16 +199,20 @@ namespace EasySslStream.Connection.Full
             
 
         }
-
+        /// <summary>
+        /// Connects to the server that verifies client certificate
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <param name="clientCertLocation">path to the client pfx cert with private key</param>
+        /// <param name="certPassword">Password to the cert, use empty string if there is no password</param>
         public void Connect(string ip, int port, string clientCertLocation, string certPassword)
         {
             X509Certificate x = null;
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
-
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
-
                 X509Certificate2 clientCert = new X509Certificate2(clientCertLocation, certPassword, X509KeyStorageFlags.PersistKeySet);
 
 
@@ -238,6 +271,10 @@ namespace EasySslStream.Connection.Full
 
         }
 
+        /// <summary>
+        /// Send byte array representation of string to server
+        /// </summary>
+        /// <param name="message"></param>
         public void WriteText(byte[] message)
         {
 
@@ -256,7 +293,10 @@ namespace EasySslStream.Connection.Full
             work.Writer.TryWrite(WR);
         }
 
-
+        /// <summary>
+        /// Sends file to server
+        /// </summary>
+        /// <param name="path">Path to the file</param>
         public void SendFile(string path)
         {
             Task.Run(async () =>
