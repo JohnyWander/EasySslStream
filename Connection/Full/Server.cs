@@ -19,7 +19,7 @@ namespace EasySslStream.Connection.Full
         public List<SSLClient> ConnectedClients = new List<SSLClient>();
 
         public ConcurrentDictionary<int,SSLClient> ConnectedClientsByNumber = new ConcurrentDictionary<int, SSLClient>();
-        public ConcurrentDictionary<string,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<string, SSLClient>();
+        public ConcurrentDictionary<IPEndPoint,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<IPEndPoint, SSLClient>();
         public X509Certificate2 serverCert = null;
         private TcpListener listener = null;
 
@@ -42,20 +42,20 @@ namespace EasySslStream.Connection.Full
             foreach(byte b in bytes) { Console.Write(Convert.ToInt32(b)+" "); }
             //return bytes
         };
-        
-    
 
+
+        public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
+        {
+
+
+            ConnectedClientsByEndPoint[clientEndpoint].WriteText(Message);
+        }
         public void WriteTextToClient(int ConnectionID, byte[] Message)
         {
             ConnectedClients[ConnectionID].WriteText(Message);
         }
 
-        public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
-        {
-           
-          
-            ConnectedClientsByEndPoint[clientEndpoint.ToString()].WriteText(Message);
-        }
+       
 
         public void WriteFileToClient(int ConnectionID,string Path)
         {
@@ -64,7 +64,7 @@ namespace EasySslStream.Connection.Full
 
         public void WriteFileToClient(IPEndPoint clientEndpoint,string Path)
         {
-            ConnectedClientsByEndPoint[clientEndpoint.ToString()].SendFile(Path);
+            ConnectedClientsByEndPoint[clientEndpoint].SendFile(Path);
         }
 
 
@@ -181,7 +181,7 @@ namespace EasySslStream.Connection.Full
 
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
-            srv.ConnectedClientsByEndPoint.TryAdd(client.Client.RemoteEndPoint.ToString(), this);
+            srv.ConnectedClientsByEndPoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
             // Console.WriteLine("?: "+srv.ConnectedClients.Count);
             if (VerifyClients == false)
             {

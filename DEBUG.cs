@@ -18,6 +18,7 @@ namespace EasySslStream
 
         static void Main()
         {
+
             DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
 
             DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
@@ -84,7 +85,7 @@ namespace EasySslStream
             //   Thread.Sleep(10000);
             //  server.TestList();
 
-            foreach (var kp in server.ConnectedClientsByIP)
+            foreach (var kp in server.ConnectedClientsByEndPoint)
             {
                 server.WriteTextToClient(kp.Key, Encoding.UTF8.GetBytes("booga ooga 2"));
                 Console.WriteLine(kp.Key);
