@@ -19,7 +19,7 @@ namespace EasySslStream.Connection.Full
         public List<SSLClient> ConnectedClients = new List<SSLClient>();
 
         public ConcurrentDictionary<int,SSLClient> ConnectedClientsByNumber = new ConcurrentDictionary<int, SSLClient>();
-        public ConcurrentDictionary<string,SSLClient> ConnectedClientsByIP = new ConcurrentDictionary<string, SSLClient>();
+        public ConcurrentDictionary<string,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<string, SSLClient>();
         public X509Certificate2 serverCert = null;
         private TcpListener listener = null;
 
@@ -43,26 +43,29 @@ namespace EasySslStream.Connection.Full
             //return bytes
         };
         
-        public void TestList()
-        {
-            Console.WriteLine("?:"+ConnectedClients.Count);
-            Console.WriteLine("?:" + ConnectedClientsByNumber.Count);
-            Console.WriteLine("?:" +ConnectedClientsByIP.Count);
-            ConnectedClients[0].WriteText(Encoding.UTF8.GetBytes("BOOGA UUGA"));
-        }
-
+    
 
         public void WriteTextToClient(int ConnectionID, byte[] Message)
         {
             ConnectedClients[ConnectionID].WriteText(Message);
         }
 
-        public void WriteTextToClient(string ip, byte[] Message)
+        public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
         {
-            ConnectedClientsByIP[ip].WriteText(Message);
+           
+          
+            ConnectedClientsByEndPoint[clientEndpoint.ToString()].WriteText(Message);
         }
 
+        public void WriteFileToClient(int ConnectionID,string Path)
+        {
+            ConnectedClients[ConnectionID].SendFile(Path);
+        }
 
+        public void WriteFileToClient(IPEndPoint clientEndpoint,string Path)
+        {
+            ConnectedClientsByEndPoint[clientEndpoint.ToString()].SendFile(Path);
+        }
 
 
         public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
@@ -84,10 +87,7 @@ namespace EasySslStream.Connection.Full
                     
                     TcpClient client = listener.AcceptTcpClient();
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
-                  //  ConnectedClients.Add(connection);
-                    ConnectedClientsByNumber.TryAdd(connected, connection);
-
-                    ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString(), connection);
+                
                     Console.WriteLine(client.Client.RemoteEndPoint.ToString());
                 }
                 connected++;
@@ -181,7 +181,7 @@ namespace EasySslStream.Connection.Full
 
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
-            srv.ConnectedClientsByIP.TryAdd(client.Client.RemoteEndPoint.ToString(), this);
+            srv.ConnectedClientsByEndPoint.TryAdd(client.Client.RemoteEndPoint.ToString(), this);
             // Console.WriteLine("?: "+srv.ConnectedClients.Count);
             if (VerifyClients == false)
             {
@@ -225,7 +225,7 @@ namespace EasySslStream.Connection.Full
                 //  {
                 while (cancelConnection == false)
                 {
-                    Console.WriteLine("Waiting for steer");
+                    //Console.WriteLine("Waiting for steer");
                     int steer = await ConnSteer();
 
                     Console.WriteLine(steer);
@@ -358,9 +358,9 @@ namespace EasySslStream.Connection.Full
             //File.WriteAllText("debugfilename.txt", filename);
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
 
-            var watch = new Stopwatch();
+          //  var watch = new Stopwatch();
 
-            watch.Start();
+         //   watch.Start();
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
@@ -373,8 +373,8 @@ namespace EasySslStream.Connection.Full
                     break;
                 }
             }
-            watch.Stop();
-            Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
+          /// watch.Stop();
+           // Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
 
             long ReceivedFileLength = fs.Length;
 
@@ -398,7 +398,7 @@ namespace EasySslStream.Connection.Full
             int received = 0;
             received = await sslstream_.ReadAsync(lenghtBuffer, 0, lenghtBuffer.Length);
 
-            Console.WriteLine(BitConverter.ToInt32(lenghtBuffer));
+           // Console.WriteLine(BitConverter.ToInt32(lenghtBuffer));
 
             byte[] MessageBytes = new byte[BitConverter.ToInt32(lenghtBuffer)];
 
