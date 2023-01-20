@@ -143,8 +143,7 @@ namespace EasySslStream.Connection.Full
                 }
                 connected++;
             });
-            listenerThread.Start();
-            
+            listenerThread.Start();          
         }
 
         /// <summary>
@@ -231,7 +230,6 @@ namespace EasySslStream.Connection.Full
             SendRawBytes =3
         }
 
-
         /// <summary>
         /// Creates client instance
         /// </summary>
@@ -240,15 +238,14 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients"></param>
         /// <param name="srvinstance"></param>
         public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server srvinstance = null)
-        {
-            
+        {           
             client_ = client;
             srv = srvinstance;
 
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
             srv.ConnectedClientsByEndPoint.TryAdd(client.Client.RemoteEndPoint?.ToString(), this);
-            // Console.WriteLine("?: "+srv.ConnectedClients.Count);
+            
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
@@ -259,9 +256,6 @@ namespace EasySslStream.Connection.Full
                 sslstream_ = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidadeClientCert));
                 sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true);
             }
-
-
-
 
             Thread ServerSender = new Thread(() =>
             {
@@ -277,26 +271,16 @@ namespace EasySslStream.Connection.Full
 
                     }
                 }).ConfigureAwait(false).GetAwaiter().GetResult();
-
-
             });
             ServerSender.Start();
-
 
             bool cancelConnection = false;
 
             Task.Run(async () =>
-            {
-                //  try
-                //  {
+            {             
                 while (cancelConnection == false)
-                {
-                    //Console.WriteLine("Waiting for steer");
+                {                 
                     int steer = await ConnSteer();
-
-                    Console.WriteLine(steer);
-
-
                     switch (steer)
                     {
                         case 1:
@@ -309,19 +293,10 @@ namespace EasySslStream.Connection.Full
                             srv.HandleReceivedBytes.Invoke(await GetRawBytes());
                             break;
                     }
-
-
-
                 }
-                //  }
-                //  catch (Exception e)
-                //  {
-                //     Console.WriteLine(e.Message);
-                //  }
             }).GetAwaiter().GetResult();
 
         }
-
         private async Task<int> ConnSteer()
         {
             byte[] buffer = new byte[64];
@@ -329,29 +304,18 @@ namespace EasySslStream.Connection.Full
 
             int bytes_count = -1;
 
-
             bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
             steer = BitConverter.ToInt32(buffer, 0);
             await sslstream_.FlushAsync();
 
-
-
-
             return steer;
-
-
         }
 
         private async Task<string> GetText(Encoding enc)
         {
-
             byte[] buffer = new byte[64];
-
             int bytes_count = -1;
             StringBuilder Message = new StringBuilder();
-
-
-
 
             Decoder decoder = enc.GetDecoder();
             do
@@ -362,18 +326,13 @@ namespace EasySslStream.Connection.Full
                 decoder.GetChars(buffer, 0, bytes_count, messagechars, 0);
                 Message.Append(messagechars);
 
-                // Console.WriteLine(Message.ToString());
-
                 if (Message.ToString().IndexOf(Terminatorstring) != -1) { break; }
-
-
 
             } while (bytes_count != 0);
 
             string toreturn = Message.ToString();
             toreturn = toreturn.Substring(0, toreturn.IndexOf(Terminatorstring));
             return toreturn;
-
         }
 
         private Task GetFile(Server srv)
@@ -385,7 +344,7 @@ namespace EasySslStream.Connection.Full
 
 
             string filename = srv.FileNameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
-            // Console.WriteLine("filename is: " + filename);
+            
 
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
