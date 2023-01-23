@@ -33,7 +33,7 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Thread safe dictionary that contains connected clients referenced by string endpoint ( 127.0.0.1:5000 etc)
         /// </summary>
-        public ConcurrentDictionary<string,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<string, SSLClient>();
+        public ConcurrentDictionary<IPEndPoint,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<IPEndPoint, SSLClient>();
 
      
         private X509Certificate2 serverCert = null;
@@ -94,16 +94,6 @@ namespace EasySslStream.Connection.Full
             ConnectedClients[ConnectionID].WriteText(Message);
         }
 
-
-        /// <summary>
-        /// Sends text Message to client
-        /// </summary>
-        /// <param name="clientEndpoint">client endpoint</param>
-        /// <param name="Message">byte array representation of the message</param>
-        public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
-        {
-            ConnectedClientsByEndPoint[clientEndpoint.ToString()].WriteText(Message);
-        }
 
 
         /// <summary>
@@ -258,7 +248,7 @@ namespace EasySslStream.Connection.Full
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
 
-            srv.ConnectedClientsByEndPoint.TryAdd(client.Client.RemoteEndPoint?.ToString(), this);
+           
             
 
             srv.ConnectedClientsByEndPoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
