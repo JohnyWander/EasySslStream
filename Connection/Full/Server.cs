@@ -341,8 +341,6 @@ namespace EasySslStream.Connection.Full
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
             filenamebytes = sslstream_.Read(filenamebuffer);
-
-
             string filename = srv.FileNameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
             
 
@@ -351,8 +349,7 @@ namespace EasySslStream.Connection.Full
             lengthbytes = sslstream_.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            // Console.WriteLine("File lenhth is: " + FileLength);
-            /////////
+            
             string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
 
             bool correct = false;
@@ -363,12 +360,12 @@ namespace EasySslStream.Connection.Full
                 {
                     filename = filename + number_of_occurence;
                     number_of_occurence++;
-                    // Console.WriteLine("contains");
+                    
                 }
                 else
                 {
                     correct = true;
-                    // Console.WriteLine("CORRECT");
+                    
                 }
             }
 
@@ -380,26 +377,22 @@ namespace EasySslStream.Connection.Full
             {
                 Directory.SetCurrentDirectory(srv.ReceivedFilesLocation);
             }
-            //File.WriteAllText("debugfilename.txt", filename);
+           
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
 
-          //  var watch = new Stopwatch();
-
-         //   watch.Start();
+         
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
 
                 fs.Write(ReceiveBuffer);
-                //  Console.WriteLine(fs.Length + "/" + FileLength);
+                
                 if (fs.Length >= FileLength)
-                {
-                    //      Console.WriteLine("END");
+                {            
                     break;
                 }
             }
-          /// watch.Stop();
-           // Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
+          
 
             long ReceivedFileLength = fs.Length;
 
@@ -423,7 +416,7 @@ namespace EasySslStream.Connection.Full
             int received = 0;
             received = await sslstream_.ReadAsync(lenghtBuffer, 0, lenghtBuffer.Length);
 
-           // Console.WriteLine(BitConverter.ToInt32(lenghtBuffer));
+           
 
             byte[] MessageBytes = new byte[BitConverter.ToInt32(lenghtBuffer)];
 
