@@ -12,8 +12,9 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-
+    /*
     public static class Program
+
     {
 
         static void Main()
@@ -85,16 +86,12 @@ namespace EasySslStream
             //   Thread.Sleep(10000);
             //  server.TestList();
 
-            foreach (var kp in server.ConnectedClientsByEndPoint)
-            {
-                server.WriteTextToClient(kp.Key, Encoding.UTF8.GetBytes("booga ooga 2"));
-                Console.WriteLine(kp.Key);
-            }
+
 
         }
 
 
 
     }
-     
+     */
 }

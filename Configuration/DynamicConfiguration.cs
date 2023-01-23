@@ -9,15 +9,35 @@ using static EasySslStream.CA_CertGen;
 
 namespace EasySslStream
 {
+/// <summary>
+/// Event that fires when debug message is raised
+/// </summary>
     public delegate void DebugLocalVariableEventRaised();
 
+    /// <summary>
+    /// Contains configuration values
+    /// </summary>
     public static class DynamicConfiguration
     {
+        /// <summary>
+        /// Contains configuration for CA certificate generation
+        /// </summary>
         public static CA_CertGen CA_CONFIG = new CA_CertGen();
+
+        /// <summary>
+        /// Contains configuration 
+        /// </summary>
         public static OpenSSLConfig_ OpenSSl_config = new OpenSSLConfig_();
 
+        /// <summary>
+        /// Buffer size for sending files / large Messages. Smaller buffer = higher cpu load, smaller probability of fail
+        /// Bigger buffer = lower cpu load, bigger probability of fail
+        /// </summary>
+        public static int TransportBufferSize = 4096;
 
-        public static int  TransportBufferSize = 2048;
+        /// <summary>
+        /// Debug modes
+        /// </summary>
         public enum DEBUG_MODE
         {
             Console,
@@ -27,6 +47,9 @@ namespace EasySslStream
 
         internal static DEBUG_MODE debug_mode;
 
+        /// <summary>
+        /// Method of certificate generation
+        /// </summary>
         public enum SSL_Certgen_mode
         {
             OpenSSL,
@@ -35,6 +58,9 @@ namespace EasySslStream
 
         }
 
+        /// <summary>
+        /// Mode of generating certificates
+        /// </summary>
         public static SSL_Certgen_mode Certgen_Mode { private set; get; }
 
         /// <summary>
@@ -42,9 +68,18 @@ namespace EasySslStream
         /// </summary>
         internal static bool DEBUG = false;
      
+        /// <summary>
+        /// Latest debug message
+        /// </summary>
         public static string? debug_message;
+        /// <summary>
+        /// Latest debug message title
+        /// </summary>
         public static string? debug_title;
-
+        
+        /// <summary>
+        /// Event that fires when debug message is changed
+        /// </summary>
         public static event DebugLocalVariableEventRaised? DebugLocalVariableEvent;
 
         private static void RaiseLocalVariableDebugMessage()
@@ -52,12 +87,6 @@ namespace EasySslStream
             if (DEBUG)
                 DebugLocalVariableEvent?.Invoke();
         }
-
-        internal static void SetLocalDebugMsg(string Message, string Title)
-        {
-
-        }
-
 
 
         public delegate void RaiseMessageDelegate(string message, string title);

@@ -15,11 +15,17 @@ namespace EasySslStream.Connection.Full
 {
     public class Client 
     {
+        /// <summary>
+        /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
+        /// </summary>
         public Action<string> HandleReceivedText = (string text) =>
         {
             Console.WriteLine(text);
         };
 
+        /// <summary>
+        /// Action Delegate for handling bytes received from client, by default it prints int representation of them in console
+        /// </summary>
         public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
         {
             foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
@@ -32,26 +38,41 @@ namespace EasySslStream.Connection.Full
         public TcpClient client;
         public SslStream stream;
 
+        /// <summary>
+        /// True if server hostname must match subject name on the certificate. True by default
+        /// </summary>
         public bool VerifyCertificateName = true;
+
+        /// <summary>
+        /// True if certificate sign chain should be valid, True by default
+        /// </summary>
         public bool VerifyCertificateChain = true;
 
+        /// <summary>
+        /// Encoding of filenames UTF8 is default
+        /// </summary>
         public Encoding FilenameEncoding = Encoding.UTF8;
+
+        /// <summary>
+        /// Encoding of received text from server, UTF8 is default
+        /// </summary>
         public Encoding TextReceiveEncoding = Encoding.UTF8;
+
+        /// <summary>
+        /// Location of the received files
+        /// </summary>
         public string ReceivedFilesLocation = "";
 
-
-        public bool cancelConnection;
-       
-
+        private bool cancelConnection;
+        
         private enum SteerCodes
         {
             SendText = 1,
             SendFile = 2,
             SendRawBytes = 3
         }
-       
-
-        public bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+           
+        internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
@@ -68,47 +89,35 @@ namespace EasySslStream.Connection.Full
             else
             {
                 return false;
-
             }
-
-
-
-
         }
-        public Client()
-        {
-
-        }
-
+    
+        /// <summary>
+        /// Connects to the server
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
         public void Connect(string ip, int port)
         {
             X509Certificate x = null;
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
-
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
 
                 try
                 {
-                    stream.WriteTimeout = 10000;
-                    stream.AuthenticateAsClient(ip);
+                    stream.WriteTimeout = 10000;     
                     stream.ReadTimeout = 10000;
+                    stream.AuthenticateAsClient(ip);
 
                     Thread ListeningThread = new Thread(() =>
                     {
                         Task.Run(async () =>
-                        {
-                            //  try
-                            //  {
+                        {                       
                             while (cancelConnection == false)
-                            {
-                               // Console.WriteLine("Waiting for steer");
+                            {                               
                                 int steer = await ConnSteer();
-
-                                Console.WriteLine(steer);
-
-
                                 switch (steer)
                                 {
                                     case 1:
@@ -120,41 +129,27 @@ namespace EasySslStream.Connection.Full
                                     case 3:
                                         HandleReceivedBytes.Invoke(await GetRawBytes());
                                         break;
-
                                 }
 
 
 
                             }
-                            //  }
-                            //  catch (Exception e)
-                            //  {
-                            //     Console.WriteLine(e.Message);
-                            //  }
-                        }).GetAwaiter().GetResult();
-
-                    
-
+                        }).GetAwaiter().GetResult();                  
                     });
                     ListeningThread.Start();
-
 
 
                     Task.Run(async () =>
                     {
                         while (true)
                         {
-
-
                             await work.Reader.WaitToReadAsync();
                             Action w = await work.Reader.ReadAsync();
                             await Task.Delay(100);
                             w.Invoke();
                             w = null;
-
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
-
 
                     stream.Close();
 
@@ -170,20 +165,21 @@ namespace EasySslStream.Connection.Full
             
 
         }
-
+        /// <summary>
+        /// Connects to the server that verifies client certificates
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="port"></param>
+        /// <param name="clientCertLocation">path to the client pfx cert with private key</param>
+        /// <param name="certPassword">Password to the cert, use empty string if there is no password</param>
         public void Connect(string ip, int port, string clientCertLocation, string certPassword)
         {
             X509Certificate x = null;
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
-
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
-
                 X509Certificate2 clientCert = new X509Certificate2(clientCertLocation, certPassword, X509KeyStorageFlags.PersistKeySet);
-
-
-
                 X509Certificate2Collection certs = new X509Certificate2Collection(clientCert);
 
                 stream.AuthenticateAsClient(ip, certs, false);
@@ -193,7 +189,7 @@ namespace EasySslStream.Connection.Full
                     stream.AuthenticateAsClient(ip);
                     stream.ReadTimeout = 10000;
 
-                    Task.Run(async () =>
+                    Task.Run(async () => // sending queue
                     {
                         while (true)
                         {
@@ -202,13 +198,10 @@ namespace EasySslStream.Connection.Full
                             await Task.Delay(100);
                             w.Invoke();
                             w = null;
-
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
-
-
                     stream.Close();
-
+                    stream.Dispose();
                 }
                 catch (Exception e)
                 {
@@ -225,19 +218,17 @@ namespace EasySslStream.Connection.Full
 
             int bytes_count = -1;
 
-
             bytes_count = await stream.ReadAsync(buffer, 0, buffer.Length);
             steer = BitConverter.ToInt32(buffer, 0);
             await stream.FlushAsync();
 
-
-
-
             return steer;
-
-
         }
 
+        /// <summary>
+        /// Send byte array representation of string to server
+        /// </summary>
+        /// <param name="message"></param>
         public void WriteText(byte[] message)
         {
 
@@ -245,33 +236,32 @@ namespace EasySslStream.Connection.Full
             messagebytes.AddRange(message);
             messagebytes.AddRange(Encoding.UTF8.GetBytes(Terminator));
 
-
-            Action WR = () =>
-            {
-
-                stream.Write(BitConverter.GetBytes((int)SteerCodes.SendText));
-                stream.Write(messagebytes.ToArray());
-
-            };
+                Action WR = () =>
+                {
+                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendText));
+                    stream.Write(messagebytes.ToArray());
+                };
             work.Writer.TryWrite(WR);
         }
 
-
+        /// <summary>
+        /// Sends file to server
+        /// </summary>
+        /// <param name="path">Path to the file</param>
         public void SendFile(string path)
         {
             Task.Run(async () =>
             {
                 SslStream str = stream;
                 byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
-
-                // informs server that file will be sent
+                
+                // Sends information to server what type of message will be sent
                 Action SendSteer = () =>
                 {
                     stream.Write(BitConverter.GetBytes((int)SteerCodes.SendFile));
                 };
                 await work.Writer.WaitToWriteAsync();
                 await work.Writer.WriteAsync(SendSteer);
-
 
                 // informs server what the filename is
                 string filename = Path.GetFileName(path);
@@ -282,11 +272,7 @@ namespace EasySslStream.Connection.Full
                 await work.Writer.WaitToWriteAsync();
                 await work.Writer.WriteAsync(SendFilename);
 
-
-
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-
-
 
                 Action SendFileLength = () =>
                 {
@@ -309,19 +295,10 @@ namespace EasySslStream.Connection.Full
                 while (Received != fs.Length)
                 {
                     Received += await fs.ReadAsync(chunk, 0, chunk.Length);
-                    //  Console.WriteLine(fs.Position+"/"+fs.Length);
-
-                    //Console.WriteLine(chunk.Length);
                     await str.WriteAsync(chunk);
-
-                    // await Task.Delay(10);
                 }
 
-
                 await fs.DisposeAsync();
-
-
-
 
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             // write.Dispose();
@@ -331,14 +308,10 @@ namespace EasySslStream.Connection.Full
 
         private async Task<string> GetText(Encoding enc)
         {
-
             byte[] buffer = new byte[64];
 
             int bytes_count = -1;
             StringBuilder Message = new StringBuilder();
-
-
-
 
             Decoder decoder = enc.GetDecoder();
             do
@@ -349,38 +322,28 @@ namespace EasySslStream.Connection.Full
                 decoder.GetChars(buffer, 0, bytes_count, messagechars, 0);
                 Message.Append(messagechars);
 
-                // Console.WriteLine(Message.ToString());
-
                 if (Message.ToString().IndexOf(Terminator) != -1) { break; }
-
-
 
             } while (bytes_count != 0);
 
             string toreturn = Message.ToString();
             toreturn = toreturn.Substring(0, toreturn.IndexOf(Terminator));
             return toreturn;
-
         }
 
         private Task GetFile()
         {
-            //file name
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
             filenamebytes = stream.Read(filenamebuffer);
 
-
             string filename = FilenameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
-            // Console.WriteLine("filename is: " + filename);
 
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
             lengthbytes = stream.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            // Console.WriteLine("File lenhth is: " + FileLength);
-            /////////
             string[] FilesInDirectory = Directory.GetFiles(ReceivedFilesLocation);
 
             bool correct = false;
@@ -391,15 +354,12 @@ namespace EasySslStream.Connection.Full
                 {
                     filename = filename + number_of_occurence;
                     number_of_occurence++;
-                    // Console.WriteLine("contains");
                 }
                 else
                 {
                     correct = true;
-                    // Console.WriteLine("CORRECT");
                 }
             }
-
 
             int bytesReceived = 0;
             byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
@@ -408,32 +368,21 @@ namespace EasySslStream.Connection.Full
             {
                 Directory.SetCurrentDirectory(ReceivedFilesLocation);
             }
-            //File.WriteAllText("debugfilename.txt", filename);
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
 
-            var watch = new Stopwatch();
-
-           // watch.Start();
             while ((stream.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
-
-
                 fs.Write(ReceiveBuffer);
-                //  Console.WriteLine(fs.Length + "/" + FileLength);
                 if (fs.Length >= FileLength)
                 {
-                    //      Console.WriteLine("END");
                     break;
                 }
             }
-           // watch.Stop();
-           // Console.WriteLine("Time elapsed: " + watch.ElapsedMilliseconds + " ms");
-
             long ReceivedFileLength = fs.Length;
 
-            if (ReceivedFileLength > FileLength)
-            {
-                fs.SetLength(FileLength);
+            if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+            {                                    // we have to cut stream to oryginal file length
+                fs.SetLength(FileLength);        // to remove NULL bytes from the stream
             }
 
 
@@ -454,9 +403,11 @@ namespace EasySslStream.Connection.Full
             int MessageReceivedBytes = await stream.ReadAsync(MessageBytes);
 
             return MessageBytes;
-
         }
-
+        /// <summary>
+        /// Sends raw bytes message 
+        /// </summary>
+        /// <param name="Message">bytes to send</param>
         public void SendRawBytes(byte[] Message)
         {
             Task.Run(async () =>
