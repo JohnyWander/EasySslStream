@@ -19,6 +19,7 @@ namespace EasySslStream
 
         static void Main()
         {
+
             DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
 
             DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
@@ -85,7 +86,7 @@ namespace EasySslStream
             //   Thread.Sleep(10000);
             //  server.TestList();
 
-           
+
 
         }
 

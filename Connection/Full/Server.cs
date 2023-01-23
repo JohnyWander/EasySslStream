@@ -29,6 +29,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public ConcurrentDictionary<int,SSLClient> ConnectedClientsByNumber = new ConcurrentDictionary<int, SSLClient>();
 
+
         /// <summary>
         /// Thread safe dictionary that contains connected clients referenced by string endpoint ( 127.0.0.1:5000 etc)
         /// </summary>
@@ -36,6 +37,8 @@ namespace EasySslStream.Connection.Full
 
      
         private X509Certificate2 serverCert = null;
+
+
         private TcpListener listener = null;
 
         private CancellationTokenSource cts = new CancellationTokenSource();
@@ -71,6 +74,7 @@ namespace EasySslStream.Connection.Full
             foreach(byte b in bytes) { Console.Write(Convert.ToInt32(b)+" "); }
             //return bytes
         };
+
         
     
         /// <summary>
@@ -78,10 +82,18 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         /// <param name="ConnectionID">Id of connection</param>
         /// <param name="Message">byte array representation of the message</param>
+        public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
+        {
+
+
+            ConnectedClientsByEndPoint[clientEndpoint].WriteText(Message);
+        }
+
         public void WriteTextToClient(int ConnectionID, byte[] Message)
         {
             ConnectedClients[ConnectionID].WriteText(Message);
         }
+
 
         /// <summary>
         /// Sends text Message to client
@@ -92,6 +104,7 @@ namespace EasySslStream.Connection.Full
         {
             ConnectedClientsByEndPoint[clientEndpoint.ToString()].WriteText(Message);
         }
+
 
         /// <summary>
         /// Sends file to client
@@ -110,7 +123,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="Path">path to the file to send</param>
         public void WriteFileToClient(IPEndPoint clientEndpoint,string Path)
         {
-            ConnectedClientsByEndPoint[clientEndpoint.ToString()].SendFile(Path);
+            ConnectedClientsByEndPoint[clientEndpoint].SendFile(Path);
         }
 
         /// <summary>
@@ -244,8 +257,13 @@ namespace EasySslStream.Connection.Full
 
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
+
             srv.ConnectedClientsByEndPoint.TryAdd(client.Client.RemoteEndPoint?.ToString(), this);
             
+
+            srv.ConnectedClientsByEndPoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
+            // Console.WriteLine("?: "+srv.ConnectedClients.Count);
+
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);

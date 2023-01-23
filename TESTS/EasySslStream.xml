@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>EasySslStream</name>
+    </assembly>
+    <members>
+        <member name="T:EasySslStream.Abstraction.CertGenClassesParent">
+             <summary>
+             Parent class for certificate generation
+            
+             </summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CAKeyLength">
+            <summary>Contains name of hash algorithm for CA </summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CAdays">
+            <summary>Contains length or RSA keys </summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CACountry">
+            <summary>amount of days from now for which the certificate will be valid </summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CAState">
+            <summary>amount of days from now for which the certificate will be valid </summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CALocation">
+            <summary>Region, State etc.</summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CAOrganisation">
+            <summary>Locality, City etc</summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CACommonName">
+            <summary>Organisation of CA</summary>
+        </member>
+        <member name="F:EasySslStream.Abstraction.CertGenClassesParent.CAGenerationEncoding">
+            <summary>Common name of CA certificate</summary>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.#ctor">
+            <summary>Encoding of certificate fields</summary>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.GenerateCA(System.String)">
+            <summary>
+            Base function of parent for generating CA cert
+            </summary>
+            <param name="OutputPath">Path for CA.crt,CA.key out</param>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.GenerateCA_Async(System.String)">
+            <summary>
+            Base function of parent for generating CA cert
+            </summary>
+            <param name="OutputPath">Path for CA.crt,CA.key out</param>
+            <returns>Task object for await</returns>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.GenerateCSR(EasySslStream.CSRConfiguration,System.String)">
+            <summary>
+            Base function for generating csr
+            </summary>
+            <param name="config">CSRConfiguration class instance with configuration</param>
+            <param name="OutputPath">path for .csr and .key</param>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.GenerateCSRAsync(EasySslStream.CSRConfiguration,System.String)">
+            <summary>
+            Base function for generating csr
+            </summary>
+            <param name="config">CSRConfiguration class instance with configuration</param>
+            <param name="OutputPath">path for .csr and .key</param>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.SignCSR(EasySslStream.SignCSRConfig,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Base of SignCsr function
+            </summary>
+            <param name="config">Instance of config class</param>
+            <param name="CSRpath">Path to csr file</param>
+            <param name="CAPath">Path to CA certificate</param>
+            <param name="CAKeyPath">Path to CA private key</param>
+            <param name="CertName">Name of new Certificate</param>
+            <param name="Outputpath">Output path for new certificate</param>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.SignCSRAsync(EasySslStream.SignCSRConfig,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Base of SignCsr function
+            </summary>
+            <param name="config">Instance of config class</param>
+            <param name="CSRpath">Path to csr file</param>
+            <param name="CAPath">Path to CA certificate</param>
+            <param name="CAKeyPath">Path to CA private key</param>
+            <param name="CertName">Name of new Certificate</param>
+            <param name="Outputpath">Output path for new certificate</param>
+            <returns>Task object that indicates task completion </returns>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.ConvertX509ToPfx(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Base for converting x509 cert to pfx function
+            </summary>
+            <param name="Certpath"></param>
+            <param name="KeyPath"></param>
+            <param name="Password"></param>
+            <param name="Certname"></param>
+            <param name="OutputPath"></param>
+        </member>
+        <member name="M:EasySslStream.Abstraction.CertGenClassesParent.ConvertX509ToPfxAsync(System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Base for converting x509 cert to pfx function
+            </summary>
+            <param name="Certpath"></param>
+            <param name="KeyPath"></param>
+            <param name="Password"></param>
+            <param name="Certname"></param>
+            <param name="OutputPath"></param>
+            <returns> Task object that indicates task completion</returns>
+        </member>
+        <member name="T:EasySslStream.SignCSRConfig">
+            <summary>
+            Class that contains configuration for CSR signing with OpenSSL
+            </summary>
+        </member>
+        <member name="M:EasySslStream.SignCSRConfig.SetDefaultConfig(EasySslStream.SignCSRConfig.DefaultConfigs)">
+            <summary>
+            Sets default configuration values of CSR signing to specified type.
+            </summary>
+            <param name="conf"></param>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.GenerateCA_Async(System.String)">
+            <summary>
+            Asynchronously Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
+            </summary>
+            <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+            <returns></returns>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.GenerateCA(System.String)">
+            <summary>
+            Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
+            </summary>
+            <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.GenerateCSR(EasySslStream.CSRConfiguration,System.String)">
+            <summary>
+            Generates csr based on settings from CSRConfiguration class
+            </summary>
+            <param name="config">Instance of CSRConfiguration class that contains configuration</param>
+            <param name="OutputPath">Output path</param>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.GenerateCSRAsync(EasySslStream.CSRConfiguration,System.String)">
+            <summary>
+            Asynchronously generates csr based on settings from CSRConfiguration class
+            </summary>
+            <param name="config">Instance of CSRConfiguration class that contains configuration</param>
+            <param name="OutputPath">Output path</param>
+            <returns>Task object that indicates task completion</returns>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.SignCSR(EasySslStream.SignCSRConfig,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Signs certificate signing request
+            </summary>
+            <param name="config"></param>
+            <param name="CSRpath"></param>
+            <param name="CAPath"></param>
+            <param name="CAKeyPath"></param>
+            <param name="CertName"></param>
+            <param name="OutputPath"></param>
+        </member>
+        <member name="M:EasySslStream.CertGenerationClasses.OpensslCertGeneration.SignCSRAsync(EasySslStream.SignCSRConfig,System.String,System.String,System.String,System.String,System.String)">
+            <summary>
+            Asynchrounously signs certificate signing request
+            </summary>
+            <param name="config"></param>
+            <param name="CSRpath"></param>
+            <param name="CAPath"></param>
+            <param name="CAKeyPath"></param>
+            <param name="CertName"></param>
+            <param name="OutputPath"></param>
+            <returns></returns>
+        </member>
+        <member name="F:EasySslStream.DynamicConfiguration.DEBUG">
+            <summary>
+            True - Lib will try to output debug Messages through specified 
+            </summary>
+        </member>
+        <member name="M:EasySslStream.DynamicConfiguration.EnableDebugMode(EasySslStream.DynamicConfiguration.DEBUG_MODE)">
+            <summary>
+            Enables debug mode
+            </summary>
+            <param name="mode">Optional parameter - By default debug will show by Console.WriteLine, it can be changed here</param>
+        </member>
+        <member name="T:EasySslStream.Interop.User32">
+            <summary>
+            Contains functions invoked from User32.dll
+            </summary>
+        </member>
+        <member name="T:EasySslStream.Misc.Misc">
+            <summary>
+            Miscellaneous methods
+            </summary>
+        </member>
+    </members>
+</doc>
