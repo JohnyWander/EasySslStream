@@ -76,6 +76,16 @@ namespace EasySslStream.Connection.Full
         };
 
         
+        public void StopServer()
+        {
+            Parallel.ForEach(ConnectedClients, SSLClient =>
+            {
+                SSLClient.Stop(); 
+            });
+       
+            this.listener.Stop();
+        }
+
     
         /// <summary>
         /// Sends text Message to client
@@ -204,6 +214,12 @@ namespace EasySslStream.Connection.Full
 
         TcpClient client_ = null;
         SslStream sslstream_ = null;
+
+        internal void Stop()
+        {
+            sslstream_.Dispose();
+            client_.Dispose();
+        }
 
         private bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
