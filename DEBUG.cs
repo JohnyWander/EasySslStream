@@ -82,7 +82,7 @@ namespace EasySslStream
                  Thread.Sleep(5000);
 
 
-            server.StopServer();
+            server.GentleStopServer();
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
             //   Thread.Sleep(10000);
