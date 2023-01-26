@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -93,6 +94,14 @@ namespace EasySslStream.Connection.Full
         }
     
         /// <summary>
+        /// Disconnects from the server, disposes client's sslstream
+        /// </summary>
+        public void Disconnect()
+        {
+            stream.Dispose();
+            client.Dispose();
+        }
+        /// <summary>
         /// Connects to the server
         /// </summary>
         /// <param name="ip"></param>
@@ -113,41 +122,86 @@ namespace EasySslStream.Connection.Full
 
                     Thread ListeningThread = new Thread(() =>
                     {
-                        Task.Run(async () =>
-                        {                       
-                            while (cancelConnection == false)
-                            {                               
-                                int steer = await ConnSteer();
-                                switch (steer)
+                        try
+                        {
+                            Task.Run(async () =>
+                            {
+                                while (cancelConnection == false)
                                 {
-                                    case 1:
-                                        HandleReceivedText.Invoke(await GetText(TextReceiveEncoding));
-                                        break;
-                                    case 2:
-                                        await GetFile();
-                                        break;
-                                    case 3:
-                                        HandleReceivedBytes.Invoke(await GetRawBytes());
-                                        break;
+                                    int steer = await ConnSteer();
+                                    switch (steer)
+                                    {
+                                        case 1:
+                                            HandleReceivedText.Invoke(await GetText(TextReceiveEncoding));
+                                            break;
+                                        case 2:
+                                            await GetFile();
+                                            break;
+                                        case 3:
+                                            HandleReceivedBytes.Invoke(await GetRawBytes());
+                                            break;
+                                    }
+
+
+
                                 }
 
 
+                            }).GetAwaiter().GetResult();
 
-                            }
-                        }).GetAwaiter().GetResult();                  
+                        }
+                        catch (System.ObjectDisposedException)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            throw new Exceptions.ConnectionException("Connection closed by client");
+                        }
+                        catch (System.IO.IOException)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            throw new Exceptions.ConnectionException("Server closed");
+
+                        } 
+                        catch (Exception e)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+
+                        }
+
                     });
                     ListeningThread.Start();
 
 
                     Task.Run(async () =>
                     {
-                        while (true)
+                        try
                         {
-                            await work.Reader.WaitToReadAsync();
-                            Action w = await work.Reader.ReadAsync();
-                            await Task.Delay(100);
-                            w.Invoke();
-                            w = null;
+                            while (true)
+                            {
+
+                                await work.Reader.WaitToReadAsync();
+                                Action w = await work.Reader.ReadAsync();
+                                await Task.Delay(100);
+                                w.Invoke();
+                                w = null;
+                            }
+                        }
+                        catch (System.ObjectDisposedException)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            throw new Exceptions.ConnectionException("Connection closed by client");
+                        }
+                        catch (System.IO.IOException)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            throw new Exceptions.ConnectionException("Server closed");
+
+                        }
+                        catch (Exception e)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
 

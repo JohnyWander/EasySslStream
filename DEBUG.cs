@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-    /*
+    
     public static class Program
 
     {
@@ -79,8 +79,10 @@ namespace EasySslStream
                 server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
 
            
-                 Thread.Sleep(10000);
+                 Thread.Sleep(5000);
 
+
+            server.GentleStopServer();
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
             //   Thread.Sleep(10000);
@@ -93,5 +95,5 @@ namespace EasySslStream
 
 
     }
-     */
+    // */
 }

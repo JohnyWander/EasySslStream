@@ -75,20 +75,104 @@ namespace EasySslStream.Connection.Full
             //return bytes
         };
 
-        
+        // Shutting down the server
+      ////////////////////////////////////////////////////////////////////  
+        private TaskCompletionSource<object> GentleStopLock = new TaskCompletionSource<object>();
+        internal void WorkLock()
+        {
+                bool NoJobs = true;
+               foreach(SSLClient client in ConnectedClients)
+                {             
+                    if (client.Busy)
+                    {
+                        NoJobs = false;
+                    }
+                }
+
+               if(NoJobs == true)
+                {
+                    GentleStopLock.SetResult(null);
+                }
+              
+            
+          
+        }
+       
+        /// <summary>
+        /// Waits for currently running transfers to end, for all connections, then shuts down the server.
+        /// </summary>
+        public async void GentleStopServer(int interval = 100)
+        {
+            if (ConnectedClients.Count != 0)
+            {
+                Console.WriteLine("Waiting for all jobs to terminate");
+                bool loopcancel = true;
+                Task.Run(() =>
+                {
+                    while (loopcancel)
+                    {
+                        WorkLock();
+                        Task.Delay(interval).Wait();
+                    }
+                });
+
+                
+
+                await GentleStopLock.Task;
+
+                loopcancel = false;
+
+                Parallel.ForEach(ConnectedClients, SSLClient =>
+                {
+                    SSLClient.Stop();
+                });
+                listener.Stop();
+
+
+            }
+            else
+            {
+                Parallel.ForEach(ConnectedClients, SSLClient =>
+                {
+                    SSLClient.Stop();
+                });
+                listener.Stop();
+            }
+
+        }
+
+
+
+
+        /// <summary>
+        /// Disposes all connected clients and stops server from listening
+        /// </summary>
+        public void StopServer()
+        {
+            Parallel.ForEach(ConnectedClients, SSLClient =>
+            {
+                SSLClient.Stop(); 
+            });
+       
+            this.listener.Stop();
+        }
+
     
         /// <summary>
         /// Sends text Message to client
         /// </summary>
-        /// <param name="ConnectionID">Id of connection</param>
+        /// <param name="clientEndpoint">Client endpoint</param>
         /// <param name="Message">byte array representation of the message</param>
         public void WriteTextToClient(IPEndPoint clientEndpoint, byte[] Message)
         {
-
-
             ConnectedClientsByEndPoint[clientEndpoint].WriteText(Message);
         }
 
+        /// <summary>
+        /// Sends text Message to client
+        /// </summary>
+        /// <param name="ConnectionID"></param>
+        /// <param name="Message"></param>
         public void WriteTextToClient(int ConnectionID, byte[] Message)
         {
             ConnectedClients[ConnectionID].WriteText(Message);
@@ -132,6 +216,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients">Set true if server is meant to check for client certificate, otherwise set false</param>
         public void StartServer(string ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
+            
             serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(IPAddress.Parse(ListenOnIp), port);
             Thread listenerThread = new Thread(() =>
@@ -159,6 +244,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients">Set true if server is meant to check for client certificate, otherwise set false</param>
         public void StartServer(IPAddress ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
+           
             this.serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(ListenOnIp, port);
             listener.Start();
@@ -188,6 +274,12 @@ namespace EasySslStream.Connection.Full
     /// </summary>
     public sealed class SSLClient
     {
+        internal bool Busy = false;
+
+     
+   
+
+
         private Channel<Action> ServerSendingQueue = Channel.CreateUnbounded<Action>();
 
         string ClientIP;
@@ -204,6 +296,46 @@ namespace EasySslStream.Connection.Full
 
         TcpClient client_ = null;
         SslStream sslstream_ = null;
+
+        internal void Stop()
+        {
+            sslstream_.Dispose();
+            client_.Dispose();
+        }
+
+        public void Disconnect()
+        {
+            sslstream_.Dispose();
+            client_.Dispose();
+        }
+
+
+        TaskCompletionSource GentleDisconnectTask = new TaskCompletionSource();
+        public async void GentleDisconnect()
+        {
+
+            await GentleDisconnectTask.Task;
+
+            sslstream_.Dispose();
+            client_.Dispose();
+
+        }
+
+        private bool privateBusy
+        {
+            set
+            {
+                if (value == false)
+                {
+                    GentleDisconnectTask.SetResult();
+                }
+                else
+                {
+                    GentleDisconnectTask = new TaskCompletionSource();
+                }
+            }
+        }
+
 
         private bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
@@ -241,7 +373,8 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients"></param>
         /// <param name="srvinstance"></param>
         public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server srvinstance = null)
-        {           
+        {
+            Busy = false;
             client_ = client;
             srv = srvinstance;
 
@@ -269,14 +402,34 @@ namespace EasySslStream.Connection.Full
             {
                 Task.Run(async () =>
                 {
-                    while (true)
+                    try
                     {
-                        await ServerSendingQueue.Reader.WaitToReadAsync();
-                        Action w = await ServerSendingQueue.Reader.ReadAsync();
-                        await Task.Delay(100);
-                        w.Invoke();
-                        w = null;
+                        while (true)
+                        {
+                            await ServerSendingQueue.Reader.WaitToReadAsync();
+                            Action w = await ServerSendingQueue.Reader.ReadAsync();
+                            await Task.Delay(100);
+                            Busy = true;
+                            w.Invoke();
+                            Busy = false;
+                            w = null;
 
+                        }
+                    }
+                    catch (System.ObjectDisposedException e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Server Closed: {e.Message}");
+                    }
+                    catch (System.IO.IOException e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
                     }
                 }).ConfigureAwait(false).GetAwaiter().GetResult();
             });
@@ -285,22 +438,47 @@ namespace EasySslStream.Connection.Full
             bool cancelConnection = false;
 
             Task.Run(async () =>
-            {             
-                while (cancelConnection == false)
-                {                 
-                    int steer = await ConnSteer();
-                    switch (steer)
+            {
+                try
+                {
+                    while (cancelConnection == false)
                     {
-                        case 1:
-                            srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
-                            break;
-                        case 2:
-                            await GetFile(srv);
-                            break;
-                        case 3:
-                            srv.HandleReceivedBytes.Invoke(await GetRawBytes());
-                            break;
+
+                        int steer = await ConnSteer();
+                        switch (steer)
+                        {
+                            case 1:
+                                Busy = true;
+                                srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
+                                Busy = false;
+                                break;
+                            case 2:
+                                Busy = true;
+                                await GetFile(srv);
+                                Busy = false;
+                                break;
+                            case 3:
+                                Busy = true;
+                                srv.HandleReceivedBytes.Invoke(await GetRawBytes());
+                                Busy = false;
+                                break;
+                        }
                     }
+                }
+                catch (System.ObjectDisposedException e)
+                {
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Server Closed: {e.Message}");
+                }
+                catch (System.IO.IOException e )
+                {
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
+                }
+                catch (Exception e) {
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
+
                 }
             }).GetAwaiter().GetResult();
 
@@ -309,9 +487,7 @@ namespace EasySslStream.Connection.Full
         {
             byte[] buffer = new byte[64];
             int steer = -999999;
-
             int bytes_count = -1;
-
             bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
             steer = BitConverter.ToInt32(buffer, 0);
             await sslstream_.FlushAsync();
@@ -345,7 +521,9 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile(Server srv)
         {
+            
             //file name
+
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
             filenamebytes = sslstream_.Read(filenamebuffer);
@@ -414,6 +592,7 @@ namespace EasySslStream.Connection.Full
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
+            
             return Task.CompletedTask;
         }
 
@@ -563,6 +742,7 @@ namespace EasySslStream.Connection.Full
             //  fs.Dispose();
         }
 
+        
 
 
     }
