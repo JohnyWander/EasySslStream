@@ -402,14 +402,34 @@ namespace EasySslStream.Connection.Full
             {
                 Task.Run(async () =>
                 {
-                    while (true)
+                    try
                     {
-                        await ServerSendingQueue.Reader.WaitToReadAsync();
-                        Action w = await ServerSendingQueue.Reader.ReadAsync();
-                        await Task.Delay(100);
-                        w.Invoke();
-                        w = null;
+                        while (true)
+                        {
+                            await ServerSendingQueue.Reader.WaitToReadAsync();
+                            Action w = await ServerSendingQueue.Reader.ReadAsync();
+                            await Task.Delay(100);
+                            Busy = true;
+                            w.Invoke();
+                            Busy = false;
+                            w = null;
 
+                        }
+                    }
+                    catch (System.ObjectDisposedException e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Server Closed: {e.Message}");
+                    }
+                    catch (System.IO.IOException e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                        throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
                     }
                 }).ConfigureAwait(false).GetAwaiter().GetResult();
             });
@@ -422,9 +442,9 @@ namespace EasySslStream.Connection.Full
                 try
                 {
                     while (cancelConnection == false)
-                {
-                      
-                    int steer = await ConnSteer();
+                    {
+
+                        int steer = await ConnSteer();
                         switch (steer)
                         {
                             case 1:
@@ -445,13 +465,20 @@ namespace EasySslStream.Connection.Full
                         }
                     }
                 }
-                catch (System.ObjectDisposedException)
+                catch (System.ObjectDisposedException e)
                 {
-                    DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                 }
-                catch (System.IO.IOException)
+                catch (System.IO.IOException e )
                 {
-                    DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
+                }
+                catch (Exception e) {
+                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                    throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
+
                 }
             }).GetAwaiter().GetResult();
 
@@ -460,9 +487,7 @@ namespace EasySslStream.Connection.Full
         {
             byte[] buffer = new byte[64];
             int steer = -999999;
-
             int bytes_count = -1;
-
             bytes_count = await sslstream_.ReadAsync(buffer, 0, buffer.Length);
             steer = BitConverter.ToInt32(buffer, 0);
             await sslstream_.FlushAsync();
@@ -717,6 +742,7 @@ namespace EasySslStream.Connection.Full
             //  fs.Dispose();
         }
 
+        
 
 
     }

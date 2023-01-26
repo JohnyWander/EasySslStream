@@ -152,11 +152,20 @@ namespace EasySslStream.Connection.Full
                         }
                         catch (System.ObjectDisposedException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            throw new Exceptions.ConnectionException("Connection closed by client");
                         }
                         catch (System.IO.IOException)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            throw new Exceptions.ConnectionException("Server closed");
+
+                        } 
+                        catch (Exception e)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+
                         }
 
                     });
@@ -167,10 +176,9 @@ namespace EasySslStream.Connection.Full
                     {
                         try
                         {
-
-
                             while (true)
                             {
+
                                 await work.Reader.WaitToReadAsync();
                                 Action w = await work.Reader.ReadAsync();
                                 await Task.Delay(100);
@@ -180,11 +188,20 @@ namespace EasySslStream.Connection.Full
                         }
                         catch (System.ObjectDisposedException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server Exception");
+                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            throw new Exceptions.ConnectionException("Connection closed by client");
                         }
-                        catch (System.IO.IOException e)
+                        catch (System.IO.IOException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke(e.Message, "Server Exception");
+                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            throw new Exceptions.ConnectionException("Server closed");
+
+                        }
+                        catch (Exception e)
+                        {
+                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
 
