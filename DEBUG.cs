@@ -80,9 +80,15 @@ namespace EasySslStream
 
            
                  Thread.Sleep(5000);
+           // /
 
+            
+            foreach(SSLClient cl in server.ConnectedClients)
+            {
+                Console.WriteLine("IS CONNECTION");
+                cl.GentleDisconnectClient(true);
+            }
 
-            server.GentleStopServer();
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
             //   Thread.Sleep(10000);

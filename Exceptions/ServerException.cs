@@ -6,19 +6,23 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Exceptions
 {
-    internal class ServerException :Exception
+    internal class ServerException : Exception
     {
 
 
-        public ServerException(string message)
+        public ServerException(string message) : base("Server Exception:" + message)
         {
 
+
         }
+
 
         public ServerException() : base("Unknown server Exception")
         {
 
+
         }
 
-    }
+}
+
 }

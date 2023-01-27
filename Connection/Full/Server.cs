@@ -276,10 +276,6 @@ namespace EasySslStream.Connection.Full
     {
         internal bool Busy = false;
 
-     
-   
-
-
         private Channel<Action> ServerSendingQueue = Channel.CreateUnbounded<Action>();
 
         string ClientIP;
@@ -297,29 +293,48 @@ namespace EasySslStream.Connection.Full
         TcpClient client_ = null;
         SslStream sslstream_ = null;
 
+//////////////////////////////////////////
+        /// Connection menagement
+        /// 
         internal void Stop()
         {
             sslstream_.Dispose();
             client_.Dispose();
         }
-
-        public void Disconnect()
+        /// <summary>
+        /// Closes connection with a client immediately. It will throw ServerException that should be handled by user.
+        /// </summary>
+        public void DisconnectClient()
         {
             sslstream_.Dispose();
             client_.Dispose();
         }
 
 
-        TaskCompletionSource GentleDisconnectTask = new TaskCompletionSource();
-        public async void GentleDisconnect()
+        TaskCompletionSource<object> GentleDisconnectTask = new TaskCompletionSource<object>();
+        /// <summary>
+        /// Gently Closes connection with client. Waits for ongoing transfer/s to finish.
+        /// Optionally informs client about closing connection
+        /// </summary>
+        /// <param name="InformClient">False by default. If set to true client will be informed that it has been disconnected </param>
+        public async void GentleDisconnectClient(bool InformClient = false)
         {
-
             await GentleDisconnectTask.Task;
 
+            ServerSendingQueue = null;
+
+            if (InformClient)
+            {
+                sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDisconnect));
+                Console.WriteLine("CANCEL?");
+            }
+
+
             sslstream_.Dispose();
             client_.Dispose();
 
         }
+
 
         private bool privateBusy
         {
@@ -327,14 +342,15 @@ namespace EasySslStream.Connection.Full
             {
                 if (value == false)
                 {
-                    GentleDisconnectTask.SetResult();
+                    GentleDisconnectTask.SetResult(null);
                 }
                 else
                 {
-                    GentleDisconnectTask = new TaskCompletionSource();
+                    GentleDisconnectTask = new TaskCompletionSource<object>();
                 }
             }
         }
+////////////////////////////////////
 
 
         private bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -362,7 +378,9 @@ namespace EasySslStream.Connection.Full
         {
             SendText = 1,  
             SendFile = 2,
-            SendRawBytes =3
+            SendRawBytes =3,
+
+            SendDisconnect =99
         }
 
         /// <summary>
@@ -409,9 +427,9 @@ namespace EasySslStream.Connection.Full
                             await ServerSendingQueue.Reader.WaitToReadAsync();
                             Action w = await ServerSendingQueue.Reader.ReadAsync();
                             await Task.Delay(100);
-                            Busy = true;
+                            Busy = true; privateBusy = true;
                             w.Invoke();
-                            Busy = false;
+                            Busy = false; privateBusy = false;
                             w = null;
 
                         }
@@ -448,19 +466,27 @@ namespace EasySslStream.Connection.Full
                         switch (steer)
                         {
                             case 1:
-                                Busy = true;
+                                Busy = true; privateBusy = true;
                                 srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
-                                Busy = false;
+                                Busy = false; privateBusy = false;
                                 break;
                             case 2:
-                                Busy = true;
+                                Busy = true; privateBusy = true;
                                 await GetFile(srv);
-                                Busy = false;
+                                Busy = false; privateBusy = false;
                                 break;
                             case 3:
-                                Busy = true;
+                                Busy = true; privateBusy = true;
                                 srv.HandleReceivedBytes.Invoke(await GetRawBytes());
-                                Busy = false;
+                                Busy = false; privateBusy = false;
+                                break;
+
+                            case 99:
+                                Console.WriteLine("Client closed connection");
+                                this.sslstream_.Dispose();
+                                this.client_.Dispose();
+                                cancelConnection = true;
+
                                 break;
                         }
                     }

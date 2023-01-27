@@ -361,6 +361,11 @@
             Action Delegate for handling bytes received from client, by default it prints int representation of them in console
             </summary>
         </member>
+        <member name="M:EasySslStream.Connection.Full.Server.GentleStopServer(System.Int32)">
+            <summary>
+            Waits for currently running transfers to end, for all connections, then shuts down the server.
+            </summary>
+        </member>
         <member name="M:EasySslStream.Connection.Full.Server.StopServer">
             <summary>
             Disposes all connected clients and stops server from listening
@@ -428,6 +433,10 @@
             <summary>
             Encoding for filenames, UTF8 by default
             </summary>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.SSLClient.Stop">
+            Connection menagement
+            
         </member>
         <member name="M:EasySslStream.Connection.Full.SSLClient.#ctor(System.Net.Sockets.TcpClient,System.Security.Cryptography.X509Certificates.X509Certificate2,System.Boolean,EasySslStream.Connection.Full.Server)">
             <summary>

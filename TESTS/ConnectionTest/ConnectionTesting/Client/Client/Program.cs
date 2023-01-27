@@ -26,6 +26,8 @@ namespace Client
             client.SendFile("86998.zip");
             client.SendRawBytes(Encoding.UTF8.GetBytes("wqeweqweq"));
 
+           // client.GentleDisconnect(true);
+
                  // client.WriteText(Encoding.UTF8.GetBytes("ooga booga")); ;
         }
     }

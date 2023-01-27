@@ -70,7 +70,9 @@ namespace EasySslStream.Connection.Full
         {
             SendText = 1,
             SendFile = 2,
-            SendRawBytes = 3
+            SendRawBytes = 3,
+
+            SendDisconnect = 99
         }
            
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -101,6 +103,39 @@ namespace EasySslStream.Connection.Full
             stream.Dispose();
             client.Dispose();
         }
+
+
+        private TaskCompletionSource<object> GentleDisconnectSource = new TaskCompletionSource<object>();
+
+        public async void GentleDisconnect(bool informserver = false)
+        {
+            await GentleDisconnectSource.Task;
+            work = null;
+            if (informserver)
+            {
+                stream.Write(BitConverter.GetBytes((int)SteerCodes.SendDisconnect));
+            }
+
+            stream.Dispose();
+            client.Dispose();
+        }
+
+        private bool privateBusy
+        {
+            set
+            {
+                if (value == false)
+                {
+                    GentleDisconnectSource.SetResult(null);
+                }
+                else
+                {
+                    GentleDisconnectSource = new TaskCompletionSource<object>();
+                }
+            }
+        }
+
+
         /// <summary>
         /// Connects to the server
         /// </summary>
@@ -132,14 +167,35 @@ namespace EasySslStream.Connection.Full
                                     switch (steer)
                                     {
                                         case 1:
+                                            privateBusy = true;
                                             HandleReceivedText.Invoke(await GetText(TextReceiveEncoding));
+                                            privateBusy = false;
                                             break;
                                         case 2:
+                                            privateBusy = true;
                                             await GetFile();
+                                            privateBusy = false;
                                             break;
                                         case 3:
+                                            privateBusy = true;
                                             HandleReceivedBytes.Invoke(await GetRawBytes());
+                                            privateBusy = false;
                                             break;
+
+
+
+                                        case 99:
+                                          //  privateBusy = true;
+                                            Console.WriteLine("Server closed connection");
+                                            this.stream.Dispose();
+                                            this.client.Dispose();
+                                            cancelConnection = true;
+                                           // privateBusy = false;
+                                            break;
+
+                                            
+
+
                                     }
 
 
@@ -152,15 +208,20 @@ namespace EasySslStream.Connection.Full
                         }
                         catch (System.ObjectDisposedException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Client message");
                             throw new Exceptions.ConnectionException("Connection closed by client");
                         }
                         catch (System.IO.IOException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
-                            throw new Exceptions.ConnectionException("Server closed");
+                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message");
+                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore");
 
-                        } 
+                        }
+                        catch(System.NullReferenceException)
+                        {
+                            DynamicConfiguration.RaiseMessage("Disconnected from server", "Client Exception");
+                            throw new Exceptions.ConnectionException("Client disconnected from server");
+                        }
                         catch (Exception e)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
@@ -178,11 +239,13 @@ namespace EasySslStream.Connection.Full
                         {
                             while (true)
                             {
-
                                 await work.Reader.WaitToReadAsync();
                                 Action w = await work.Reader.ReadAsync();
+                                
                                 await Task.Delay(100);
+                                privateBusy = true;
                                 w.Invoke();
+                                privateBusy = false;
                                 w = null;
                             }
                         }
@@ -250,7 +313,9 @@ namespace EasySslStream.Connection.Full
                             await work.Reader.WaitToReadAsync();
                             Action w = await work.Reader.ReadAsync();
                             await Task.Delay(100);
+                            privateBusy = true;
                             w.Invoke();
+                            privateBusy = false;
                             w = null;
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();

@@ -8,13 +8,18 @@ namespace EasySslStream.Exceptions
 {
     internal class ConnectionException :Exception
     {
-        public ConnectionException(string message)
+
+
+        public ConnectionException(string message) : base("Connection:" + message)
         {
+
 
         }
 
-        public ConnectionException() : base("Unknown connection error")
+
+        public ConnectionException() : base("Unknown Connection Exception")
         {
+
 
         }
 
