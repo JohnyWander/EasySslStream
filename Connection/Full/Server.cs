@@ -769,6 +769,19 @@ namespace EasySslStream.Connection.Full
         }
 
         
+        public void SendDirectory(string DirPath)
+        {
+            List<string> FileList = new List<string>();
+
+
+            Directory.GetFiles(DirPath,"*.*", SearchOption.AllDirectories);
+                   
+                  
+
+
+
+
+        }
 
 
     }
