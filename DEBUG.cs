@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-    
+  /*  
     public static class Program
 
     {
@@ -85,7 +85,7 @@ namespace EasySslStream
             
             foreach(SSLClient cl in server.ConnectedClients)
             {
-                Console.WriteLine("IS CONNECTION");
+                //Console.WriteLine("IS CONNECTION");
                 cl.GentleDisconnectClient(true);
             }
 
@@ -101,5 +101,5 @@ namespace EasySslStream
 
 
     }
-    // */
+     */
 }

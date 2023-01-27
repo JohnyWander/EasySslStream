@@ -326,7 +326,7 @@ namespace EasySslStream.Connection.Full
             if (InformClient)
             {
                 sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDisconnect));
-                Console.WriteLine("CANCEL?");
+              //  Console.WriteLine("CANCEL?");
             }
 
 
