@@ -438,6 +438,18 @@
             Connection menagement
             
         </member>
+        <member name="M:EasySslStream.Connection.Full.SSLClient.DisconnectClient">
+            <summary>
+            Closes connection with a client immediately. It will throw ServerException that should be handled by user.
+            </summary>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.SSLClient.GentleDisconnectClient(System.Boolean)">
+            <summary>
+            Gently Closes connection with client. Waits for ongoing transfer/s to finish.
+            Optionally informs client about closing connection
+            </summary>
+            <param name="InformClient">False by default. If set to true client will be informed that it has been disconnected </param>
+        </member>
         <member name="M:EasySslStream.Connection.Full.SSLClient.#ctor(System.Net.Sockets.TcpClient,System.Security.Cryptography.X509Certificates.X509Certificate2,System.Boolean,EasySslStream.Connection.Full.Server)">
             <summary>
             Creates client instance
