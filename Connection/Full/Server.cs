@@ -379,6 +379,7 @@ namespace EasySslStream.Connection.Full
             SendText = 1,  
             SendFile = 2,
             SendRawBytes =3,
+            SendDirectory = 4,
 
             SendDisconnect =99
         }
@@ -722,11 +723,7 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendFilename);
 
-
-
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-
-
 
                 Action SendFileLength = () =>
                 {
@@ -738,9 +735,7 @@ namespace EasySslStream.Connection.Full
 
                 int bytesLeft = (int)fs.Length;
                 
-
-
-                int times = (int)fs.Length / 512;
+               
 
                 await Task.Delay(2000);
 
@@ -771,16 +766,36 @@ namespace EasySslStream.Connection.Full
         
         public void SendDirectory(string DirPath)
         {
-            List<string> FileList = new List<string>();
+            Task.Run(async () =>
+            {
+                List<string> FileList = new List<string>();
+                Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                // informs server that directory will be sent
+                Action SendSteer = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDirectory));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendSteer);
+
+                ///////////////////////////////
 
 
-            Directory.GetFiles(DirPath,"*.*", SearchOption.AllDirectories);
-                   
-                  
+
+                
+                foreach(string file in FileList)
+                {
+
+
+
+                }
 
 
 
 
+            });
         }
 
 
