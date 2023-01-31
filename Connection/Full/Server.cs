@@ -733,7 +733,7 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WriteAsync(SendFileLength);
 
 
-                int bytesLeft = (int)fs.Length;
+              
                 
                
 
@@ -768,11 +768,12 @@ namespace EasySslStream.Connection.Full
         {
             Task.Run(async () =>
             {
-                List<string> FileList = new List<string>();
-                Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                
+               string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                Console.WriteLine(Files.Length);
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
 
-                // informs server that directory will be sent
+                // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
                     sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDirectory));
@@ -780,15 +781,25 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendSteer);
 
-                ///////////////////////////////
-
-
-
-                
-                foreach(string file in FileList)
+                // Informs client about directory name
+                Action SendDirectoryName = () =>
                 {
+                    sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetDirectoryName(DirPath)));
+                    Console.WriteLine(Path.GetFileName(DirPath));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendDirectoryName);
 
+                Action SendFileAmount = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes(Files.Length));
+                };
 
+                ///////////////////////////////                
+                foreach(string file in Files)
+                {
+                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last();
+                    Console.WriteLine(innerPath.Trim('\\'));
 
                 }
 

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-  /*  
+  
     public static class Program
 
     {
@@ -33,7 +33,7 @@ namespace EasySslStream
             DynamicConfiguration.CA_CONFIG.Days = 365;
 
             CertGenerationClasses.OpensslCertGeneration gen = new OpensslCertGeneration();
-           // gen.GenerateCA();
+            // gen.GenerateCA();
 
 
             CSRConfiguration conf = new CSRConfiguration();
@@ -69,24 +69,26 @@ namespace EasySslStream
 
             DynamicConfiguration.TransportBufferSize = 4096;
 
-          
-                Server server = new Server();
-                server.CertificateCheckSettings.VerifyCertificateName = false;
-                server.CertificateCheckSettings.VerifyCertificateChain = false;
 
-         
+            Server server = new Server();
+            server.CertificateCheckSettings.VerifyCertificateName = false;
+            server.CertificateCheckSettings.VerifyCertificateChain = false;
 
-                server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
 
-           
-                 Thread.Sleep(5000);
-           // /
 
-            
-            foreach(SSLClient cl in server.ConnectedClients)
+            server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
+
+
+            Thread.Sleep(5000);
+
+
+
+
+
+            foreach (SSLClient cl in server.ConnectedClients)
             {
                 //Console.WriteLine("IS CONNECTION");
-                cl.GentleDisconnectClient(true);
+                cl.SendDirectory("C:\\Program Files\\Common Files");
             }
 
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
@@ -101,5 +103,5 @@ namespace EasySslStream
 
 
     }
-     */
+
 }
