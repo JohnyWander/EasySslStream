@@ -88,7 +88,8 @@ namespace EasySslStream
             foreach (SSLClient cl in server.ConnectedClients)
             {
                 //Console.WriteLine("IS CONNECTION");
-                cl.SendDirectory("C:\\Program Files\\Common Files");
+               //  cl.SendDirectory("C:\\Program Files\\Common Files",false);
+                cl.SendDirectory("C:\\TEST"); 
             }
 
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
@@ -96,7 +97,7 @@ namespace EasySslStream
             //   Thread.Sleep(10000);
             //  server.TestList();
 
-
+            Thread.Sleep(2000000);
 
         }
 

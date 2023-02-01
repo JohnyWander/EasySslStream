@@ -755,7 +755,7 @@ namespace EasySslStream.Connection.Full
 
                 await fs.DisposeAsync();
 
-
+                
 
 
             }).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -764,7 +764,7 @@ namespace EasySslStream.Connection.Full
         }
 
         
-        public void SendDirectory(string DirPath)
+        public void SendDirectory(string DirPath,bool StopAndThrowOnFailedTransfer=true)
         {
             Task.Run(async () =>
             {
@@ -784,24 +784,92 @@ namespace EasySslStream.Connection.Full
                 // Informs client about directory name
                 Action SendDirectoryName = () =>
                 {
-                    sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetDirectoryName(DirPath)));
+                    sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
                     Console.WriteLine(Path.GetFileName(DirPath));
                 };
-                await ServerSendingQueue.Writer.WaitToWriteAsync();
-                await ServerSendingQueue.Writer.WriteAsync(SendDirectoryName);
+                
+                 await ServerSendingQueue.Writer.WaitToWriteAsync();
+                 await ServerSendingQueue.Writer.WriteAsync(SendDirectoryName);
 
                 Action SendFileAmount = () =>
                 {
                     sslstream_.Write(BitConverter.GetBytes(Files.Length));
-                };
+                }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendFileAmount);
 
-                ///////////////////////////////                
-                foreach(string file in Files)
-                {
-                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last();
-                    Console.WriteLine(innerPath.Trim('\\'));
+                bool LoopCancel = false;
+                 ///////////////////////////////                
+                 foreach(string file in Files)
+                 {
+                     byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
 
+
+                    
+                    Action SendInnerDirectory = () =>
+                     {
+                         try
+                         {
+                             FileStream fs = new FileStream(file, FileMode.Open);
+                             Task.Delay(100).Wait();
+                             sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
+                             Task.Delay(100).Wait();
+                             sslstream_.Write(BitConverter.GetBytes(fs.Length));
+
+
+                               
+                                   int sent = 0;
+
+                              while (sent != fs.Length)
+                              {
+                                    sent +=  fs.Read(chunk, 0, chunk.Length);
+
+                                     sslstream_.Write(chunk);
+
+                                 Task.Delay(10).Wait();
+                              }
+
+                              
+                             fs.Dispose();
+                           
+
+                         }
+                         catch (System.UnauthorizedAccessException e)
+                         {
+                            if( DynamicConfiguration.RaiseMessage != null)
+                             {
+                                 DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
+                             }
+                             
+                             if (StopAndThrowOnFailedTransfer)
+                             {
+                                 throw new Exceptions.ServerException($"Acces denied to files in the folder {e.Message}\n{e.StackTrace}");
+                                 LoopCancel = true;
+                             }
+                             else
+                             {
+                                 sslstream_.Write(BitConverter.GetBytes((long)-10));
+                             }
+
+                         }
+                        
+                       
+
+
+
+                     }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendInnerDirectory);
+
+                    if (LoopCancel == true)
+                    {
+                        break;
+                    }
+
+                   
+                    
+                    //await Task.Delay(2000);
+            
+                    
                 }
+
 
 
 

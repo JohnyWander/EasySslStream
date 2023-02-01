@@ -8,6 +8,7 @@ namespace Client
         static void Main(string[] args)
         {
             DynamicConfiguration.TransportBufferSize = 4096;
+            DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
             EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
             client.VerifyCertificateChain = false;
             client.VerifyCertificateName = false;

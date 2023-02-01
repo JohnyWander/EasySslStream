@@ -181,7 +181,11 @@ namespace EasySslStream.Connection.Full
                                             HandleReceivedBytes.Invoke(await GetRawBytes());
                                             privateBusy = false;
                                             break;
-
+                                        case 4:
+                                            privateBusy = true;
+                                            await GetDirectory();
+                                            privateBusy = false;
+                                            break;
 
 
                                         case 99:
@@ -211,10 +215,10 @@ namespace EasySslStream.Connection.Full
                             DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Client message");
                             throw new Exceptions.ConnectionException("Connection closed by client");
                         }
-                        catch (System.IO.IOException)
+                        catch (System.IO.IOException e)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message");
-                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore");
+                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
 
                         }
                         catch(System.NullReferenceException)
@@ -511,6 +515,113 @@ namespace EasySslStream.Connection.Full
 
             return Task.CompletedTask;
         }
+
+        private Task GetDirectory()
+        {
+            //////////////////////////////
+            /// Directory name
+            int directoryBytesCount = 0;
+            byte[] DirectoryNameBuffer = new byte[512];
+            directoryBytesCount = stream.Read(DirectoryNameBuffer);
+
+            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00));
+
+            if (ReceivedFilesLocation == "")
+            {
+                Console.WriteLine(DirectoryName);
+                Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                Directory.CreateDirectory(DirectoryName);
+            }
+            //////////////////////////////
+            /// File count
+            int FileCountBytesCount = 0;
+            byte[] FileCountBuffer = new byte[512];
+            FileCountBytesCount = stream.Read(FileCountBuffer);
+
+            int FileCount = BitConverter.ToInt32(FileCountBuffer);
+            Console.WriteLine(FileCount);
+
+            for(int i = 0; i <= FileCount; i++)
+            {
+                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                int IneerDirectoryBytesCount = 0;
+                byte[] InnerDirectoryNameBuffer = new byte[512];
+                directoryBytesCount = stream.Read(InnerDirectoryNameBuffer);
+
+                string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
+
+                Console.WriteLine("INNER PATH: " + innerPath);
+                
+                int FileLenthgBytesCount = 0;
+                byte[] FileLengthBuffer = new byte[512];
+                FileLenthgBytesCount = stream.Read(FileLengthBuffer);
+
+                long FileLength = BitConverter.ToInt64(FileLengthBuffer);
+                Console.WriteLine("FILE LENGTH: " + FileLength);
+                
+                if(FileLength == (long)-10)
+                {
+                    continue;
+                }
+                else
+                {
+                    A:
+                    try
+                    {
+                        Directory.SetCurrentDirectory(DirectoryName);
+
+                        Console.WriteLine(innerPath);
+                        
+                        FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
+
+                        while ((stream.Read(DataChunk, 0, DataChunk.Length) != 0))
+                        {
+                            fs.Write(DataChunk);
+                            if (fs.Length >= FileLength)
+                            {
+                                break;
+                            }
+                        }
+                        long ReceivedFileLength = fs.Length;
+
+                        if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+                        {                                    // we have to cut stream to oryginal file length
+                            fs.SetLength(FileLength);        // to remove NULL bytes from the stream
+                        }
+
+                        fs.Dispose();
+                        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                    }
+                    catch(DirectoryNotFoundException e)
+                    {
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                        goto A;
+
+                    }
+                 
+                }
+                
+
+
+            }
+
+
+
+
+            return Task.CompletedTask;
+        }
+
+
+
+
+
+
+
+
+
+
         public async Task<byte[]> GetRawBytes()
         {
             byte[] lenghtBuffer = new byte[2048];
