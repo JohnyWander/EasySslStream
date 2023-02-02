@@ -49,6 +49,8 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public bool VerifyCertificateChain = true;
 
+        
+
         /// <summary>
         /// Encoding of filenames UTF8 is default
         /// </summary>
@@ -88,9 +90,23 @@ namespace EasySslStream.Connection.Full
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && VerifyCertificateChain == false)
             {
                 return true;
+
+            }
+            else if(sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
+            {
+                DynamicConfiguration.RaiseMessage("CERT NOT AVAIABLE?!","???");
+                return false;
             }
             else
             {
+
+                if (VerifyCertificateChain == false && VerifyCertificateName == false)
+                {
+                    return true;
+                }
+
+
+                DynamicConfiguration.RaiseMessage("???", "???");
                 return false;
             }
         }
@@ -151,8 +167,8 @@ namespace EasySslStream.Connection.Full
 
                 try
                 {
-                    stream.WriteTimeout = 10000;     
-                    stream.ReadTimeout = 10000;
+                    stream.WriteTimeout = -1;     
+                    stream.ReadTimeout = -1;
                     stream.AuthenticateAsClient(ip);
 
                     Thread ListeningThread = new Thread(() =>
@@ -306,9 +322,9 @@ namespace EasySslStream.Connection.Full
                 stream.AuthenticateAsClient(ip, certs, false);
                 try
                 {
-                    stream.WriteTimeout = 10000;
+                    stream.WriteTimeout = -1;
                     stream.AuthenticateAsClient(ip);
-                    stream.ReadTimeout = 10000;
+                    stream.ReadTimeout = -1;
 
                     Task.Run(async () => // sending queue
                     {
@@ -539,25 +555,48 @@ namespace EasySslStream.Connection.Full
             FileCountBytesCount = stream.Read(FileCountBuffer);
 
             int FileCount = BitConverter.ToInt32(FileCountBuffer);
-            Console.WriteLine(FileCount);
+            //Console.WriteLine(FileCount);
+            Directory.SetCurrentDirectory(DirectoryName);
 
-            for(int i = 0; i <= FileCount; i++)
+           
+            for (int i = 0; i <= FileCount; i++)
             {
+                stream.Flush();
                 byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+                
+               
 
-                int IneerDirectoryBytesCount = 0;
+                int IneerDirectoryBytesCount = -1;
                 byte[] InnerDirectoryNameBuffer = new byte[512];
-                directoryBytesCount = stream.Read(InnerDirectoryNameBuffer);
 
+                stream.Read(InnerDirectoryNameBuffer, 0, InnerDirectoryNameBuffer.Length);
+                    stream.Flush();
+                Task.Delay(100).Wait();
+                
+                   
+                    
+                
+
+                
+                
                 string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
 
-                Console.WriteLine("INNER PATH: " + innerPath);
-                
-                int FileLenthgBytesCount = 0;
-                byte[] FileLengthBuffer = new byte[512];
-                FileLenthgBytesCount = stream.Read(FileLengthBuffer);
+                string[] msplit = innerPath.Split("$$$");
+                innerPath = msplit[0];
+                long FileLength = Convert.ToInt64(msplit[1]);
 
-                long FileLength = BitConverter.ToInt64(FileLengthBuffer);
+            //    Console.WriteLine("INNER PATH: " + innerPath);
+                
+              //  int FileLenthgBytesCount = -1;
+              //  byte[] FileLengthBuffer = new byte[512];
+
+              
+              //      FileLenthgBytesCount = stream.Read(FileLengthBuffer);
+
+              //  stream.Flush();
+               
+
+               // long FileLength = BitConverter.ToInt64(FileLengthBuffer);
                 Console.WriteLine("FILE LENGTH: " + FileLength);
                 
                 if(FileLength == (long)-10)
@@ -566,12 +605,13 @@ namespace EasySslStream.Connection.Full
                 }
                 else
                 {
-                    A:
-                    try
+                    
+                   
+                    if (innerPath.Contains("\\"))
                     {
-                        Directory.SetCurrentDirectory(DirectoryName);
-
-                        Console.WriteLine(innerPath);
+                        Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                    }
+                       // Console.WriteLine(innerPath);
                         
                         FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
 
@@ -591,24 +631,19 @@ namespace EasySslStream.Connection.Full
                         }
 
                         fs.Dispose();
-                        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                    }
-                    catch(DirectoryNotFoundException e)
-                    {
 
-                        Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
-                        goto A;
-
-                    }
+                    stream.Flush();
+                    
+                   
                  
                 }
                 
-
+                
 
             }
 
 
-
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             return Task.CompletedTask;
         }

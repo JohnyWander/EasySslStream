@@ -295,7 +295,11 @@ namespace EasySslStream.Connection.Full
 
 //////////////////////////////////////////
         /// Connection menagement
+        ///  <summary>
+        /// Connection menagement
+        /// </summary>
         /// 
+
         internal void Stop()
         {
             sslstream_.Dispose();
@@ -358,6 +362,7 @@ namespace EasySslStream.Connection.Full
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
                 return true;
+                
             }
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && srv.CertificateCheckSettings.VerifyCertificateName == false)
             {
@@ -366,6 +371,10 @@ namespace EasySslStream.Connection.Full
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && srv.CertificateCheckSettings.VerifyCertificateChain == false)
             {
                 return true;
+            }else if(sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
+            {
+                Console.WriteLine("CERT NOV AVAIABLE????");
+                return false;
             }
             else
             {
@@ -428,8 +437,8 @@ namespace EasySslStream.Connection.Full
                             await ServerSendingQueue.Reader.WaitToReadAsync();
                             Action w = await ServerSendingQueue.Reader.ReadAsync();
                             await Task.Delay(100);
-                            Busy = true; privateBusy = true;
-                            w.Invoke();
+                            Busy = true; privateBusy = true;                                                  
+                            w.Invoke();                          
                             Busy = false; privateBusy = false;
                             w = null;
 
@@ -478,6 +487,7 @@ namespace EasySslStream.Connection.Full
                                 break;
                             case 3:
                                 Busy = true; privateBusy = true;
+                                                   
                                 srv.HandleReceivedBytes.Invoke(await GetRawBytes());
                                 Busy = false; privateBusy = false;
                                 break;
@@ -766,10 +776,12 @@ namespace EasySslStream.Connection.Full
         
         public void SendDirectory(string DirPath,bool StopAndThrowOnFailedTransfer=true)
         {
+          
             Task.Run(async () =>
             {
                 
-               string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+
+                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 Console.WriteLine(Files.Length);
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
 
@@ -785,7 +797,7 @@ namespace EasySslStream.Connection.Full
                 Action SendDirectoryName = () =>
                 {
                     sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
-                    Console.WriteLine(Path.GetFileName(DirPath));
+                  //  Console.WriteLine(Path.GetFileName(DirPath));
                 };
                 
                  await ServerSendingQueue.Writer.WaitToWriteAsync();
@@ -797,11 +809,13 @@ namespace EasySslStream.Connection.Full
                 }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendFileAmount);
 
                 bool LoopCancel = false;
-                 ///////////////////////////////                
-                 foreach(string file in Files)
+                ///////////////////////////////      
+                 
+             
+                foreach (string file in Files)
                  {
-                     byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
-                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
+                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
 
 
                     
@@ -810,12 +824,16 @@ namespace EasySslStream.Connection.Full
                          try
                          {
                              FileStream fs = new FileStream(file, FileMode.Open);
-                             Task.Delay(100).Wait();
-                             sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
-                             Task.Delay(100).Wait();
-                             sslstream_.Write(BitConverter.GetBytes(fs.Length));
+                             //    Task.Delay(100).Wait();
+                             //    sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
+                             //   Task.Delay(10000).Wait();
+                             //   sslstream_.Write(BitConverter.GetBytes(fs.Length));
 
+                             string mes = innerPath +"$$$"+ fs.Length;
+                             byte[] message = srv.FileNameEncoding.GetBytes(mes);
+                             sslstream_.Write(message,0,mes.Length);
 
+                             Task.Delay(5000).Wait();
                                
                                    int sent = 0;
 
@@ -825,12 +843,13 @@ namespace EasySslStream.Connection.Full
 
                                      sslstream_.Write(chunk);
 
-                                 Task.Delay(10).Wait();
+                               
                               }
 
-                              
+                             sslstream_.Flush();
                              fs.Dispose();
                            
+                               Task.Delay(100).Wait();
 
                          }
                          catch (System.UnauthorizedAccessException e)
@@ -873,8 +892,11 @@ namespace EasySslStream.Connection.Full
 
 
 
-
+              
             });
+
+            
+
         }
 
 

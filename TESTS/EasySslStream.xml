@@ -436,6 +436,9 @@
         </member>
         <member name="M:EasySslStream.Connection.Full.SSLClient.Stop">
             Connection menagement
+             <summary>
+            Connection menagement
+            </summary>
             
         </member>
         <member name="M:EasySslStream.Connection.Full.SSLClient.DisconnectClient">

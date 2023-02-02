@@ -7,13 +7,21 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            DynamicConfiguration.TransportBufferSize = 4096;
-            DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
-            EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
-            client.VerifyCertificateChain = false;
-            client.VerifyCertificateName = false;
-            client.Connect("127.0.0.1", 10000);
+            try
+            {
+                DynamicConfiguration.TransportBufferSize = 4096;
+                DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
+                EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
+                client.VerifyCertificateChain = false;
+                client.VerifyCertificateName = false;
+                client.Connect("127.0.0.1", 10000);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.ReadLine();
 
+            }
 
             // client.WriteText(BitConverter.GetBytes(1));
             //  client.WriteText(BitConverter.GetBytes(2));
