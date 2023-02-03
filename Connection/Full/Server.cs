@@ -773,10 +773,16 @@ namespace EasySslStream.Connection.Full
             //  fs.Dispose();
         }
 
-        
-        public void SendDirectory(string DirPath,bool StopAndThrowOnFailedTransfer=true)
-        {
-          
+        /// <summary>
+        /// Sends directory over Sslstream
+        /// </summary>
+        /// <param name="DirPath">path to the directory</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
+        /// <param name="FailSafeSendInterval">Sometimes connection crashes after file info is sent, inverval can be set to prevent this issue from happenning
+        /// Higher = slower transfer, smaller chance to fail</param>
+        /// <exception cref="Exceptions.ServerException"></exception>
+        public void SendDirectory(string DirPath,bool StopAndThrowOnFailedTransfer=true,int FailSafeSendInterval= 1000)
+        {         
             Task.Run(async () =>
             {
                 
@@ -833,7 +839,7 @@ namespace EasySslStream.Connection.Full
                              byte[] message = srv.FileNameEncoding.GetBytes(mes);
                              sslstream_.Write(message,0,mes.Length);
 
-                             Task.Delay(5000).Wait();
+                             Task.Delay(FailSafeSendInterval).Wait();
                                
                                    int sent = 0;
 

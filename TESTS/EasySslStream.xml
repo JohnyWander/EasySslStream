@@ -480,6 +480,15 @@
             </summary>
             <param name="path">Path to the file</param>
         </member>
+        <member name="M:EasySslStream.Connection.Full.SSLClient.SendDirectory(System.String,System.Boolean,System.Int32)">
+            <summary>
+            Sends directory over Sslstream
+            </summary>
+            <param name="DirPath">path to the directory</param>
+            <param name="StopAndThrowOnFailedTransfer"></param>
+            <param name="FailSafeSendInterval"></param>
+            <exception cref="T:EasySslStream.Exceptions.ServerException"></exception>
+        </member>
         <member name="T:EasySslStream.Interop.User32">
             <summary>
             Contains functions invoked from User32.dll

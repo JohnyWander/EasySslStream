@@ -540,7 +540,7 @@ namespace EasySslStream.Connection.Full
             byte[] DirectoryNameBuffer = new byte[512];
             directoryBytesCount = stream.Read(DirectoryNameBuffer);
 
-            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00));
+            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
 
             if (ReceivedFilesLocation == "")
             {
@@ -582,7 +582,7 @@ namespace EasySslStream.Connection.Full
                 string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
 
                 string[] msplit = innerPath.Split("$$$");
-                innerPath = msplit[0];
+                innerPath = msplit[0].TrimStart('\\').TrimStart('/');
                 long FileLength = Convert.ToInt64(msplit[1]);
 
             //    Console.WriteLine("INNER PATH: " + innerPath);
