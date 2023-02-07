@@ -89,7 +89,7 @@ namespace EasySslStream
             {
                 //Console.WriteLine("IS CONNECTION");
                //  cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                cl.SendDirectory("C:\\TEST"); 
+                cl.SendDirectory("C:\\TEST2"); 
             }
 
             //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));

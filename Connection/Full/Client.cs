@@ -74,7 +74,10 @@ namespace EasySslStream.Connection.Full
             SendFile = 2,
             SendRawBytes = 3,
 
-            SendDisconnect = 99
+            SendDisconnect = 99,
+
+            Confirmation = 200
+
         }
            
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -537,10 +540,16 @@ namespace EasySslStream.Connection.Full
             //////////////////////////////
             /// Directory name
             int directoryBytesCount = 0;
-            byte[] DirectoryNameBuffer = new byte[512];
+            byte[] DirectoryNameBuffer = new byte[1024];
             directoryBytesCount = stream.Read(DirectoryNameBuffer);
 
             string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
+
+            
+            
+
+
+
 
             if (ReceivedFilesLocation == "")
             {
@@ -558,61 +567,65 @@ namespace EasySslStream.Connection.Full
             //Console.WriteLine(FileCount);
             Directory.SetCurrentDirectory(DirectoryName);
 
-           
-            for (int i = 0; i <= FileCount; i++)
+
+            try
             {
-                stream.Flush();
-                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
-                
-               
 
-                int IneerDirectoryBytesCount = -1;
-                byte[] InnerDirectoryNameBuffer = new byte[512];
 
-                stream.Read(InnerDirectoryNameBuffer, 0, InnerDirectoryNameBuffer.Length);
+                for (int i = 0; i <= FileCount; i++)
+                {
                     stream.Flush();
-                Task.Delay(100).Wait();
-                
-                   
-                    
-                
+                    byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
 
-                
-                
-                string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
 
-                string[] msplit = innerPath.Split("$$$");
-                innerPath = msplit[0].TrimStart('\\').TrimStart('/');
-                long FileLength = Convert.ToInt64(msplit[1]);
 
-            //    Console.WriteLine("INNER PATH: " + innerPath);
-                
-              //  int FileLenthgBytesCount = -1;
-              //  byte[] FileLengthBuffer = new byte[512];
+                    int IneerDirectoryBytesCount = -1;
+                    byte[] InnerDirectoryNameBuffer = new byte[512];
 
-              
-              //      FileLenthgBytesCount = stream.Read(FileLengthBuffer);
+                    stream.Read(InnerDirectoryNameBuffer, 0, InnerDirectoryNameBuffer.Length);
+                    stream.Flush();
+                    Task.Delay(100).Wait();
 
-              //  stream.Flush();
-               
 
-               // long FileLength = BitConverter.ToInt64(FileLengthBuffer);
-                Console.WriteLine("FILE LENGTH: " + FileLength);
-                
-                if(FileLength == (long)-10)
-                {
-                    continue;
-                }
-                else
-                {
-                    
-                   
-                    if (innerPath.Contains("\\"))
+
+
+
+
+
+                    string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
+                    Console.WriteLine(innerPath);
+                    string[] msplit = innerPath.Split("$$$");
+                    innerPath = msplit[0].TrimStart('\\').TrimStart('/');
+                    long FileLength = Convert.ToInt64(msplit[1]);
+
+                    //    Console.WriteLine("INNER PATH: " + innerPath);
+
+                    //  int FileLenthgBytesCount = -1;
+                    //  byte[] FileLengthBuffer = new byte[512];
+
+
+                    //      FileLenthgBytesCount = stream.Read(FileLengthBuffer);
+
+                    //  stream.Flush();
+
+
+                    // long FileLength = BitConverter.ToInt64(FileLengthBuffer);
+                    Console.WriteLine("FILE LENGTH: " + FileLength);
+
+                    if (FileLength == (long)-10)
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                        continue;
                     }
-                       // Console.WriteLine(innerPath);
-                        
+                    else
+                    {
+
+
+                        if (innerPath.Contains("\\"))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                        }
+                        // Console.WriteLine(innerPath);
+
                         FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
 
                         while ((stream.Read(DataChunk, 0, DataChunk.Length) != 0))
@@ -632,16 +645,20 @@ namespace EasySslStream.Connection.Full
 
                         fs.Dispose();
 
-                    stream.Flush();
-                    
-                   
-                 
+                        stream.Flush();
+
+
+
+                    }
+
+
+
                 }
-                
-                
 
+            }catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
-
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 

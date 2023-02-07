@@ -390,6 +390,9 @@ namespace EasySslStream.Connection.Full
             SendRawBytes =3,
             SendDirectory = 4,
 
+            Confirmation = 200,
+
+
             SendDisconnect =99
         }
 
@@ -791,6 +794,9 @@ namespace EasySslStream.Connection.Full
                 Console.WriteLine(Files.Length);
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
 
+
+
+
                 // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
@@ -798,6 +804,10 @@ namespace EasySslStream.Connection.Full
                 };
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendSteer);
+
+
+               
+                
 
                 // Informs client about directory name
                 Action SendDirectoryName = () =>
@@ -816,8 +826,12 @@ namespace EasySslStream.Connection.Full
 
                 bool LoopCancel = false;
                 ///////////////////////////////      
-                 
-             
+
+
+                
+
+
+
                 foreach (string file in Files)
                  {
                     byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
@@ -855,7 +869,7 @@ namespace EasySslStream.Connection.Full
                              sslstream_.Flush();
                              fs.Dispose();
                            
-                               Task.Delay(100).Wait();
+                              // Task.Delay(100).Wait();
 
                          }
                          catch (System.UnauthorizedAccessException e)
