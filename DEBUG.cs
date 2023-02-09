@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-  /*
+  
     public static class Program
 
     {
@@ -82,19 +82,43 @@ namespace EasySslStream
             Thread.Sleep(10000);
 
 
+            
+            
 
 
 
-            foreach (SSLClient cl in server.ConnectedClients)
-            {
+
+           foreach (SSLClient cl in server.ConnectedClients)
+           {
+
+                IFileReceiveEventAndStats ceas = cl.FileReceiveEventAndStats;
+
+                //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
+                //{
+                //    Console.WriteLine(ceas.CurrentBytes + "/" + ceas.TotalBytes);
+
+                //};
+                ceas.OnReceiveSpeedChecked += (object sender,EventArgs e) =>
+                {
+                    Console.WriteLine(ceas.stringSpeed);
+                    
+
+                };
+                ceas.GetFileReceiveSpeed(1000, ConnectionCommons.Unit.MBs).Wait();
+
+
+
+
                 //Console.WriteLine("IS CONNECTION");
-               //  cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                cl.SendDirectory("C:\\TEST2śśęęąą"); 
+                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
+                //cl.SendDirectory("C:\\TEST2śśęęąą");
+                
+                
             }
 
-            //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
+               //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
-            //   Thread.Sleep(10000);
+            // Thread.Sleep(10000);
             //  server.TestList();
 
            
@@ -104,5 +128,5 @@ namespace EasySslStream
 
 
     }
-  */
+  
 }

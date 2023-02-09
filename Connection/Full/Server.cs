@@ -272,7 +272,7 @@ namespace EasySslStream.Connection.Full
     /// <summary>
     /// Represents connected client 
     /// </summary>
-    public sealed class SSLClient
+    public sealed class SSLClient 
     {
         internal bool Busy = false;
 
@@ -397,6 +397,8 @@ namespace EasySslStream.Connection.Full
             SendDisconnect = 99
         }
 
+        public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.Create();
+        
         /// <summary>
         /// Creates client instance
         /// </summary>
@@ -406,6 +408,8 @@ namespace EasySslStream.Connection.Full
         /// <param name="srvinstance"></param>
         public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server srvinstance = null)
         {
+            
+
             Busy = false;
             client_ = client;
             srv = srvinstance;
@@ -583,6 +587,11 @@ namespace EasySslStream.Connection.Full
             lengthbytes = sslstream_.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
+            this.FileReceiveEventAndStats.CurrentBytes = 0;
+            this.FileReceiveEventAndStats.TotalBytes = FileLength; 
+
+
+
 
             string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
 
@@ -618,8 +627,12 @@ namespace EasySslStream.Connection.Full
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
-
+                
                 fs.Write(ReceiveBuffer);
+                FileReceiveEventAndStats.CurrentBytes = (int)fs.Position;
+                FileReceiveEventAndStats.FireDataChunkReceived();
+
+                
 
                 if (fs.Length >= FileLength)
                 {

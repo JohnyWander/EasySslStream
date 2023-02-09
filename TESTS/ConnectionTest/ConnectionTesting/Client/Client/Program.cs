@@ -15,6 +15,10 @@ namespace Client
                 client.VerifyCertificateChain = false;
                 client.VerifyCertificateName = false;
                 client.Connect("127.0.0.1", 10000);
+
+                Thread.Sleep(12000);
+
+                client.SendFile("86998.zip");
             }
             catch (Exception e)
             {
