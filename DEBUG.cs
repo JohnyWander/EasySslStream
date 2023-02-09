@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-  
+  /*
     public static class Program
 
     {
@@ -104,5 +104,5 @@ namespace EasySslStream
 
 
     }
-
+  */
 }
