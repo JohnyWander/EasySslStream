@@ -464,7 +464,7 @@ namespace EasySslStream.Connection.Full
 
 
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
-                Console.WriteLine(Files.Length);
+                //Console.WriteLine(Files.Length);
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
 
                 // informs client that directory will be sent
@@ -522,7 +522,7 @@ namespace EasySslStream.Connection.Full
                             // Converting names to base64 prevents this error from occuring
                             string mes = innerPath + "$$$" + fs.Length;
                             mes = Convert.ToBase64String(FilenameEncoding.GetBytes(mes));
-                            Console.WriteLine(mes);
+                            //Console.WriteLine(mes);
                             byte[] message = FilenameEncoding.GetBytes(mes);
                             stream.Write(message, 0, mes.Length);
 
@@ -708,7 +708,7 @@ namespace EasySslStream.Connection.Full
 
             if (ReceivedFilesLocation == "")
             {
-                Console.WriteLine(DirectoryName);
+             //   Console.WriteLine(DirectoryName);
                 Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
                 Directory.CreateDirectory(DirectoryName);
             }
@@ -750,13 +750,13 @@ namespace EasySslStream.Connection.Full
 
                     string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
                     innerPath  = FilenameEncoding.GetString(Convert.FromBase64String(innerPath));
-                    Console.WriteLine(innerPath);
+                    //Console.WriteLine(innerPath);
                     string[] msplit = innerPath.Split("$$$");
                     innerPath = msplit[0].TrimStart('\\').TrimStart('/');
                     long FileLength = Convert.ToInt64(msplit[1]);
 
                    
-                    Console.WriteLine("FILE LENGTH: " + FileLength);
+                    //Console.WriteLine("FILE LENGTH: " + FileLength);
 
                     if (FileLength == (long)-10)
                     {

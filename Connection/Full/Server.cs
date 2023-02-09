@@ -672,14 +672,9 @@ namespace EasySslStream.Connection.Full
             string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
 
 
-
-
-
-
-
             if (srv.ReceivedFilesLocation == "")
             {
-                Console.WriteLine(DirectoryName);
+               // Console.WriteLine(DirectoryName);
                 Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
                 Directory.CreateDirectory(DirectoryName);
             }
@@ -721,13 +716,13 @@ namespace EasySslStream.Connection.Full
 
                     string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
                     innerPath = FilenameEncoding.GetString(Convert.FromBase64String(innerPath));
-                    Console.WriteLine(innerPath);
+                    //Console.WriteLine(innerPath);
                     string[] msplit = innerPath.Split("$$$");
                     innerPath = msplit[0].TrimStart('\\').TrimStart('/');
                     long FileLength = Convert.ToInt64(msplit[1]);
 
 
-                    Console.WriteLine("FILE LENGTH: " + FileLength);
+                    //Console.WriteLine("FILE LENGTH: " + FileLength);
 
                     if (FileLength == (long)-10)
                     {
@@ -775,7 +770,7 @@ namespace EasySslStream.Connection.Full
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                throw new Exceptions.ServerException("Error occured while receiving directory" + e.GetType().Name + "\n" + e.Message);
             }
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
@@ -940,11 +935,8 @@ namespace EasySslStream.Connection.Full
 
 
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
-                Console.WriteLine(Files.Length);
+                //Console.WriteLine(Files.Length);
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
-
-
-
 
                 // informs client that directory will be sent
                 Action SendSteer = () =>
@@ -953,8 +945,6 @@ namespace EasySslStream.Connection.Full
                 };
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendSteer);
-
-
 
 
 
@@ -1005,7 +995,7 @@ namespace EasySslStream.Connection.Full
 
                             string mes = innerPath + "$$$" + fs.Length;
                             mes = Convert.ToBase64String(srv.FileNameEncoding.GetBytes(mes));
-                            Console.WriteLine(mes);
+                            // Console.WriteLine(mes);
                             byte[] message = srv.FileNameEncoding.GetBytes(mes);
                             sslstream_.Write(message, 0, mes.Length);
 
