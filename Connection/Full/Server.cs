@@ -27,15 +27,15 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Thread safe dictionary that contains connected clients referenced by int
         /// </summary>
-        public ConcurrentDictionary<int,SSLClient> ConnectedClientsByNumber = new ConcurrentDictionary<int, SSLClient>();
+        public ConcurrentDictionary<int, SSLClient> ConnectedClientsByNumber = new ConcurrentDictionary<int, SSLClient>();
 
 
         /// <summary>
         /// Thread safe dictionary that contains connected clients referenced by string endpoint ( 127.0.0.1:5000 etc)
         /// </summary>
-        public ConcurrentDictionary<IPEndPoint,SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<IPEndPoint, SSLClient>();
+        public ConcurrentDictionary<IPEndPoint, SSLClient> ConnectedClientsByEndPoint = new ConcurrentDictionary<IPEndPoint, SSLClient>();
 
-     
+
         private X509Certificate2 serverCert = null;
 
 
@@ -63,7 +63,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public Action<string> HandleReceivedText = (string text) =>
         {
-            Console.WriteLine(text);            
+            Console.WriteLine(text);
         };
 
         /// <summary>
@@ -71,33 +71,33 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
         {
-            foreach(byte b in bytes) { Console.Write(Convert.ToInt32(b)+" "); }
+            foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
             //return bytes
         };
 
         // Shutting down the server
-      ////////////////////////////////////////////////////////////////////  
+        ////////////////////////////////////////////////////////////////////  
         private TaskCompletionSource<object> GentleStopLock = new TaskCompletionSource<object>();
         internal void WorkLock()
         {
-                bool NoJobs = true;
-               foreach(SSLClient client in ConnectedClients)
-                {             
-                    if (client.Busy)
-                    {
-                        NoJobs = false;
-                    }
-                }
-
-               if(NoJobs == true)
+            bool NoJobs = true;
+            foreach (SSLClient client in ConnectedClients)
+            {
+                if (client.Busy)
                 {
-                    GentleStopLock.SetResult(null);
+                    NoJobs = false;
                 }
-              
-            
-          
+            }
+
+            if (NoJobs == true)
+            {
+                GentleStopLock.SetResult(null);
+            }
+
+
+
         }
-       
+
         /// <summary>
         /// Waits for currently running transfers to end, for all connections, then shuts down the server.
         /// </summary>
@@ -116,7 +116,7 @@ namespace EasySslStream.Connection.Full
                     }
                 });
 
-                
+
 
                 await GentleStopLock.Task;
 
@@ -151,13 +151,13 @@ namespace EasySslStream.Connection.Full
         {
             Parallel.ForEach(ConnectedClients, SSLClient =>
             {
-                SSLClient.Stop(); 
+                SSLClient.Stop();
             });
-       
+
             this.listener.Stop();
         }
 
-    
+
         /// <summary>
         /// Sends text Message to client
         /// </summary>
@@ -185,7 +185,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         /// <param name="ConnectionID">Id of connection</param>
         /// <param name="Path">path to the file to send</param>
-        public void WriteFileToClient(int ConnectionID,string Path)
+        public void WriteFileToClient(int ConnectionID, string Path)
         {
             ConnectedClients[ConnectionID].SendFile(Path);
         }
@@ -195,7 +195,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         /// <param name="clientEndpoint">client endpoint</param>
         /// <param name="Path">path to the file to send</param>
-        public void WriteFileToClient(IPEndPoint clientEndpoint,string Path)
+        public void WriteFileToClient(IPEndPoint clientEndpoint, string Path)
         {
             ConnectedClientsByEndPoint[clientEndpoint].SendFile(Path);
         }
@@ -216,7 +216,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients">Set true if server is meant to check for client certificate, otherwise set false</param>
         public void StartServer(string ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
-            
+
             serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(IPAddress.Parse(ListenOnIp), port);
             Thread listenerThread = new Thread(() =>
@@ -231,7 +231,7 @@ namespace EasySslStream.Connection.Full
                 }
                 connected++;
             });
-            listenerThread.Start();          
+            listenerThread.Start();
         }
 
         /// <summary>
@@ -244,7 +244,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="VerifyClients">Set true if server is meant to check for client certificate, otherwise set false</param>
         public void StartServer(IPAddress ListenOnIp, int port, string ServerPFXCertificatePath, string CertPassword, bool VerifyClients)
         {
-           
+
             this.serverCert = new X509Certificate2(ServerPFXCertificatePath, CertPassword, X509KeyStorageFlags.PersistKeySet);
             listener = new TcpListener(ListenOnIp, port);
             listener.Start();
@@ -293,9 +293,13 @@ namespace EasySslStream.Connection.Full
         TcpClient client_ = null;
         SslStream sslstream_ = null;
 
-//////////////////////////////////////////
+        //////////////////////////////////////////
         /// Connection menagement
+        ///  <summary>
+        /// Connection menagement
+        /// </summary>
         /// 
+
         internal void Stop()
         {
             sslstream_.Dispose();
@@ -326,7 +330,7 @@ namespace EasySslStream.Connection.Full
             if (InformClient)
             {
                 sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDisconnect));
-              //  Console.WriteLine("CANCEL?");
+                //  Console.WriteLine("CANCEL?");
             }
 
 
@@ -350,7 +354,7 @@ namespace EasySslStream.Connection.Full
                 }
             }
         }
-////////////////////////////////////
+        ////////////////////////////////////
 
 
         private bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -358,6 +362,7 @@ namespace EasySslStream.Connection.Full
             if (sslPolicyErrors == SslPolicyErrors.None)
             {
                 return true;
+
             }
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && srv.CertificateCheckSettings.VerifyCertificateName == false)
             {
@@ -366,6 +371,11 @@ namespace EasySslStream.Connection.Full
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && srv.CertificateCheckSettings.VerifyCertificateChain == false)
             {
                 return true;
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
+            {
+                Console.WriteLine("CERT NOV AVAIABLE????");
+                return false;
             }
             else
             {
@@ -376,11 +386,15 @@ namespace EasySslStream.Connection.Full
 
         private enum SteerCodes
         {
-            SendText = 1,  
+            SendText = 1,
             SendFile = 2,
-            SendRawBytes =3,
+            SendRawBytes = 3,
+            SendDirectory = 4,
 
-            SendDisconnect =99
+            Confirmation = 200,
+
+
+            SendDisconnect = 99
         }
 
         /// <summary>
@@ -399,8 +413,8 @@ namespace EasySslStream.Connection.Full
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
 
-           
-            
+
+
 
             srv.ConnectedClientsByEndPoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
             // Console.WriteLine("?: "+srv.ConnectedClients.Count);
@@ -477,7 +491,14 @@ namespace EasySslStream.Connection.Full
                                 break;
                             case 3:
                                 Busy = true; privateBusy = true;
+
                                 srv.HandleReceivedBytes.Invoke(await GetRawBytes());
+                                Busy = false; privateBusy = false;
+                                break;
+
+                            case 4:
+                                Busy = true; privateBusy = true;
+                                await GetDirectory();
                                 Busy = false; privateBusy = false;
                                 break;
 
@@ -496,12 +517,13 @@ namespace EasySslStream.Connection.Full
                     DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
                     throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                 }
-                catch (System.IO.IOException e )
+                catch (System.IO.IOException e)
                 {
                     DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
                     throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
                 }
-                catch (Exception e) {
+                catch (Exception e)
+                {
                     DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
                     throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
 
@@ -547,21 +569,21 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile(Server srv)
         {
-            
+
             //file name
 
             int filenamebytes = -1;
             byte[] filenamebuffer = new byte[128];
             filenamebytes = sslstream_.Read(filenamebuffer);
             string filename = srv.FileNameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
-            
+
 
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
             lengthbytes = sslstream_.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            
+
             string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
 
             bool correct = false;
@@ -572,39 +594,39 @@ namespace EasySslStream.Connection.Full
                 {
                     filename = filename + number_of_occurence;
                     number_of_occurence++;
-                    
+
                 }
                 else
                 {
                     correct = true;
-                    
+
                 }
             }
 
 
-            
+
             byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
 
             if (srv.ReceivedFilesLocation != "")
             {
                 Directory.SetCurrentDirectory(srv.ReceivedFilesLocation);
             }
-           
+
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
 
-         
+
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
 
                 fs.Write(ReceiveBuffer);
-                
+
                 if (fs.Length >= FileLength)
-                {            
+                {
                     break;
                 }
             }
-          
+
 
             long ReceivedFileLength = fs.Length;
 
@@ -618,7 +640,7 @@ namespace EasySslStream.Connection.Full
 
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-            
+
             return Task.CompletedTask;
         }
 
@@ -629,15 +651,150 @@ namespace EasySslStream.Connection.Full
             int received = 0;
             received = await sslstream_.ReadAsync(lenghtBuffer, 0, lenghtBuffer.Length);
 
-           
+
 
             byte[] MessageBytes = new byte[BitConverter.ToInt32(lenghtBuffer)];
 
             int MessageReceivedBytes = await sslstream_.ReadAsync(MessageBytes);
 
             return MessageBytes;
-         
+
         }
+
+        private Task GetDirectory()
+        {
+            //////////////////////////////
+            /// Directory name
+            int directoryBytesCount = 0;
+            byte[] DirectoryNameBuffer = new byte[1024];
+            directoryBytesCount = sslstream_.Read(DirectoryNameBuffer);
+
+            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
+
+
+            if (srv.ReceivedFilesLocation == "")
+            {
+               // Console.WriteLine(DirectoryName);
+                Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                Directory.CreateDirectory(DirectoryName);
+            }
+            //////////////////////////////
+            /// File count
+            int FileCountBytesCount = 0;
+            byte[] FileCountBuffer = new byte[512];
+            FileCountBytesCount = sslstream_.Read(FileCountBuffer);
+
+            int FileCount = BitConverter.ToInt32(FileCountBuffer);
+            //Console.WriteLine(FileCount);
+            Directory.SetCurrentDirectory(DirectoryName);
+
+
+            try
+            {
+
+
+                for (int i = 0; i <= FileCount; i++)
+                {
+                    sslstream_.Flush();
+                    byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+
+
+                    int IneerDirectoryBytesCount = -1;
+                    byte[] InnerDirectoryNameBuffer = new byte[512];
+
+                    sslstream_.Read(InnerDirectoryNameBuffer, 0, InnerDirectoryNameBuffer.Length);
+                    sslstream_.Flush();
+                    Task.Delay(100).Wait();
+
+
+
+
+
+                    // Transfer will fail for unknown(for me) reason,if filename or directory name contains diacretic characters,
+                    // Converting names to base64 prevents this error from occuring
+
+                    string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
+                    innerPath = FilenameEncoding.GetString(Convert.FromBase64String(innerPath));
+                    //Console.WriteLine(innerPath);
+                    string[] msplit = innerPath.Split("$$$");
+                    innerPath = msplit[0].TrimStart('\\').TrimStart('/');
+                    long FileLength = Convert.ToInt64(msplit[1]);
+
+
+                    //Console.WriteLine("FILE LENGTH: " + FileLength);
+
+                    if (FileLength == (long)-10)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+
+
+                        if (innerPath.Contains("\\"))
+                        {
+                            Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                        }
+                        // Console.WriteLine(innerPath);
+
+                        FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
+
+                        while ((sslstream_.Read(DataChunk, 0, DataChunk.Length) != 0))
+                        {
+                            fs.Write(DataChunk);
+                            if (fs.Length >= FileLength)
+                            {
+                                break;
+                            }
+                        }
+                        long ReceivedFileLength = fs.Length;
+
+                        if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+                        {                                    // we have to cut stream to oryginal file length
+                            fs.SetLength(FileLength);        // to remove NULL bytes from the stream
+                        }
+
+                        fs.Dispose();
+
+                        sslstream_.Flush();
+
+
+
+                    }
+
+
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                throw new Exceptions.ServerException("Error occured while receiving directory" + e.GetType().Name + "\n" + e.Message);
+            }
+
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+            return Task.CompletedTask;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// Sends raw bytes to the client
@@ -722,11 +879,7 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendFilename);
 
-
-
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-
-
 
                 Action SendFileLength = () =>
                 {
@@ -736,11 +889,9 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WriteAsync(SendFileLength);
 
 
-                int bytesLeft = (int)fs.Length;
-                
 
 
-                int times = (int)fs.Length / 512;
+
 
                 await Task.Delay(2000);
 
@@ -768,7 +919,151 @@ namespace EasySslStream.Connection.Full
             //  fs.Dispose();
         }
 
-        
+        /// <summary>
+        /// Sends directory over Sslstream
+        /// </summary>
+        /// <param name="DirPath">path to the directory</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
+        /// <param name="FailSafeSendInterval">Sometimes connection crashes after file info is sent, inverval can be set to prevent this issue from happenning
+        /// Higher = slower transfer, smaller chance to fail
+        /// 20ms by default </param>
+        /// <exception cref="Exceptions.ServerException"></exception>
+        public void SendDirectory(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
+        {
+            Task.Run(async () =>
+            {
+
+
+                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                //Console.WriteLine(Files.Length);
+                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                // informs client that directory will be sent
+                Action SendSteer = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDirectory));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendSteer);
+
+
+
+                // Informs client about directory name
+                Action SendDirectoryName = () =>
+                {
+                    sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
+                    //  Console.WriteLine(Path.GetFileName(DirPath));
+                };
+
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendDirectoryName);
+
+                Action SendFileAmount = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes(Files.Length));
+                }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendFileAmount);
+
+                bool LoopCancel = false;
+                ///////////////////////////////      
+
+
+
+
+
+
+                foreach (string file in Files)
+                {
+                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
+
+
+
+                    Action SendInnerDirectory = () =>
+                    {
+                        try
+                        {
+                            FileStream fs = new FileStream(file, FileMode.Open);
+                            //    Task.Delay(100).Wait();
+                            //    sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
+                            //   Task.Delay(10000).Wait();
+                            //   sslstream_.Write(BitConverter.GetBytes(fs.Length));
+
+
+
+                            // Transfer will fail for unknown(for me) reason,if filename or directory name contains diacretic characters,
+                            // Converting names to base64 prevents this error from occuring
+
+                            string mes = innerPath + "$$$" + fs.Length;
+                            mes = Convert.ToBase64String(srv.FileNameEncoding.GetBytes(mes));
+                            // Console.WriteLine(mes);
+                            byte[] message = srv.FileNameEncoding.GetBytes(mes);
+                            sslstream_.Write(message, 0, mes.Length);
+
+                            Task.Delay(FailSafeSendInterval).Wait();
+
+                            int sent = 0;
+
+                            while (sent != fs.Length)
+                            {
+                                sent += fs.Read(chunk, 0, chunk.Length);
+
+                                sslstream_.Write(chunk);
+
+
+                            }
+
+                            sslstream_.Flush();
+                            fs.Dispose();
+
+                            // Task.Delay(100).Wait();
+
+                        }
+                        catch (System.UnauthorizedAccessException e)
+                        {
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            {
+                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
+                            }
+
+                            if (StopAndThrowOnFailedTransfer)
+                            {
+                                throw new Exceptions.ServerException($"Acces denied to files in the folder {e.Message}\n{e.StackTrace}");
+                                LoopCancel = true;
+                            }
+                            else
+                            {
+                                sslstream_.Write(BitConverter.GetBytes((long)-10));
+                            }
+
+                        }
+
+
+
+
+
+                    }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendInnerDirectory);
+
+                    if (LoopCancel == true)
+                    {
+                        break;
+                    }
+
+
+
+                    //await Task.Delay(2000);
+
+
+                }
+
+
+
+
+
+            });
+
+
+
+        }
 
 
     }
