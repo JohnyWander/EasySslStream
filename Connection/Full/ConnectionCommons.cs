@@ -25,6 +25,9 @@ namespace EasySslStream.Connection.Full
 
         // // //////////////
         //// Connection Speed
+        public bool AutoStartFileReceiveSpeedCheck { get; set; } = false;
+        public int DefaultIntervalForFileReceiveCheck { get; set; } = 1000;
+        public Unit DefaultSpeedUnit { get; set; } = Unit.Bps;
         public float Speed { get; set; } = 0;
         public string stringSpeed { get; set; } = string.Empty;
         public enum Unit
@@ -41,7 +44,7 @@ namespace EasySslStream.Connection.Full
             OnReceiveSpeedChecked?.Invoke(this, EventArgs.Empty);
         }
 
-        public async Task GetFileReceiveSpeed(int Interval,Unit unit, CancellationToken cts=default(CancellationToken))
+        public async Task StartFileReceiveSpeedCheck(int Interval,Unit unit, CancellationToken cts=default(CancellationToken))
         {       
             while (!cts.IsCancellationRequested)
             {

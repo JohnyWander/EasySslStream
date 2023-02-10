@@ -104,24 +104,32 @@ namespace EasySslStream
                     
 
                 };
-                ceas.GetFileReceiveSpeed(1000, ConnectionCommons.Unit.MBs).Wait();
+                ceas.AutoStartFileReceiveSpeedCheck = true;
+                ceas.DefaultIntervalForFileReceiveCheck = 1000;
+                ceas.DefaultSpeedUnit = ConnectionCommons.Unit.MBs;
+
+
+                Thread.Sleep(3000);
+                cl.SendFile("7z2201-x64.exe");
+
+                // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
 
 
 
 
                 //Console.WriteLine("IS CONNECTION");
-                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
+                //cl.SendDirectory("C:\\Program Files\\Common Files",false);
                 //cl.SendDirectory("C:\\TEST2śśęęąą");
-                
-                
+
+
             }
 
-               //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
+            //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
             // Thread.Sleep(10000);
             //  server.TestList();
 
-           
+
 
         }
 

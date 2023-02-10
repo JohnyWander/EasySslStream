@@ -1,4 +1,5 @@
 ﻿using EasySslStream;
+using EasySslStream.Connection.Full;
 using System.Text;
 
 namespace Client
@@ -16,9 +17,24 @@ namespace Client
                 client.VerifyCertificateName = false;
                 client.Connect("127.0.0.1", 10000);
 
-                Thread.Sleep(12000);
+                //Thread.Sleep(12000);
+                
+                //client.SendFile("86998.zip");
 
-                client.SendFile("86998.zip");
+               // Thread.Sleep(20000);
+
+               // client.SendFile("86998.zip");
+
+
+                IFileReceiveEventAndStats ceas = client.FileReceiveEventAndStats;
+                ceas.OnReceiveSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(ceas.stringSpeed);
+                };
+                ceas.AutoStartFileReceiveSpeedCheck = true;
+                ceas.DefaultIntervalForFileReceiveCheck = 1000;
+                ceas.DefaultSpeedUnit = ConnectionCommons.Unit.MBs;
+
             }
             catch (Exception e)
             {

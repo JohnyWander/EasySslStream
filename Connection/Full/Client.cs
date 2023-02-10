@@ -64,7 +64,7 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Location of the received files
         /// </summary>
-        public string ReceivedFilesLocation = "";
+        public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
 
         private bool cancelConnection;
 
@@ -80,6 +80,8 @@ namespace EasySslStream.Connection.Full
             Confirmation = 200
 
         }
+
+        public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.Create();
 
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
@@ -249,7 +251,7 @@ namespace EasySslStream.Connection.Full
                         catch (Exception e)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
-                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
 
                         }
 
@@ -287,7 +289,7 @@ namespace EasySslStream.Connection.Full
                         catch (Exception e)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
-                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion: {e.Message}\n {e.StackTrace}");
+                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
 
                         }
                     }).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -630,64 +632,86 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile()
         {
-            int filenamebytes = -1;
-            byte[] filenamebuffer = new byte[128];
-            filenamebytes = stream.Read(filenamebuffer);
+            
+                CancellationTokenSource cts = new CancellationTokenSource();
 
-            string filename = FilenameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
-
-            int lengthbytes = -1;
-            byte[] file_length_buffer = new byte[512];
-            lengthbytes = stream.Read(file_length_buffer);
-            int FileLength = BitConverter.ToInt32(file_length_buffer);
-
-            string[] FilesInDirectory = Directory.GetFiles(ReceivedFilesLocation);
-
-            bool correct = false;
-            int number_of_occurence = 1;
-            while (correct == false)
-            {
-                if (FilesInDirectory.Contains(filename))
+                if (this.FileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck)
                 {
-                    filename = filename + number_of_occurence;
-                    number_of_occurence++;
+                    Task.Run(() =>
+                    {
+                        this.FileReceiveEventAndStats.StartFileReceiveSpeedCheck(this.FileReceiveEventAndStats.DefaultIntervalForFileReceiveCheck,
+                            this.FileReceiveEventAndStats.DefaultSpeedUnit, cts.Token);
+                    });
                 }
-                else
+
+
+                int filenamebytes = -1;
+                byte[] filenamebuffer = new byte[128];
+                filenamebytes = stream.Read(filenamebuffer);
+
+                string filename = FilenameEncoding.GetString(filenamebuffer).Trim(Convert.ToChar(0x00));
+               // Console.WriteLine(filename);
+
+                int lengthbytes = -1;
+                byte[] file_length_buffer = new byte[512];
+                lengthbytes = stream.Read(file_length_buffer);
+                int FileLength = BitConverter.ToInt32(file_length_buffer);
+
+                this.FileReceiveEventAndStats.CurrentBytes = 0;
+                this.FileReceiveEventAndStats.TotalBytes = FileLength;
+
+
+                string[] FilesInDirectory = Directory.GetFiles(ReceivedFilesLocation);
+
+                bool correct = false;
+                int number_of_occurence = 1;
+                while (correct == false)
                 {
-                    correct = true;
+                    if (FilesInDirectory.Contains(filename))
+                    {
+                        filename = filename + number_of_occurence;
+                        //Console.WriteLine(filename); 
+                        number_of_occurence++;
+                    }
+                    else
+                    {
+                        correct = true;
+                    }
                 }
-            }
 
-            int bytesReceived = 0;
-            byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
+                int bytesReceived = 0;
+                byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
 
-            if (ReceivedFilesLocation != "")
-            {
-                Directory.SetCurrentDirectory(ReceivedFilesLocation);
-            }
-            FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
-
-            while ((stream.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
-            {
-                fs.Write(ReceiveBuffer);
-                if (fs.Length >= FileLength)
+                if (ReceivedFilesLocation != "")
                 {
-                    break;
+                     Directory.SetCurrentDirectory(ReceivedFilesLocation);
                 }
-            }
-            long ReceivedFileLength = fs.Length;
+                FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
 
-            if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
-            {                                    // we have to cut stream to oryginal file length
-                fs.SetLength(FileLength);        // to remove NULL bytes from the stream
-            }
+                while ((stream.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
+                {
+                    fs.Write(ReceiveBuffer);
+                    FileReceiveEventAndStats.CurrentBytes = (int)fs.Position;
+                    FileReceiveEventAndStats.FireDataChunkReceived();
+                    if (fs.Length >= FileLength)
+                    {
+                        break;
+                    }
+                }
+                long ReceivedFileLength = fs.Length;
+
+                if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+                {                                    // we have to cut stream to oryginal file length
+                    fs.SetLength(FileLength);        // to remove NULL bytes from the stream
+                }
 
 
-            fs.Dispose();
+                fs.Dispose();
+                cts.Cancel();
+                 Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
-            return Task.CompletedTask;
+                return Task.CompletedTask;
+          
         }
 
         private Task GetDirectory()

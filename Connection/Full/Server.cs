@@ -274,6 +274,8 @@ namespace EasySslStream.Connection.Full
     /// </summary>
     public sealed class SSLClient 
     {
+        
+
         internal bool Busy = false;
 
         private Channel<Action> ServerSendingQueue = Channel.CreateUnbounded<Action>();
@@ -573,6 +575,16 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile(Server srv)
         {
+            CancellationTokenSource cts = new CancellationTokenSource();
+
+            if (this.FileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck)
+            {
+                Task.Run(() =>
+                {
+                    this.FileReceiveEventAndStats.StartFileReceiveSpeedCheck(this.FileReceiveEventAndStats.DefaultIntervalForFileReceiveCheck,
+                        this.FileReceiveEventAndStats.DefaultSpeedUnit, cts.Token);
+                });
+            }
 
             //file name
 
@@ -650,10 +662,10 @@ namespace EasySslStream.Connection.Full
 
 
             fs.Dispose();
-
+            cts.Cancel();
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-
+            
             return Task.CompletedTask;
         }
 
