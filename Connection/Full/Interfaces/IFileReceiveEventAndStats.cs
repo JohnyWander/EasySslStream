@@ -12,12 +12,12 @@ namespace EasySslStream.Connection.Full
        /// <summary>
        /// Current bytes of transfer
        /// </summary>
-        int CurrentBytes { get; set; } 
+        int CurrentReceivedBytes { get; set; } 
 
         /// <summary>
         /// Total bytes of processed file
         /// </summary>
-        int TotalBytes { get; set; }
+        int TotalBytesToReceive { get; set; }
 
         /// <summary>
         /// Raised when chunk of data is received
@@ -25,7 +25,7 @@ namespace EasySslStream.Connection.Full
         event EventHandler OnDataChunkReceived;
         internal void FireDataChunkReceived();
 
-
+        
 
 
 
@@ -34,7 +34,7 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Units of transfer speed
         /// </summary>
-        public ConnectionCommons.Unit DefaultSpeedUnit { get; set; }
+        public ConnectionCommons.Unit DefaultReceiveSpeedUnit { get; set; }
 
     
         /// <summary>
@@ -59,12 +59,12 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Calculated speed as float
         /// </summary>
-        public float Speed { get; set; }
+        public float ReceiveSpeed { get; set; }
         
         /// <summary>
         /// Transfer speed with it's unit
         /// </summary>
-        public string stringSpeed { get; set; }
+        public string stringReceiveSpeed { get; set; }
 
         /// <summary>
         /// Raised when transfer speed is checked
@@ -72,7 +72,7 @@ namespace EasySslStream.Connection.Full
         public event EventHandler OnReceiveSpeedChecked;
 
         /// <summary>
-        /// Checks connection speed evetytime specified Interval 
+        /// Checks connection speed evetytime specified Interval passes
         /// </summary>
         /// <param name="Interval">Delay between each check</param>
         /// <param name="unit">Unit of transfer speed</param>

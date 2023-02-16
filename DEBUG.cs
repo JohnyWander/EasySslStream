@@ -91,26 +91,39 @@ namespace EasySslStream
            foreach (SSLClient cl in server.ConnectedClients)
            {
 
-                IFileReceiveEventAndStats ceas = cl.FileReceiveEventAndStats;
+                IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
 
                 //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
                 //{
                 //    Console.WriteLine(ceas.CurrentBytes + "/" + ceas.TotalBytes);
 
                 //};
-                ceas.OnReceiveSpeedChecked += (object sender,EventArgs e) =>
+                reas.OnReceiveSpeedChecked += (object sender,EventArgs e) =>
                 {
-                    Console.WriteLine(ceas.stringSpeed);
+                    Console.WriteLine(reas.stringReceiveSpeed);
                     
 
                 };
-                ceas.AutoStartFileReceiveSpeedCheck = true;
-                ceas.DefaultIntervalForFileReceiveCheck = 1000;
-                ceas.DefaultSpeedUnit = ConnectionCommons.Unit.MBs;
+                reas.AutoStartFileReceiveSpeedCheck = true;
+                
+                 reas.DefaultIntervalForFileReceiveCheck = 1000;
+                reas.DefaultReceiveSpeedUnit = ConnectionCommons.Unit.MBs;
 
 
+
+                IFileSendEventAndStats seas = cl.FileSendEventAndStats;
+
+                seas.OnSendSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(seas.stringSendSpeed);
+                };
+                seas.AutoStartFileSendSpeedCheck = true;
+                seas.DefaultFileSendCheckUnit = ConnectionCommons.Unit.MBs;
+                seas.FileSendSpeedCheckInterval = 1000;
+
+                
                 Thread.Sleep(3000);
-                cl.SendFile("7z2201-x64.exe");
+                cl.SendFile("86998.zip");
 
                 // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
 

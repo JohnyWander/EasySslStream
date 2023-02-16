@@ -399,7 +399,8 @@ namespace EasySslStream.Connection.Full
             SendDisconnect = 99
         }
 
-        public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.Create();
+        public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.CreateFileReceive();
+        public IFileSendEventAndStats FileSendEventAndStats = ConnectionCommons.CreateFileSend();
         
         /// <summary>
         /// Creates client instance
@@ -429,6 +430,7 @@ namespace EasySslStream.Connection.Full
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
                 sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true);
+                
             }
             else
             {
@@ -582,7 +584,7 @@ namespace EasySslStream.Connection.Full
                 Task.Run(() =>
                 {
                     this.FileReceiveEventAndStats.StartFileReceiveSpeedCheck(this.FileReceiveEventAndStats.DefaultIntervalForFileReceiveCheck,
-                        this.FileReceiveEventAndStats.DefaultSpeedUnit, cts.Token);
+                        this.FileReceiveEventAndStats.DefaultReceiveSpeedUnit, cts.Token);
                 });
             }
 
@@ -599,8 +601,8 @@ namespace EasySslStream.Connection.Full
             lengthbytes = sslstream_.Read(file_length_buffer);
             int FileLength = BitConverter.ToInt32(file_length_buffer);
 
-            this.FileReceiveEventAndStats.CurrentBytes = 0;
-            this.FileReceiveEventAndStats.TotalBytes = FileLength; 
+            this.FileReceiveEventAndStats.CurrentReceivedBytes = 0;
+            this.FileReceiveEventAndStats.TotalBytesToReceive = FileLength; 
 
 
 
@@ -641,7 +643,7 @@ namespace EasySslStream.Connection.Full
 
                 
                 fs.Write(ReceiveBuffer);
-                FileReceiveEventAndStats.CurrentBytes = (int)fs.Position;
+                FileReceiveEventAndStats.CurrentReceivedBytes = (int)fs.Position;
                 FileReceiveEventAndStats.FireDataChunkReceived();
 
                 
@@ -883,6 +885,17 @@ namespace EasySslStream.Connection.Full
         {
             Task.Run(async () =>
             {
+
+                CancellationTokenSource cancellConnectionSpeedCheck = new CancellationTokenSource();
+
+                Task.Run(() =>
+                {
+                    FileSendEventAndStats.StartFileSendSpeedCheck(FileSendEventAndStats.FileSendSpeedCheckInterval,
+                        FileSendEventAndStats.DefaultFileSendCheckUnit, cancellConnectionSpeedCheck.Token);
+                });
+
+
+
                 SslStream str = sslstream_;
                 byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
 
@@ -905,6 +918,7 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WriteAsync(SendFilename);
 
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
+                FileSendEventAndStats.TotalBytesToSend = (int)fs.Length;
 
                 Action SendFileLength = () =>
                 {
@@ -913,7 +927,7 @@ namespace EasySslStream.Connection.Full
                 }; await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendFileLength);
 
-
+                
 
 
 
@@ -929,7 +943,7 @@ namespace EasySslStream.Connection.Full
 
                     //Console.WriteLine(chunk.Length);
                     await str.WriteAsync(chunk);
-
+                    FileSendEventAndStats.CurrentSendBytes = Received;
                     // await Task.Delay(10);
                 }
 
@@ -937,7 +951,7 @@ namespace EasySslStream.Connection.Full
                 await fs.DisposeAsync();
 
 
-
+                cancellConnectionSpeedCheck.Cancel();
 
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             // write.Dispose();
