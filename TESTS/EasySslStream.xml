@@ -327,12 +327,12 @@
             </summary>
             <param name="Message">bytes to send</param>
         </member>
-        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.CurrentBytes">
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.CurrentReceivedBytes">
             <summary>
             Current bytes of transfer
             </summary>
         </member>
-        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.TotalBytes">
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.TotalBytesToReceive">
             <summary>
             Total bytes of processed file
             </summary>
@@ -342,7 +342,7 @@
             Raised when chunk of data is received
             </summary>
         </member>
-        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.DefaultSpeedUnit">
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.DefaultReceiveSpeedUnit">
             <summary>
             Units of transfer speed
             </summary>
@@ -362,12 +362,12 @@
             Units of transfer speed
             </summary>
         </member>
-        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.Speed">
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.ReceiveSpeed">
             <summary>
             Calculated speed as float
             </summary>
         </member>
-        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.stringSpeed">
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.stringReceiveSpeed">
             <summary>
             Transfer speed with it's unit
             </summary>
@@ -379,7 +379,7 @@
         </member>
         <member name="M:EasySslStream.Connection.Full.IFileReceiveEventAndStats.StartFileReceiveSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)">
             <summary>
-            Checks connection speed evetytime specified Interval 
+            Checks connection speed evetytime specified Interval passes
             </summary>
             <param name="Interval">Delay between each check</param>
             <param name="unit">Unit of transfer speed</param>

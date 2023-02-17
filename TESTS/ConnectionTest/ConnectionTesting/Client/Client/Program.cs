@@ -25,7 +25,7 @@ namespace Client
 
                // client.SendFile("86998.zip");
 
-
+/*
                 IFileReceiveEventAndStats ceas = client.FileReceiveEventAndStats;
                 ceas.OnReceiveSpeedChecked += (object sender, EventArgs e) =>
                 {
@@ -34,7 +34,7 @@ namespace Client
                 ceas.AutoStartFileReceiveSpeedCheck = true;
                 ceas.DefaultIntervalForFileReceiveCheck = 1000;
                 ceas.DefaultSpeedUnit = ConnectionCommons.Unit.MBs;
-
+*/
             }
             catch (Exception e)
             {

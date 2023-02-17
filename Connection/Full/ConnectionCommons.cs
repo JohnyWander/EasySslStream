@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Connection.Full
 {
-    public class ConnectionCommons : IFileReceiveEventAndStats,IFileSendEventAndStats
+    public partial class ConnectionCommons : IFileReceiveEventAndStats,IFileSendEventAndStats,IDirectorySendEventAndStats
     {
         private ConnectionCommons() { }
         //File Transfer//////////////////////////////////////////////
@@ -109,7 +109,7 @@ namespace EasySslStream.Connection.Full
         {
             OnSendSpeedChecked.Invoke(this, EventArgs.Empty);
         }
-        public bool AutoStartFileSendSpeedCheck { get; set; } = true;
+        public bool AutoStartFileSendSpeedCheck { get; set; } = false;
         public int FileSendSpeedCheckInterval { get; set; } = 1000;
         public Unit DefaultFileSendCheckUnit    { get; set; } = Unit.Bps;
 
@@ -157,6 +157,84 @@ namespace EasySslStream.Connection.Full
 
 
 
+
+    }
+
+
+    public partial class ConnectionCommons : IFileReceiveEventAndStats, IFileSendEventAndStats, IDirectorySendEventAndStats
+    {
+
+        ////////// SendDirectory
+        internal static IDirectorySendEventAndStats CreateDirectorySendEventAndStats()
+        {
+            return new ConnectionCommons();
+        }
+        public int TotalFilesToSend { get; set; } = 0;
+        public string CurrentFilename { get; set; } = string.Empty;
+        public int CurrentFile { get; set; } = 0;
+
+        public int CurrentFileCurrentBytes { get; set; } = 0;
+        public float CurrentFileTotalBytes { get; set; } = 0;
+
+
+        public event EventHandler OnDirectoryProcessed;
+        public event EventHandler OnDirectorySendSpeedChecked;
+
+
+        public void RaiseOnDirectoryProcessed()
+        {
+            OnDirectoryProcessed?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal void RaiseOnDirectorySendSpeedChecked()
+        {
+            OnDirectorySendSpeedChecked?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        public float DirectorySendSpeed { get; set; } = 0;
+        public string stringDirectorySendSpeed { get; set; } = string.Empty;
+
+        public bool AutoStartDirectowrySendSpeedCheck { get; set; } = false;
+        public int DirectorySendCheckInterval { get; set; } = 1000;
+        public Unit DefaultDirectorySendUnit { get; set; } = Unit.Bps;
+
+        public async Task StartDirectorySendSpeedCheck(int Interval,Unit unit,CancellationToken cts = default(CancellationToken))
+        {
+            while (!cts.IsCancellationRequested)
+            {
+                int current = CurrentFileCurrentBytes;
+                await Task.Delay(Interval);
+                int AfterInvterval = CurrentFileCurrentBytes;
+
+
+                DirectorySendSpeed = (AfterInvterval - current) / (Interval / 1000);
+
+                switch (unit)
+                {
+                    case Unit.Bps:
+                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.Bps.ToString();
+                        break;
+                    case Unit.KBs:
+                        DirectorySendSpeed = DirectorySendSpeed / 1024;
+                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.KBs.ToString();
+                        break;
+                    case Unit.MBs:
+                        DirectorySendSpeed = DirectorySendSpeed / 1024 / 1024;
+                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.MBs.ToString();
+                        break;
+
+
+                }
+                RaiseOnDirectorySendSpeedChecked();
+
+
+            }
+        }
+
+
+        
+        
 
     }
 }

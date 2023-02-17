@@ -91,6 +91,26 @@ namespace EasySslStream
            foreach (SSLClient cl in server.ConnectedClients)
            {
 
+                IDirectorySendEventAndStats deas = cl.DirectorySendEventAndStats;
+                deas.OnDirectorySendSpeedChecked += (object sender,EventArgs e) =>
+                {
+                    
+                    Console.WriteLine(deas.stringDirectorySendSpeed);
+                    
+                };
+
+                deas.OnDirectoryProcessed += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(deas.CurrentFilename);
+                };
+
+
+
+                deas.AutoStartDirectowrySendSpeedCheck = true;
+
+                Thread.Sleep(2000);
+                cl.SendDirectory("C:\\TEST");
+ /*
                 IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
 
                 //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
@@ -134,7 +154,7 @@ namespace EasySslStream
                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
                 //cl.SendDirectory("C:\\TEST2śśęęąą");
 
-
+*/
             }
 
             //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
