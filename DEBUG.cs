@@ -106,10 +106,10 @@ namespace EasySslStream
 
 
 
-                deas.AutoStartDirectowrySendSpeedCheck = true;
+                deas.AutoStartDirectorySendSpeedCheck = true;
 
                 Thread.Sleep(2000);
-                cl.SendDirectory("C:\\TEST");
+                //cl.SendDirectory("C:\\TEST");
  /*
                 IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
 

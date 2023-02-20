@@ -17,24 +17,30 @@ namespace Client
                 client.VerifyCertificateName = false;
                 client.Connect("127.0.0.1", 10000);
 
-                //Thread.Sleep(12000);
-                
-                //client.SendFile("86998.zip");
+                Thread.Sleep(12000);
 
-               // Thread.Sleep(20000);
 
-               // client.SendFile("86998.zip");
-
-/*
-                IFileReceiveEventAndStats ceas = client.FileReceiveEventAndStats;
-                ceas.OnReceiveSpeedChecked += (object sender, EventArgs e) =>
+                client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
+                client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
                 {
-                    Console.WriteLine(ceas.stringSpeed);
+                    Console.WriteLine(client.FileSendEventAndStats.stringSendSpeed);
                 };
-                ceas.AutoStartFileReceiveSpeedCheck = true;
-                ceas.DefaultIntervalForFileReceiveCheck = 1000;
-                ceas.DefaultSpeedUnit = ConnectionCommons.Unit.MBs;
-*/
+
+
+             //   client.SendDirectory("TEST2");
+
+
+
+
+                client.SendFile("86998.zip");
+
+                // Thread.Sleep(20000);
+
+                // client.SendFile("86998.zip");
+
+                /*
+
+                */
             }
             catch (Exception e)
             {

@@ -399,14 +399,16 @@ namespace EasySslStream.Connection.Full
             Task.Run(async () =>
             {
 
-                CancellationTokenSource cts = new CancellationTokenSource();
+                CancellationTokenSource CancelFSC = new CancellationTokenSource();
 
-                Task.Run(() =>
+                if (FileSendEventAndStats.AutoStartFileSendSpeedCheck)
                 {
-                    FileSendEventAndStats.StartFileSendSpeedCheck(FileSendEventAndStats.FileSendSpeedCheckInterval,
-                        FileSendEventAndStats.DefaultFileSendCheckUnit, cts.Token);
-                });
-
+                    Task.Run(() =>
+                    {
+                        FileSendEventAndStats.StartFileSendSpeedCheck(FileSendEventAndStats.FileSendSpeedCheckInterval,
+                            FileSendEventAndStats.DefaultFileSendCheckUnit, CancelFSC.Token);
+                    });
+                }
 
 
 
@@ -461,7 +463,7 @@ namespace EasySslStream.Connection.Full
 
                 await fs.DisposeAsync();
 
-                cts.Cancel();
+                CancelFSC.Cancel();
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             // write.Dispose();
             //  fs.Dispose();
@@ -482,7 +484,7 @@ namespace EasySslStream.Connection.Full
             {
                 CancellationTokenSource cts = new CancellationTokenSource();
 
-                if (DirectorySendEventAndStats.AutoStartDirectowrySendSpeedCheck)
+                if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
                 {
                     Task.Run(() =>
                     {
@@ -759,14 +761,14 @@ namespace EasySslStream.Connection.Full
 
 
 
-
+            string AppDir = AppDomain.CurrentDomain.BaseDirectory;
 
 
             if (ReceivedFilesLocation == "")
             {
              //   Console.WriteLine(DirectoryName);
-                Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                Directory.CreateDirectory(DirectoryName);
+                //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                Directory.CreateDirectory(AppDir + DirectoryName);
             }
             //////////////////////////////
             /// File count
@@ -776,7 +778,7 @@ namespace EasySslStream.Connection.Full
 
             int FileCount = BitConverter.ToInt32(FileCountBuffer);
             //Console.WriteLine(FileCount);
-            Directory.SetCurrentDirectory(DirectoryName);
+            //Directory.SetCurrentDirectory(DirectoryName);
 
 
             try
@@ -824,11 +826,11 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(AppDir +Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
-                        FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
+                        FileStream fs = new FileStream(AppDir + innerPath, FileMode.Create, FileAccess.Write);
 
                         while ((stream.Read(DataChunk, 0, DataChunk.Length) != 0))
                         {
@@ -863,7 +865,7 @@ namespace EasySslStream.Connection.Full
                 Console.WriteLine(e.Message);
             }
 
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             return Task.CompletedTask;
         }

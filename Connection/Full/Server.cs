@@ -409,7 +409,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="serverCert">Server certificate</param>
         /// <param name="VerifyClients"></param>
         /// <param name="srvinstance"></param>
-        public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server srvinstance = null)
+        public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server? srvinstance = null)
         {
             
 
@@ -577,14 +577,14 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile(Server srv)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            CancellationTokenSource cancelCST= new CancellationTokenSource();
 
             if (this.FileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck)
             {
                 Task.Run(() =>
                 {
                     this.FileReceiveEventAndStats.StartFileReceiveSpeedCheck(this.FileReceiveEventAndStats.DefaultIntervalForFileReceiveCheck,
-                        this.FileReceiveEventAndStats.DefaultReceiveSpeedUnit, cts.Token);
+                        this.FileReceiveEventAndStats.DefaultReceiveSpeedUnit, cancelCST.Token);
                 });
             }
 
@@ -664,7 +664,7 @@ namespace EasySslStream.Connection.Full
 
 
             fs.Dispose();
-            cts.Cancel();
+           // cancelCST.Cancel();
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             
@@ -698,12 +698,13 @@ namespace EasySslStream.Connection.Full
 
             string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
 
+            string AppDir = AppDomain.CurrentDomain.BaseDirectory;
 
             if (srv.ReceivedFilesLocation == "")
             {
                // Console.WriteLine(DirectoryName);
-                Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                Directory.CreateDirectory(DirectoryName);
+               // Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                Directory.CreateDirectory(AppDir + DirectoryName);
             }
             //////////////////////////////
             /// File count
@@ -713,7 +714,7 @@ namespace EasySslStream.Connection.Full
 
             int FileCount = BitConverter.ToInt32(FileCountBuffer);
             //Console.WriteLine(FileCount);
-            Directory.SetCurrentDirectory(DirectoryName);
+           // Directory.SetCurrentDirectory(DirectoryName);
 
 
             try
@@ -761,11 +762,11 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(AppDir +Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
-                        FileStream fs = new FileStream(innerPath, FileMode.Create, FileAccess.Write);
+                        FileStream fs = new FileStream(AppDir + innerPath, FileMode.Create, FileAccess.Write);
 
                         while ((sslstream_.Read(DataChunk, 0, DataChunk.Length) != 0))
                         {
@@ -800,7 +801,7 @@ namespace EasySslStream.Connection.Full
                 throw new Exceptions.ServerException("Error occured while receiving directory" + e.GetType().Name + "\n" + e.Message);
             }
 
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
             return Task.CompletedTask;
         }
@@ -967,18 +968,19 @@ namespace EasySslStream.Connection.Full
         /// Higher = slower transfer, smaller chance to fail
         /// 20ms by default </param>
         /// <exception cref="Exceptions.ServerException"></exception>
+        /// 
         public void SendDirectory(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
             Task.Run(async () =>
             {
-                CancellationTokenSource cts = new CancellationTokenSource();
+                CancellationTokenSource SDCancel = new CancellationTokenSource();
 
-                if (DirectorySendEventAndStats.AutoStartDirectowrySendSpeedCheck)
+                if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
                 {
                     Task.Run(() =>
                     {
                         DirectorySendEventAndStats.StartDirectorySendSpeedCheck(DirectorySendEventAndStats.DirectorySendCheckInterval,
-                            DirectorySendEventAndStats.DefaultDirectorySendUnit, cts.Token);
+                            DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
 
                     });
 
@@ -1075,6 +1077,7 @@ namespace EasySslStream.Connection.Full
                             sslstream_.Flush();
                             fs.Dispose();
                             DirectorySendEventAndStats.RaiseOnDirectoryProcessed();
+                            SDCancel.Cancel();
                             // Task.Delay(100).Wait();
 
                         }

@@ -145,7 +145,7 @@ namespace EasySslStream.Connection.Full
 
 
                 }
-                OnSendSpeedChecked.Invoke(this, EventArgs.Empty);
+                OnSendSpeedChecked?.Invoke(this, EventArgs.Empty);
             }
         }
         internal static IFileSendEventAndStats CreateFileSend()
@@ -195,7 +195,7 @@ namespace EasySslStream.Connection.Full
         public float DirectorySendSpeed { get; set; } = 0;
         public string stringDirectorySendSpeed { get; set; } = string.Empty;
 
-        public bool AutoStartDirectowrySendSpeedCheck { get; set; } = false;
+        public bool AutoStartDirectorySendSpeedCheck { get; set; } = false;
         public int DirectorySendCheckInterval { get; set; } = 1000;
         public Unit DefaultDirectorySendUnit { get; set; } = Unit.Bps;
 
