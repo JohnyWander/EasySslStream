@@ -161,7 +161,7 @@ namespace EasySslStream.Connection.Full
     }
 
 
-    public partial class ConnectionCommons : IFileReceiveEventAndStats, IFileSendEventAndStats, IDirectorySendEventAndStats
+    public partial class ConnectionCommons : IDirectorySendEventAndStats, IDirectoryReceiveEventAndStats
     {
 
         ////////// SendDirectory
@@ -170,20 +170,20 @@ namespace EasySslStream.Connection.Full
             return new ConnectionCommons();
         }
         public int TotalFilesToSend { get; set; } = 0;
-        public string CurrentFilename { get; set; } = string.Empty;
-        public int CurrentFile { get; set; } = 0;
+        public string CurrentSendFilename { get; set; } = string.Empty;
+        public int CurrentSendFile { get; set; } = 0;
 
-        public int CurrentFileCurrentBytes { get; set; } = 0;
-        public float CurrentFileTotalBytes { get; set; } = 0;
+        public int CurrentSendFileCurrentBytes { get; set; } = 0;
+        public float CurrentSendFileTotalBytes { get; set; } = 0;
 
 
-        public event EventHandler OnDirectoryProcessed;
+        public event EventHandler OnFileFromDirectorySendProcessed;
         public event EventHandler OnDirectorySendSpeedChecked;
 
 
-        public void RaiseOnDirectoryProcessed()
+        public void RaiseOnFileFromDirectorySendProcessed()
         {
-            OnDirectoryProcessed?.Invoke(this, EventArgs.Empty);
+            OnFileFromDirectorySendProcessed?.Invoke(this, EventArgs.Empty);
         }
 
         internal void RaiseOnDirectorySendSpeedChecked()
@@ -203,9 +203,9 @@ namespace EasySslStream.Connection.Full
         {
             while (!cts.IsCancellationRequested)
             {
-                int current = CurrentFileCurrentBytes;
+                int current = CurrentSendFileCurrentBytes;
                 await Task.Delay(Interval);
-                int AfterInvterval = CurrentFileCurrentBytes;
+                int AfterInvterval = CurrentSendFileCurrentBytes;
 
 
                 DirectorySendSpeed = (AfterInvterval - current) / (Interval / 1000);
@@ -233,8 +233,74 @@ namespace EasySslStream.Connection.Full
         }
 
 
-        
-        
+        //////////////////////////////////////////////////////////////////////// GetDirectory
+         internal static IDirectoryReceiveEventAndStats CreateDirectoryReceiveEventAndStats()
+         {
+            return new ConnectionCommons();
+         }
+
+
+
+        public int TotalFilesToReceive { get; set; } = 0;
+        public string CurrentReceivedFileName { get;  set; }
+        public int CurrentReceiveFile { get; set; }
+
+        public int CurrentReceiveFileCurrentBytes { get;  set; } = 0;
+        public float CurrentReceiveFileTotalBytes { get;  set; } = 0;
+
+
+        public event EventHandler OnFileFromDirectoryReceiveProcessed;
+        public event EventHandler OnDirectoryReceiveSpeedChecked;
+
+        public void RaiseOnFileFromDirectoryReceiveProcessed()
+        {
+            OnFileFromDirectoryReceiveProcessed?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void RaiseOnDirectoryReceiveSpeedChecked()
+        {
+            OnDirectorySendSpeedChecked?.Invoke(this, EventArgs.Empty);
+        }
+
+        public float DirectoryReceiveSpeed { get; set; } = 0;
+        public string stringDirectoryReceiveSpeed { get; set; } = string.Empty;
+
+        public bool AutoStartDirectoryReceiveSpeedCheck { get; set; } = false;
+        public int DirectoryReceiveCheckInterval { get; set; } = 1000;
+        public Unit DefaultDirectoryReceiveUnit { get; set; } = Unit.Bps;
+
+        public async Task StartDirectoryReceiveSpeedCheck(int Interval, Unit unit, CancellationToken cts = default(CancellationToken))
+        {
+            while (!cts.IsCancellationRequested)
+            {
+                int current = CurrentReceiveFileCurrentBytes;
+                await Task.Delay(Interval);
+                int AfterInvterval = CurrentReceiveFileCurrentBytes;
+
+
+                DirectoryReceiveSpeed = (AfterInvterval - current) / (Interval / 1000);
+
+                switch (unit)
+                {
+                    case Unit.Bps:
+                        stringDirectoryReceiveSpeed = DirectoryReceiveSpeed + " " + Unit.Bps.ToString();
+                        break;
+                    case Unit.KBs:
+                        DirectoryReceiveSpeed = DirectoryReceiveSpeed / 1024;
+                        stringDirectoryReceiveSpeed = DirectoryReceiveSpeed + " " + Unit.KBs.ToString();
+                        break;
+                    case Unit.MBs:
+                        DirectoryReceiveSpeed = DirectoryReceiveSpeed / 1024 / 1024;
+                        stringDirectoryReceiveSpeed = DirectoryReceiveSpeed + " " + Unit.MBs.ToString();
+                        break;
+
+
+                }
+                RaiseOnDirectoryReceiveSpeedChecked();
+
+
+            }
+        }
 
     }
 }

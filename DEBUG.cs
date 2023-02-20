@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-  
+  /*
     public static class Program
 
     {
@@ -99,9 +99,9 @@ namespace EasySslStream
                     
                 };
 
-                deas.OnDirectoryProcessed += (object sender, EventArgs e) =>
+                deas.OnFileFromDirectorySendProcessed += (object sender, EventArgs e) =>
                 {
-                    Console.WriteLine(deas.CurrentFilename);
+                    Console.WriteLine(deas.CurrentSendFilename);
                 };
 
 
@@ -154,7 +154,7 @@ namespace EasySslStream
                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
                 //cl.SendDirectory("C:\\TEST2śśęęąą");
 
-*/
+
             }
 
             //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
@@ -169,5 +169,5 @@ namespace EasySslStream
 
 
     }
-  
+  */
 }

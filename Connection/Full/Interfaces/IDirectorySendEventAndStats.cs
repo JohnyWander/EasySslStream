@@ -16,29 +16,29 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Name of currently proccessed file
         /// </summary>
-        public string CurrentFilename { get; set; }
+        public string CurrentSendFilename { get; set; }
 
         /// <summary>
         /// Number of currently processed file
         /// </summary>
-        public int CurrentFile { get; set; }
+        public int CurrentSendFile { get; set; }
 
         /// <summary>
         /// Amount of processed bytes of currently processed file
         /// </summary>
-        public int CurrentFileCurrentBytes { get; set; }
+        public int CurrentSendFileCurrentBytes { get; set; }
 
 
         /// <summary>
         /// Total bytes of current file to procces 
         /// </summary>
-        public float CurrentFileTotalBytes { get; set; }
+        public float CurrentSendFileTotalBytes { get; set; }
 
 
         /// <summary>
         /// Event raised when any file transfer from directory ends
         /// </summary>
-         event EventHandler OnDirectoryProcessed;
+        event EventHandler OnFileFromDirectorySendProcessed;
 
         /// <summary>
         /// Raised when connection speed is checked<br></br>
@@ -47,9 +47,9 @@ namespace EasySslStream.Connection.Full
         /// <see cref="DefaultDirectorySendUnit"/>)<br>
         /// with this event</br>
         /// </summary>
-         event EventHandler OnDirectorySendSpeedChecked;
+        event EventHandler OnDirectorySendSpeedChecked;
 
-        internal void RaiseOnDirectoryProcessed();
+        internal void RaiseOnFileFromDirectorySendProcessed();
 
         /// <summary>
         /// Numeric representation of connection speed in specified unit
