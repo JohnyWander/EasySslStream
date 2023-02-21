@@ -61,11 +61,11 @@ namespace EasySslStream.Connection.Full
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.Bps.ToString();
                         break;
                     case Unit.KBs:
-                        ReceiveSpeed = ReceiveSpeed / 1024;
+                        ReceiveSpeed = ReceiveSpeed / 1024f;
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.KBs.ToString();
                         break;
                     case Unit.MBs:
-                        ReceiveSpeed = ReceiveSpeed / 1024 / 1024;
+                        ReceiveSpeed = ReceiveSpeed / 1024f / 1024f;
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.MBs.ToString();
                         break;
                 }

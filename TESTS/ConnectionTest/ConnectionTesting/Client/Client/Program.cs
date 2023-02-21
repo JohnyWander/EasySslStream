@@ -25,8 +25,8 @@ namespace Client
                     Console.WriteLine(client.FileReceiveEventAndStats.stringReceiveSpeed + "  " +
                         client.FileReceiveEventAndStats.CurrentReceivedBytes + " / " + client.FileReceiveEventAndStats.TotalBytesToReceive);
                };
-
-                //client.SendFile("x.zip");
+                Thread.Sleep(13000);
+                client.SendFile("x.zip");
 
                // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
                // client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>

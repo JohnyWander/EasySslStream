@@ -645,7 +645,7 @@ namespace EasySslStream.Connection.Full
 
 
                 fs.Write(ReceiveBuffer);
-                FileReceiveEventAndStats.CurrentReceivedBytes = (int)fs.Position;
+                FileReceiveEventAndStats.CurrentReceivedBytes = fs.Position;
                 FileReceiveEventAndStats.FireDataChunkReceived();
 
 
