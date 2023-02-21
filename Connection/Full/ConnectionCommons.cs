@@ -135,11 +135,11 @@ namespace EasySslStream.Connection.Full
                         stringSendSpeed = SendSpeed + " " + Unit.Bps.ToString();
                         break;
                     case Unit.KBs:
-                        SendSpeed = SendSpeed / 1024f;
+                        SendSpeed = Math.Abs(SendSpeed / 1024f);
                         stringSendSpeed = SendSpeed + " " + Unit.KBs.ToString();
                         break;
                     case Unit.MBs:
-                        SendSpeed = SendSpeed / 1024f / 1024f;
+                        SendSpeed = Math.Abs(SendSpeed / 1024f / 1024f);
                         stringSendSpeed = SendSpeed + " " + Unit.MBs.ToString();
                         break;
 

@@ -726,7 +726,7 @@ namespace EasySslStream.Connection.Full
                 while ((stream.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
                 {
                     fs.Write(ReceiveBuffer);
-                    FileReceiveEventAndStats.CurrentReceivedBytes = (int)fs.Position;
+                    FileReceiveEventAndStats.CurrentReceivedBytes = fs.Position;
                     FileReceiveEventAndStats.FireDataChunkReceived();
                     if (fs.Length >= FileLength)
                     {
