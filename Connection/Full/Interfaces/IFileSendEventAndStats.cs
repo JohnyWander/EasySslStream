@@ -8,8 +8,8 @@ namespace EasySslStream.Connection.Full
 {
     public interface IFileSendEventAndStats
     {
-        public int CurrentSendBytes { get; set; }
-        public int TotalBytesToSend { get; set; }
+        public long CurrentSendBytes { get; set; }
+        public long TotalBytesToSend { get; set; }
         public event EventHandler OnDataChunkSent;
         internal void FireOnDataChunkSent();
 

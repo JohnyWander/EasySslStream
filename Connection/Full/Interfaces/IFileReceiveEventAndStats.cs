@@ -12,12 +12,12 @@ namespace EasySslStream.Connection.Full
        /// <summary>
        /// Current bytes of transfer
        /// </summary>
-        int CurrentReceivedBytes { get; set; } 
+        long CurrentReceivedBytes { get; set; } 
 
         /// <summary>
         /// Total bytes of processed file
         /// </summary>
-        int TotalBytesToReceive { get; set; }
+        long TotalBytesToReceive { get; set; }
 
         /// <summary>
         /// Raised when chunk of data is received

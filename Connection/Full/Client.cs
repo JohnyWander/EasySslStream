@@ -436,24 +436,24 @@ namespace EasySslStream.Connection.Full
                 await work.Writer.WriteAsync(SendFilename);
 
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-                FileSendEventAndStats.TotalBytesToSend = (int)fs.Length;
+                FileSendEventAndStats.TotalBytesToSend = fs.Length;
                 Action SendFileLength = () =>
                 {
 
-                    stream.Write(BitConverter.GetBytes((int)fs.Length));
+                    stream.Write(BitConverter.GetBytes(fs.Length));
                 }; await work.Writer.WaitToWriteAsync();
                 await work.Writer.WriteAsync(SendFileLength);
 
 
-                int bytesLeft = (int)fs.Length;
-                int Readed = 0;
+                long bytesLeft = fs.Length;
+                long Readed = 0;
 
 
-                int times = (int)fs.Length / 512;
+                long times = fs.Length / 512;
 
                 await Task.Delay(2000);
 
-                int Received = 0;
+                long Received = 0;
 
                 while (Received != fs.Length)
                 {
@@ -690,7 +690,7 @@ namespace EasySslStream.Connection.Full
                 int lengthbytes = -1;
                 byte[] file_length_buffer = new byte[512];
                 lengthbytes = stream.Read(file_length_buffer);
-                int FileLength = BitConverter.ToInt32(file_length_buffer);
+                long FileLength = BitConverter.ToInt64(file_length_buffer);
 
                 this.FileReceiveEventAndStats.CurrentReceivedBytes = 0;
                 this.FileReceiveEventAndStats.TotalBytesToReceive = FileLength;
@@ -714,7 +714,7 @@ namespace EasySslStream.Connection.Full
                     }
                 }
 
-                int bytesReceived = 0;
+                long bytesReceived = 0;
                 byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
 
                 if (ReceivedFilesLocation != "")

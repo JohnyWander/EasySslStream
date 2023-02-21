@@ -273,9 +273,9 @@ namespace EasySslStream.Connection.Full
     /// <summary>
     /// Represents connected client 
     /// </summary>
-    public sealed class SSLClient 
+    public sealed class SSLClient
     {
-        
+
 
         internal bool Busy = false;
 
@@ -413,7 +413,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="srvinstance"></param>
         public SSLClient(TcpClient client, X509Certificate2 serverCert, bool VerifyClients, Server? srvinstance = null)
         {
-            
+
 
             Busy = false;
             client_ = client;
@@ -432,7 +432,7 @@ namespace EasySslStream.Connection.Full
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
                 sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true);
-                
+
             }
             else
             {
@@ -579,7 +579,7 @@ namespace EasySslStream.Connection.Full
 
         private Task GetFile(Server srv)
         {
-            CancellationTokenSource cancelCST= new CancellationTokenSource();
+            CancellationTokenSource cancelCST = new CancellationTokenSource();
 
             if (this.FileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck)
             {
@@ -601,10 +601,10 @@ namespace EasySslStream.Connection.Full
             int lengthbytes = -1;
             byte[] file_length_buffer = new byte[512];
             lengthbytes = sslstream_.Read(file_length_buffer);
-            int FileLength = BitConverter.ToInt32(file_length_buffer);
+            long FileLength = BitConverter.ToInt64(file_length_buffer);
 
             this.FileReceiveEventAndStats.CurrentReceivedBytes = 0;
-            this.FileReceiveEventAndStats.TotalBytesToReceive = FileLength; 
+            this.FileReceiveEventAndStats.TotalBytesToReceive = FileLength;
 
 
 
@@ -643,12 +643,12 @@ namespace EasySslStream.Connection.Full
             while ((sslstream_.Read(ReceiveBuffer, 0, ReceiveBuffer.Length) != 0))
             {
 
-                
+
                 fs.Write(ReceiveBuffer);
                 FileReceiveEventAndStats.CurrentReceivedBytes = (int)fs.Position;
                 FileReceiveEventAndStats.FireDataChunkReceived();
 
-                
+
 
                 if (fs.Length >= FileLength)
                 {
@@ -666,10 +666,10 @@ namespace EasySslStream.Connection.Full
 
 
             fs.Dispose();
-           // cancelCST.Cancel();
+            // cancelCST.Cancel();
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-            
+
             return Task.CompletedTask;
         }
 
@@ -722,8 +722,8 @@ namespace EasySslStream.Connection.Full
 
             if (srv.ReceivedFilesLocation == "")
             {
-               // Console.WriteLine(DirectoryName);
-               // Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+                // Console.WriteLine(DirectoryName);
+                // Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
                 Directory.CreateDirectory(AppDir + DirectoryName);
             }
             //////////////////////////////
@@ -785,11 +785,11 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(AppDir +Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(AppDir + Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
-                       
+
 
 
 
@@ -804,7 +804,7 @@ namespace EasySslStream.Connection.Full
                             fs.Write(DataChunk);
                             if (fs.Length >= FileLength)
                             {
-                                
+
                                 DirectorySendEventAndStats.CurrentSendFileCurrentBytes = (int)fs.Length;
                                 break;
                             }
@@ -823,10 +823,10 @@ namespace EasySslStream.Connection.Full
                         DirectoryReceiveEventAndStats.RaiseOnFileFromDirectoryReceiveProcessed();
 
                         GDCancel.Cancel();
-                        
+
                     }
 
-                   
+
 
                 }
 
@@ -939,23 +939,23 @@ namespace EasySslStream.Connection.Full
                 await ServerSendingQueue.Writer.WriteAsync(SendFilename);
 
                 FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-                FileSendEventAndStats.TotalBytesToSend = (int)fs.Length;
+                FileSendEventAndStats.TotalBytesToSend = fs.Length;
 
                 Action SendFileLength = () =>
                 {
 
-                    sslstream_.Write(BitConverter.GetBytes((int)fs.Length));
+                    sslstream_.Write(BitConverter.GetBytes(fs.Length));
                 }; await ServerSendingQueue.Writer.WaitToWriteAsync();
                 await ServerSendingQueue.Writer.WriteAsync(SendFileLength);
 
-                
+
 
 
 
 
                 await Task.Delay(2000);
 
-                int Received = 0;
+                long Received = 0;
 
                 while (Received != fs.Length)
                 {
@@ -1009,7 +1009,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories); 
+                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
 
 
@@ -1064,7 +1064,7 @@ namespace EasySslStream.Connection.Full
                             DirectorySendEventAndStats.CurrentSendFileCurrentBytes = 0;
                             DirectorySendEventAndStats.CurrentSendFileTotalBytes = fs.Length;
                             DirectorySendEventAndStats.CurrentSendFilename = innerPath;
-                            
+
                             //    Task.Delay(100).Wait();
                             //    sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
                             //   Task.Delay(10000).Wait();
