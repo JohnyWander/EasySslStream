@@ -310,11 +310,81 @@
             </summary>
             <param name="path">Path to the file</param>
         </member>
+        <member name="M:EasySslStream.Connection.Full.Client.SendDirectory(System.String,System.Boolean,System.Int32)">
+            <summary>
+            Sends directory over Sslstream
+            </summary>
+            <param name="DirPath">path to the directory</param>
+            <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
+            <param name="FailSafeSendInterval">Sometimes connection crashes after file info is sent, inverval can be set to prevent this issue from happenning
+            Higher = slower transfer, smaller chance to fail
+            20ms by default </param>
+            <exception cref="T:EasySslStream.Exceptions.ConnectionException"></exception>
+        </member>
         <member name="M:EasySslStream.Connection.Full.Client.SendRawBytes(System.Byte[])">
             <summary>
             Sends raw bytes message 
             </summary>
             <param name="Message">bytes to send</param>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.CurrentReceivedBytes">
+            <summary>
+            Current bytes of transfer
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.TotalBytesToReceive">
+            <summary>
+            Total bytes of processed file
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IFileReceiveEventAndStats.OnDataChunkReceived">
+            <summary>
+            Raised when chunk of data is received
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.DefaultReceiveSpeedUnit">
+            <summary>
+            Units of transfer speed
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck">
+            <summary>
+            If true everytime file transfer start, StartFileReceiveSpeedCheck is started with pre-set settings
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.DefaultIntervalForFileReceiveCheck">
+            <summary>
+            Interval between each speed check
+            </summary>
+        </member>
+        <member name="T:EasySslStream.Connection.Full.IFileReceiveEventAndStats.Unit">
+            <summary>
+            Units of transfer speed
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.ReceiveSpeed">
+            <summary>
+            Calculated speed as float
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.stringReceiveSpeed">
+            <summary>
+            Transfer speed with it's unit
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IFileReceiveEventAndStats.OnReceiveSpeedChecked">
+            <summary>
+            Raised when transfer speed is checked
+            </summary>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.IFileReceiveEventAndStats.StartFileReceiveSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)">
+            <summary>
+            Checks connection speed evetytime specified Interval passes
+            </summary>
+            <param name="Interval">Delay between each check</param>
+            <param name="unit">Unit of transfer speed</param>
+            <param name="cts"></param>
+            <returns></returns>
         </member>
         <member name="T:EasySslStream.Connection.Full.Server">
             <summary>
@@ -487,7 +557,8 @@
             <param name="DirPath">path to the directory</param>
             <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
             <param name="FailSafeSendInterval">Sometimes connection crashes after file info is sent, inverval can be set to prevent this issue from happenning
-            Higher = slower transfer, smaller chance to fail</param>
+            Higher = slower transfer, smaller chance to fail
+            20ms by default </param>
             <exception cref="T:EasySslStream.Exceptions.ServerException"></exception>
         </member>
         <member name="T:EasySslStream.Interop.User32">

@@ -1,4 +1,5 @@
 ﻿using EasySslStream;
+using EasySslStream.Connection.Full;
 using System.Text;
 
 namespace Client
@@ -15,6 +16,31 @@ namespace Client
                 client.VerifyCertificateChain = false;
                 client.VerifyCertificateName = false;
                 client.Connect("127.0.0.1", 10000);
+
+                Thread.Sleep(12000);
+
+
+                client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
+                client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(client.FileSendEventAndStats.stringSendSpeed);
+                };
+
+
+             //   client.SendDirectory("TEST2");
+
+
+
+
+                client.SendFile("86998.zip");
+
+                // Thread.Sleep(20000);
+
+                // client.SendFile("86998.zip");
+
+                /*
+
+                */
             }
             catch (Exception e)
             {

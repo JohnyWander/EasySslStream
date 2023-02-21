@@ -82,22 +82,87 @@ namespace EasySslStream
             Thread.Sleep(10000);
 
 
+            
+            
 
 
 
-            foreach (SSLClient cl in server.ConnectedClients)
-            {
+
+           foreach (SSLClient cl in server.ConnectedClients)
+           {
+
+                IDirectorySendEventAndStats deas = cl.DirectorySendEventAndStats;
+                deas.OnDirectorySendSpeedChecked += (object sender,EventArgs e) =>
+                {
+                    
+                    Console.WriteLine(deas.stringDirectorySendSpeed);
+                    
+                };
+
+                deas.OnFileFromDirectorySendProcessed += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(deas.CurrentSendFilename);
+                };
+
+
+
+                deas.AutoStartDirectorySendSpeedCheck = true;
+
+                Thread.Sleep(2000);
+                //cl.SendDirectory("C:\\TEST");
+ /*
+                IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
+
+                //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
+                //{
+                //    Console.WriteLine(ceas.CurrentBytes + "/" + ceas.TotalBytes);
+
+                //};
+                reas.OnReceiveSpeedChecked += (object sender,EventArgs e) =>
+                {
+                    Console.WriteLine(reas.stringReceiveSpeed);
+                    
+
+                };
+                reas.AutoStartFileReceiveSpeedCheck = true;
+                
+                 reas.DefaultIntervalForFileReceiveCheck = 1000;
+                reas.DefaultReceiveSpeedUnit = ConnectionCommons.Unit.MBs;
+
+
+
+                IFileSendEventAndStats seas = cl.FileSendEventAndStats;
+
+                seas.OnSendSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(seas.stringSendSpeed);
+                };
+                seas.AutoStartFileSendSpeedCheck = true;
+                seas.DefaultFileSendCheckUnit = ConnectionCommons.Unit.MBs;
+                seas.FileSendSpeedCheckInterval = 1000;
+
+                
+                Thread.Sleep(3000);
+                cl.SendFile("86998.zip");
+
+                // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
+
+
+
+
                 //Console.WriteLine("IS CONNECTION");
-               //  cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                cl.SendDirectory("C:\\TEST2śśęęąą"); 
+                //cl.SendDirectory("C:\\Program Files\\Common Files",false);
+                //cl.SendDirectory("C:\\TEST2śśęęąą");
+
+
             }
 
-            //      server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
+            //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
-            //   Thread.Sleep(10000);
+            // Thread.Sleep(10000);
             //  server.TestList();
 
-           
+
 
         }
 
