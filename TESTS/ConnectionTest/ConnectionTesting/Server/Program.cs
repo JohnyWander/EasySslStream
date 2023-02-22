@@ -8,7 +8,7 @@ namespace ConnectionTesting
     {
         static void Main(string[] args)
         {
-
+            DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
             DynamicConfiguration.TransportBufferSize = 8192;
             Server server = new Server();
             server.CertificateCheckSettings.VerifyCertificateName = false;
@@ -23,14 +23,6 @@ namespace ConnectionTesting
              // Server To client ----->>>>>>
             foreach(SSLClient cl in server.ConnectedClients)
             {
-                // cl.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server ćńéé"));
-
-                // Thread.Sleep(2000);
-
-                //cl.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 });
-
-                // cl.SendFile("Cent.iso"); // large file
-
                 cl.FileReceiveEventAndStats.DefaultReceiveSpeedUnit = ConnectionCommons.Unit.MBs;
                 cl.FileReceiveEventAndStats.AutoStartFileReceiveSpeedCheck = true;
                 cl.FileReceiveEventAndStats.OnReceiveSpeedChecked += (object sender, EventArgs e) =>
@@ -38,6 +30,17 @@ namespace ConnectionTesting
                     Console.WriteLine(cl.FileReceiveEventAndStats.stringReceiveSpeed + "  " +
                         cl.FileReceiveEventAndStats.CurrentReceivedBytes + " / " + cl.FileReceiveEventAndStats.TotalBytesToReceive);
                 };
+               // cl.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server ćńéé")); //OK
+
+                 Thread.Sleep(2000);
+
+               // cl.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 }); // OK
+
+                // cl.SendFile("Cent.iso"); // large file //OK, works two ways
+               // Thread.Sleep(1000);
+                //cl.SendDirectory("C:\\TEST");
+
+              
             }
         }
     }

@@ -718,13 +718,20 @@ namespace EasySslStream.Connection.Full
 
             string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
 
-            string AppDir = AppDomain.CurrentDomain.BaseDirectory;
+            string WorkDir = "";
 
-            if (srv.ReceivedFilesLocation == "")
+            if (srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory) 
             {
-                // Console.WriteLine(DirectoryName);
-                // Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                Directory.CreateDirectory(AppDir + DirectoryName);
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+                Directory.CreateDirectory(WorkDir+DirectoryName);
+            }
+            else if (srv.ReceivedFilesLocation == "")
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+            }
+            else
+            {
+                WorkDir = srv.ReceivedFilesLocation + "\\";
             }
             //////////////////////////////
             /// File count
@@ -767,7 +774,7 @@ namespace EasySslStream.Connection.Full
 
                     string innerPath = FilenameEncoding.GetString(InnerDirectoryNameBuffer).Trim(Convert.ToChar(0x00));
                     innerPath = FilenameEncoding.GetString(Convert.FromBase64String(innerPath));
-                    //Console.WriteLine(innerPath);
+                    Console.WriteLine(innerPath);
                     string[] msplit = innerPath.Split("$$$");
                     innerPath = msplit[0].TrimStart('\\').TrimStart('/');
                     long FileLength = Convert.ToInt64(msplit[1]);
@@ -785,7 +792,7 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(AppDir + Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(WorkDir + DirectoryName+"\\"+ Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
@@ -793,7 +800,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-                        FileStream fs = new FileStream(AppDir + innerPath, FileMode.Create, FileAccess.Write);
+                        FileStream fs = new FileStream(WorkDir + DirectoryName +"\\"+ innerPath, FileMode.Create, FileAccess.Write);
 
                         DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = 0;
                         DirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes = fs.Length;

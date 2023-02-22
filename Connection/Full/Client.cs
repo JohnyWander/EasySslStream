@@ -779,15 +779,20 @@ namespace EasySslStream.Connection.Full
 
 
 
+            string WorkDir = "";
 
-            string AppDir = AppDomain.CurrentDomain.BaseDirectory;
-
-
-            if (ReceivedFilesLocation == "")
+            if (this.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
             {
-             //   Console.WriteLine(DirectoryName);
-                //Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-                Directory.CreateDirectory(AppDir + DirectoryName);
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+                Directory.CreateDirectory(WorkDir + DirectoryName);
+            }
+            else if (this.ReceivedFilesLocation == "")
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+            }
+            else
+            {
+                WorkDir = this.ReceivedFilesLocation + "\\";
             }
             //////////////////////////////
             /// File count
@@ -847,11 +852,11 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(AppDir +Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(WorkDir + DirectoryName + "\\" + Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
-                        FileStream fs = new FileStream(AppDir + innerPath, FileMode.Create, FileAccess.Write);
+                        FileStream fs = new FileStream(WorkDir + DirectoryName + "\\" + innerPath, FileMode.Create, FileAccess.Write);
                         DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = 0;
                         DirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes = fs.Length;
                         DirectoryReceiveEventAndStats.CurrentReceivedFileName = innerPath;

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream
 {
-  /*
+  
     public static class Program
 
     {
@@ -110,7 +110,7 @@ namespace EasySslStream
 
                 Thread.Sleep(2000);
                 //cl.SendDirectory("C:\\TEST");
- /*
+ 
                 IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
 
                 //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
@@ -143,7 +143,7 @@ namespace EasySslStream
 
                 
                 Thread.Sleep(3000);
-                cl.SendFile("86998.zip");
+               // cl.SendFile("86998.zip");
 
                 // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
 
@@ -152,7 +152,7 @@ namespace EasySslStream
 
                 //Console.WriteLine("IS CONNECTION");
                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                //cl.SendDirectory("C:\\TEST2śśęęąą");
+                cl.SendDirectory("C:\\TEST");
 
 
             }
@@ -162,12 +162,12 @@ namespace EasySslStream
             // Thread.Sleep(10000);
             //  server.TestList();
 
-
+            //*/
 
         }
 
 
 
     }
-  */
+  
 }

@@ -11,7 +11,7 @@ namespace Client
         {
             try
             {
-                DynamicConfiguration.TransportBufferSize = 8192;
+                DynamicConfiguration.TransportBufferSize = 4096;
                 DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
                 EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
                 client.VerifyCertificateChain = false;
@@ -26,24 +26,27 @@ namespace Client
                         client.FileReceiveEventAndStats.CurrentReceivedBytes + " / " + client.FileReceiveEventAndStats.TotalBytesToReceive);
                };
                 Thread.Sleep(13000);
-                client.SendFile("x.zip");
+              //  client.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server éééę")); // OK
+                //client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 }); // OK
+                //client.SendFile("x.zip");
 
+                Thread.Sleep(1000);
+             //   client.SendDirectory("C:\\TEST2śśęęąą");
+                //client.SendDirectory("C:\\TEST");
                // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
                // client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
-              //  {
+               //  {
                //     Console.WriteLine(client.FileSendEventAndStats.stringSendSpeed);
                // };
 
-               // Thread.Sleep(12000);
+                // Thread.Sleep(12000);
 
-               // client.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server éééę"));
+                // client.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server éééę"));
 
-            //    Thread.Sleep(2000);
+                //    Thread.Sleep(2000);
 
-               // client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 });
-             //   client.SendDirectory("TEST2");
-
-
+                // client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 });
+                //   client.SendDirectory("TEST2");
 
 
 
@@ -56,7 +59,9 @@ namespace Client
 
 
 
-               // client.SendFile("86998.zip");
+
+
+                // client.SendFile("86998.zip");
 
                 // Thread.Sleep(20000);
 
