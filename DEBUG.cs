@@ -95,7 +95,7 @@ namespace EasySslStream
                 deas.OnDirectorySendSpeedChecked += (object sender,EventArgs e) =>
                 {
                     
-                    Console.WriteLine(deas.stringDirectorySendSpeed);
+                  //  Console.WriteLine(deas.stringDirectorySendSpeed);
                     
                 };
 
@@ -135,7 +135,7 @@ namespace EasySslStream
 
                 seas.OnSendSpeedChecked += (object sender, EventArgs e) =>
                 {
-                    Console.WriteLine(seas.stringSendSpeed);
+                //    Console.WriteLine(seas.stringSendSpeed);
                 };
                 seas.AutoStartFileSendSpeedCheck = true;
                 seas.DefaultFileSendCheckUnit = ConnectionCommons.Unit.MBs;
@@ -143,7 +143,7 @@ namespace EasySslStream
 
                 
                 Thread.Sleep(3000);
-               // cl.SendFile("86998.zip");
+                // cl.SendFile("86998.zip");
 
                 // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
 
@@ -152,8 +152,8 @@ namespace EasySslStream
 
                 //Console.WriteLine("IS CONNECTION");
                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                cl.SendDirectory("C:\\TEST");
-
+                  cl.SendDirectoryV2("C:\\TEST");
+               // cl.SendDirectory("C:\\TEST");
 
             }
 
