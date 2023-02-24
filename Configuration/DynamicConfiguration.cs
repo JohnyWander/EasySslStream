@@ -33,7 +33,7 @@ namespace EasySslStream
         /// Buffer size for sending files / large Messages. 
         /// Setting this higher could be buggy ! Client and server
         /// </summary>
-        public static int TransportBufferSize = 8192;
+        public static int TransportBufferSize = 4096;
 
         /// <summary>
         /// Debug modes
