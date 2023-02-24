@@ -192,8 +192,8 @@
         </member>
         <member name="F:EasySslStream.DynamicConfiguration.TransportBufferSize">
             <summary>
-            Buffer size for sending files / large Messages. Smaller buffer = higher cpu load, smaller probability of fail
-            Bigger buffer = lower cpu load, bigger probability of fail
+            Buffer size for sending files / large Messages. 
+            Setting this higher could be buggy ! Client and server
             </summary>
         </member>
         <member name="T:EasySslStream.DynamicConfiguration.DEBUG_MODE">
@@ -326,6 +326,140 @@
             Sends raw bytes message 
             </summary>
             <param name="Message">bytes to send</param>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.TotalFilesToReceive">
+            <summary>
+            Amount of all files to receive
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.CurrentReceivedFileName">
+            <summary>
+            Name of currently proccessed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.CurrentReceiveFile">
+            <summary>
+            Number of currently processed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes">
+            <summary>
+            Amount of processed bytes of currently processed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes">
+            <summary>
+            Total bytes of current file to procces 
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.OnFileFromDirectoryReceiveProcessed">
+            <summary>
+            Event raised when receiving file completes
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.OnDirectoryReceiveSpeedChecked">
+            <summary>
+            Raised when connection speed is checked<br></br>
+            You can use <see cref="!:DirectorySendSpeed"/>(numeric representation) <br></br>
+            or <see cref="!:stringDirectorySendSpeed"/> (Mix of numeric result and specified unit in<br></br>
+            <see cref="!:DefaultDirectorySendUnit"/>)<br>
+            with this event</br>
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.DirectoryReceiveSpeed">
+            <summary>
+            Numeric representation of connection speed in specified unit
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.stringDirectoryReceiveSpeed">
+            <summary>
+            Contains combination of connection check result and selected unit in<br>
+            <see cref="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit"/></br>
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.AutoStartDirectoryReceiveSpeedCheck">
+            <summary>
+            Specifies if <see cref="M:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)"/><br></br>
+            should start automatically
+            It wont work if <see cref="E:EasySslStream.Connection.Full.IDirectoryReceiveEventAndStats.OnDirectoryReceiveSpeedChecked"/> event is not specified
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.TotalFilesToSend">
+            <summary>
+            Amount of all files to send
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.CurrentSendFilename">
+            <summary>
+            Name of currently proccessed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.CurrentSendFile">
+            <summary>
+            Number of currently processed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.CurrentSendFileCurrentBytes">
+            <summary>
+            Amount of processed bytes of currently processed file
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.CurrentSendFileTotalBytes">
+            <summary>
+            Total bytes of current file to procces 
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IDirectorySendEventAndStats.OnFileFromDirectorySendProcessed">
+            <summary>
+            Event raised when any file transfer from directory ends
+            </summary>
+        </member>
+        <member name="E:EasySslStream.Connection.Full.IDirectorySendEventAndStats.OnDirectorySendSpeedChecked">
+            <summary>
+            Raised when connection speed is checked<br></br>
+            You can use <see cref="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DirectorySendSpeed"/>(numeric representation) <br></br>
+            or <see cref="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.stringDirectorySendSpeed"/> (Mix of numeric result and specified unit in<br></br>
+            <see cref="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DefaultDirectorySendUnit"/>)<br>
+            with this event</br>
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DirectorySendSpeed">
+            <summary>
+            Numeric representation of connection speed in specified unit
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.stringDirectorySendSpeed">
+            <summary>
+            Contains combination of connection check result and selected unit in<br>
+            <see cref="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DefaultDirectorySendUnit"/></br>
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck">
+            <summary>
+            Specifies if <see cref="M:EasySslStream.Connection.Full.IDirectorySendEventAndStats.StartDirectorySendSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)"/><br></br>
+            should start automatically
+            It wont work if <see cref="!:OnDirectoryProcessed"/> event is not specified
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DirectorySendCheckInterval">
+            <summary>
+            Specifies how often connection speed should be checked
+            </summary>
+        </member>
+        <member name="P:EasySslStream.Connection.Full.IDirectorySendEventAndStats.DefaultDirectorySendUnit">
+            <summary>
+            Speed unit for <see cref="M:EasySslStream.Connection.Full.IDirectorySendEventAndStats.StartDirectorySendSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)"/><br>
+            Bps by default</br>
+            </summary>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.IDirectorySendEventAndStats.StartDirectorySendSpeedCheck(System.Int32,EasySslStream.Connection.Full.ConnectionCommons.Unit,System.Threading.CancellationToken)">
+            <summary>
+            Task that checks connection speed
+            </summary>
+            <param name="interval">Delay between each check</param>
+            <param name="unit">Unit of transfer speed</param>
+            <param name="cts"></param>
+            <returns></returns>
         </member>
         <member name="P:EasySslStream.Connection.Full.IFileReceiveEventAndStats.CurrentReceivedBytes">
             <summary>
@@ -560,6 +694,7 @@
             Higher = slower transfer, smaller chance to fail
             20ms by default </param>
             <exception cref="T:EasySslStream.Exceptions.ServerException"></exception>
+            
         </member>
         <member name="T:EasySslStream.Interop.User32">
             <summary>

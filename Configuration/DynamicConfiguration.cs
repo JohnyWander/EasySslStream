@@ -30,8 +30,8 @@ namespace EasySslStream
         public static OpenSSLConfig_ OpenSSl_config = new OpenSSLConfig_();
 
         /// <summary>
-        /// Buffer size for sending files / large Messages. Smaller buffer = higher cpu load, smaller probability of fail
-        /// Bigger buffer = lower cpu load, bigger probability of fail
+        /// Buffer size for sending files / large Messages. 
+        /// Setting this higher could be buggy ! Client and server
         /// </summary>
         public static int TransportBufferSize = 4096;
 

@@ -11,8 +11,8 @@ namespace EasySslStream.Connection.Full
     {
         private ConnectionCommons() { }
         //File Transfer//////////////////////////////////////////////
-        public int CurrentReceivedBytes { get; set; } = 0;
-        public int TotalBytesToReceive { get; set; } = 0;
+        public long CurrentReceivedBytes { get; set; } = 0;
+        public long TotalBytesToReceive { get; set; } = 0;
 
         ///////////////////////
         public event EventHandler OnDataChunkReceived;
@@ -49,9 +49,9 @@ namespace EasySslStream.Connection.Full
             while (!cts.IsCancellationRequested)
             {
 
-                int current = CurrentReceivedBytes;
+                long current = CurrentReceivedBytes;
                     await Task.Delay(Interval);
-                int AfterInterval = CurrentReceivedBytes;
+                long AfterInterval = CurrentReceivedBytes;
 
                 ReceiveSpeed = (AfterInterval - current)/(Interval/1000);
                 //Console.WriteLine(Speed);
@@ -61,11 +61,11 @@ namespace EasySslStream.Connection.Full
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.Bps.ToString();
                         break;
                     case Unit.KBs:
-                        ReceiveSpeed = ReceiveSpeed / 1024;
+                        ReceiveSpeed = ReceiveSpeed / 1024f;
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.KBs.ToString();
                         break;
                     case Unit.MBs:
-                        ReceiveSpeed = ReceiveSpeed / 1024 / 1024;
+                        ReceiveSpeed = ReceiveSpeed / 1024f / 1024f;
                         stringReceiveSpeed = ReceiveSpeed + " " + Unit.MBs.ToString();
                         break;
                 }
@@ -90,8 +90,8 @@ namespace EasySslStream.Connection.Full
         /////////data chunk
        
         
-        public int CurrentSendBytes { get; set; } = 0;
-        public int TotalBytesToSend { get; set; } = 0;
+        public long CurrentSendBytes { get; set; } = 0;
+        public long TotalBytesToSend { get; set; } = 0;
 
         public event EventHandler OnDataChunkSent;
 
@@ -123,9 +123,9 @@ namespace EasySslStream.Connection.Full
         {
             while (!cts.IsCancellationRequested)
             {
-                int current = CurrentSendBytes;
+                long current = CurrentSendBytes;
                 await Task.Delay(interval);
-                int AfterInvterval = CurrentSendBytes;
+                long AfterInvterval = CurrentSendBytes;
 
                 SendSpeed = (AfterInvterval - current) / (interval / 1000);
 
@@ -135,11 +135,11 @@ namespace EasySslStream.Connection.Full
                         stringSendSpeed = SendSpeed + " " + Unit.Bps.ToString();
                         break;
                     case Unit.KBs:
-                        SendSpeed = SendSpeed / 1024;
+                        SendSpeed = Math.Abs(SendSpeed / 1024f);
                         stringSendSpeed = SendSpeed + " " + Unit.KBs.ToString();
                         break;
                     case Unit.MBs:
-                        SendSpeed = SendSpeed / 1024 / 1024;
+                        SendSpeed = Math.Abs(SendSpeed / 1024f / 1024f);
                         stringSendSpeed = SendSpeed + " " + Unit.MBs.ToString();
                         break;
 
