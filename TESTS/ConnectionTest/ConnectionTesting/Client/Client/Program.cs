@@ -11,7 +11,9 @@ namespace Client
         {
             try
             {
-                DynamicConfiguration.TransportBufferSize = 4096;
+                //DynamicConfiguration.TransportBufferSize = 4096; // WORKS FINE
+                //DynamicConfiguration.TransportBufferSize = 8192; // WORKS FINE except for Send/GetDirectoryV1 
+                DynamicConfiguration.TransportBufferSize = 16384;
                 DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
                 EasySslStream.Connection.Full.Client client = new EasySslStream.Connection.Full.Client();
                 client.VerifyCertificateChain = false;
@@ -31,8 +33,8 @@ namespace Client
                 //client.SendFile("x.zip");
 
                 Thread.Sleep(1000);
-             //   client.SendDirectory("C:\\TEST2śśęęąą");
-                //client.SendDirectory("C:\\TEST");
+                //client.SendDirectoryV2("C:\\TEST2śśęęąą");
+                client.SendDirectoryV2("C:\\TEST");
                // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
                // client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
                //  {

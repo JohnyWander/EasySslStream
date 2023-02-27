@@ -513,6 +513,12 @@ namespace EasySslStream.Connection.Full
                                 Busy = false; privateBusy = false;
                                 break;
 
+                            case 5:
+                                Busy = true; privateBusy = true;
+                                await GetDirectoryV2();
+                                Busy = false; privateBusy = false;
+                                break;
+
                             case 99:
                                 Console.WriteLine("Client closed connection");
                                 this.sslstream_.Dispose();
@@ -848,6 +854,122 @@ namespace EasySslStream.Connection.Full
 
             return Task.CompletedTask;
         }
+
+
+
+        private Task GetDirectoryV2()
+        {
+            CancellationTokenSource GDCancel = new CancellationTokenSource();
+
+            if (DirectoryReceiveEventAndStats.AutoStartDirectoryReceiveSpeedCheck)
+            {
+                Task.Run(() =>
+                {
+                    DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
+                        DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
+
+                });
+
+
+            }
+
+            //////////////////////////////
+            /// Directory name
+            int directoryBytesCount = 0;
+            byte[] DirectoryNameBuffer = new byte[1024];
+            directoryBytesCount = sslstream_.Read(DirectoryNameBuffer);
+
+            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
+
+            int FileInfosBytesCount = 0;
+            byte[] FileInfosReceiveBuffer = new byte[1024];
+            FileInfosBytesCount = sslstream_.Read(FileInfosReceiveBuffer);
+
+            string base64Message = FilenameEncoding.GetString(FileInfosReceiveBuffer).Trim(Convert.ToChar(0x00));
+
+
+            string DecodedMessage = FilenameEncoding.GetString(Convert.FromBase64String(base64Message));
+
+
+
+            string WorkDir = "";
+
+            if (this.srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+                Directory.CreateDirectory(WorkDir + DirectoryName);
+            }
+            else if (this.srv.ReceivedFilesLocation == "")
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+            }
+            else
+            {
+                WorkDir = this.srv.ReceivedFilesLocation + "\\";
+            }
+
+
+
+
+            string[] files = DecodedMessage.Split("^^^");
+            foreach (string file in files)
+            {
+                string[] InfoSplit = file.Split("@@@");
+                string InnerPath = InfoSplit[0];
+                long FileLength = Convert.ToInt64(InfoSplit[1]);
+                DirectoryReceiveEventAndStats.CurrentReceiveFile++;
+
+                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                if (InnerPath.Contains("\\"))
+                {
+                    Directory.CreateDirectory(WorkDir + DirectoryName + "\\" + Path.GetDirectoryName(InnerPath));
+                }
+
+                // Console.WriteLine(WorkDir);
+                //Console.WriteLine(DirectoryName);
+                //Console.WriteLine(InnerPath);
+                FileStream fs = new FileStream(WorkDir + DirectoryName + "\\" + InnerPath, FileMode.Create, FileAccess.Write);
+                DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = 0;
+                DirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes = fs.Length;
+                DirectoryReceiveEventAndStats.CurrentReceivedFileName = InnerPath;
+                while ((sslstream_.Read(DataChunk, 0, DataChunk.Length) != 0))
+                {
+                    fs.Write(DataChunk);
+                    if (fs.Length >= FileLength)
+                    {
+                        DirectorySendEventAndStats.CurrentSendFileCurrentBytes = (int)fs.Length;
+                        break;
+                    }
+                }
+                long ReceivedFileLength = fs.Length;
+
+                if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+                {                                    // we have to cut stream to oryginal file length
+                    fs.SetLength(FileLength);        // to remove NULL bytes from the stream
+                }
+
+                fs.Dispose();
+
+                sslstream_.Flush();
+                DirectoryReceiveEventAndStats.RaiseOnFileFromDirectoryReceiveProcessed();
+
+                GDCancel.Cancel();
+
+            }
+
+
+
+
+
+
+
+
+
+            return Task.CompletedTask;
+        }
+
+
 
 
 
@@ -1328,45 +1450,6 @@ namespace EasySslStream.Connection.Full
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             });
         }
 

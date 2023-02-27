@@ -35,6 +35,10 @@ namespace EasySslStream
         /// </summary>
         public static int TransportBufferSize = 4096;
 
+
+
+
+
         /// <summary>
         /// Debug modes
         /// </summary>

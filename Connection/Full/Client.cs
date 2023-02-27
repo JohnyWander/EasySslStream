@@ -74,7 +74,7 @@ namespace EasySslStream.Connection.Full
             SendFile = 2,
             SendRawBytes = 3,
             SendDirectory = 4,
-
+            SendDirectoryV2 =5,
             SendDisconnect = 99,
 
             Confirmation = 200
@@ -632,6 +632,179 @@ namespace EasySslStream.Connection.Full
 
 
         }
+
+
+        public void SendDirectoryV2(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
+        {
+            Task.Run(async () =>
+            {
+                CancellationTokenSource SDCancel = new CancellationTokenSource();
+
+                if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
+                {
+                    Task.Run(() =>
+                    {
+                        DirectorySendEventAndStats.StartDirectorySendSpeedCheck(DirectorySendEventAndStats.DirectorySendCheckInterval,
+                        DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
+
+                    });
+
+
+                }
+
+
+
+
+                List<string> FileInfos = new List<string>();
+                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
+
+                foreach (string File in Files)
+                {
+                    string f = File.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00)); ;
+
+                    FileInfo inf = new FileInfo(File);
+                    string Info = f;
+                    Info += $"@@@{inf.Length}";
+                    FileInfos.Add(Info);
+                    //    Console.WriteLine(Info);
+                }
+
+                string Message = "";
+                foreach (string FileInfo in FileInfos)
+                {
+                    Message += FileInfo + "^^^";
+
+                }
+                Message = Message.TrimEnd('^');
+                Console.WriteLine(Message);
+
+                string Base64Message = Convert.ToBase64String(FilenameEncoding.GetBytes(Message));
+                byte[] Base64Buffer = FilenameEncoding.GetBytes(Base64Message);
+
+
+
+
+                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                Action SendSteer = () =>
+                {
+                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendDirectoryV2));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendSteer);
+
+                Action SendDirectoryName = () =>
+                {
+                    stream.Write(FilenameEncoding.GetBytes(Path.GetFileName(DirPath)));
+                    Console.WriteLine(Path.GetFileName(DirPath));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendDirectoryName);
+
+
+
+                Action SendFileInfos = () =>
+                {
+                    stream.Write(Base64Buffer, 0, Base64Buffer.Length);
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendFileInfos);
+
+
+                bool LoopCancel = false;
+                foreach (string file in Files)
+                {
+                    DirectorySendEventAndStats.CurrentSendFile++;
+                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
+                    DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
+                    //Console.WriteLine(innerPath);
+
+                    Action SendInnerDirectory = () =>
+                    {
+                        try
+                        {
+                            FileStream fs = new FileStream(file, FileMode.Open);
+                            DirectorySendEventAndStats.CurrentSendFileCurrentBytes = 0;
+                            DirectorySendEventAndStats.CurrentSendFileTotalBytes = fs.Length;
+                            DirectorySendEventAndStats.CurrentSendFilename = innerPath;
+
+                            //    Task.Delay(100).Wait();
+                            //    sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
+                            //   Task.Delay(10000).Wait();
+                            //   sslstream_.Write(BitConverter.GetBytes(fs.Length));
+
+
+
+                            // Transfer will fail for unknown(for me) reason,if filename or directory name contains diacretic characters,
+                            // Converting names to base64 prevents this error from occuring
+
+                            string mes = innerPath + "$$$" + fs.Length;
+                            mes = Convert.ToBase64String(FilenameEncoding.GetBytes(mes));
+                            // Console.WriteLine(mes);
+                            byte[] message = FilenameEncoding.GetBytes(mes);
+                            stream.Write(message, 0, mes.Length);
+
+                            Task.Delay(FailSafeSendInterval).Wait();
+
+                            int sent = 0;
+
+                            while (sent != fs.Length)
+                            {
+                                sent += fs.Read(chunk, 0, chunk.Length);
+
+                                stream.Write(chunk);
+                                DirectorySendEventAndStats.CurrentSendFileCurrentBytes = sent;
+
+                            }
+
+                            stream.Flush();
+                            fs.Dispose();
+                            DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
+                            SDCancel.Cancel();
+                            // Task.Delay(100).Wait();
+
+                        }
+                        catch (System.UnauthorizedAccessException e)
+                        {
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            {
+                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
+                            }
+
+                            if (StopAndThrowOnFailedTransfer)
+                            {
+                                throw new Exceptions.ServerException($"Acces denied to files in the folder {e.Message}\n{e.StackTrace}");
+                                LoopCancel = true;
+                            }
+                            else
+                            {
+                                stream.Write(BitConverter.GetBytes((long)-10));
+                            }
+
+                        }
+
+
+
+
+
+                    }; await work.Writer.WaitToWriteAsync(); await work.Writer.WriteAsync(SendInnerDirectory);
+
+                    if (LoopCancel == true)
+                    {
+                        break;
+                    }
+
+
+
+                    //await Task.Delay(2000);
+
+                    DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
+                }
+            });
+        }
+
 
 
 

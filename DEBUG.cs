@@ -67,8 +67,9 @@ namespace EasySslStream
             //gen.ConvertX509ToPfx("cert.crt", "certificate.csr.key", "cert.pfx", "123");
 
 
-            DynamicConfiguration.TransportBufferSize = 4096;
-
+            //DynamicConfiguration.TransportBufferSize = 4096; // WORKS FINE
+            //DynamicConfiguration.TransportBufferSize = 8192;
+            DynamicConfiguration.TransportBufferSize = 16384;
 
             Server server = new Server();
             server.CertificateCheckSettings.VerifyCertificateName = false;
@@ -152,7 +153,7 @@ namespace EasySslStream
 
                 //Console.WriteLine("IS CONNECTION");
                 //cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                  cl.SendDirectoryV2("C:\\TEST");
+                  //cl.SendDirectoryV2("C:\\TEST");
                // cl.SendDirectory("C:\\TEST");
 
             }
