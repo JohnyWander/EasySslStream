@@ -180,7 +180,15 @@ namespace EasySslStream.Connection.Full
             ConnectedClients[ConnectionID].WriteText(Message);
         }
 
+        public void SendRawBytesToClient(int ConnectionID, byte[] Message)
+        {
+            ConnectedClients[ConnectionID].SendRawBytes(Message);
+        }
 
+        public void SendRawBytesToClient(IPEndPoint clientEndpoint, byte[] Message)
+        {
+            ConnectedClientsByEndPoint[clientEndpoint].SendRawBytes(Message);
+        }
 
         /// <summary>
         /// Sends file to client
