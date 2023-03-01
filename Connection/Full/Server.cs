@@ -102,7 +102,7 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Waits for currently running transfers to end, for all connections, then shuts down the server.
         /// </summary>
-        public async void GentleStopServer(int interval = 100)
+        public async Task GentleStopServer(int interval = 100)
         {
             if (ConnectedClients.Count != 0)
             {
@@ -115,8 +115,9 @@ namespace EasySslStream.Connection.Full
                         WorkLock();
                         Task.Delay(interval).Wait();
                     }
+                 
                 });
-
+                
 
 
                 await GentleStopLock.Task;
@@ -200,6 +201,50 @@ namespace EasySslStream.Connection.Full
         {
             ConnectedClientsByEndPoint[clientEndpoint].SendFile(Path);
         }
+
+        /// <summary>
+        /// Sends Directory to client
+        /// </summary>
+        /// <param name="ConnectionID">Connection id</param>
+        /// <param name="Path">Path to directory to send</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+        /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        public void SendDirectoryToClient(int ConnectionID,string Path,bool StopAndThrowOnFailedTransfer = true ,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByNumber[ConnectionID].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        /// <summary>
+        /// Sends Directory to client
+        /// </summary>
+        /// <param name="clientEndPoint">Client endpoint</param>
+        /// <param name="Path">Path to directory to send</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+        /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        public void SendDirectoryToClient(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByEndPoint[clientEndPoint].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        /// <summary>
+        /// Optimized - Sends directory to client
+        /// </summary>
+        /// <param name="ConnectionID"></param>
+        /// <param name="Path"></param>
+        /// <param name="StopAndThrowOnFailedTransfer"></param>
+        /// <param name="FailSafeInterval"></param>
+        public void SendDirectoryToClientV2(int ConnectionID, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
+        {
+            ConnectedClientsByNumber[ConnectionID].SendDirectoryV2(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        public void SendDirectoryToClientV2(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByEndPoint[clientEndPoint].SendDirectoryV2(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
+        }
+
+        
+
 
         /// <summary>
         /// Location for the received file from clients
