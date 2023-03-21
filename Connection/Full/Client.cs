@@ -677,7 +677,7 @@ namespace EasySslStream.Connection.Full
 
                 }
                 Message = Message.TrimEnd('^');
-                Console.WriteLine(Message);
+               // Console.WriteLine(Message);
 
                 string Base64Message = Convert.ToBase64String(FilenameEncoding.GetBytes(Message));
                 byte[] Base64Buffer = FilenameEncoding.GetBytes(Base64Message);
@@ -697,7 +697,7 @@ namespace EasySslStream.Connection.Full
                 Action SendDirectoryName = () =>
                 {
                     stream.Write(FilenameEncoding.GetBytes(Path.GetFileName(DirPath)));
-                    Console.WriteLine(Path.GetFileName(DirPath));
+                    //Console.WriteLine(Path.GetFileName(DirPath));
                 };
                 await work.Writer.WaitToWriteAsync();
                 await work.Writer.WriteAsync(SendDirectoryName);
