@@ -102,7 +102,7 @@ namespace EasySslStream.Connection.Full
         /// <summary>
         /// Waits for currently running transfers to end, for all connections, then shuts down the server.
         /// </summary>
-        public async void GentleStopServer(int interval = 100)
+        public async Task GentleStopServer(int interval = 100)
         {
             if (ConnectedClients.Count != 0)
             {
@@ -115,8 +115,9 @@ namespace EasySslStream.Connection.Full
                         WorkLock();
                         Task.Delay(interval).Wait();
                     }
+                 
                 });
-
+                
 
 
                 await GentleStopLock.Task;
@@ -179,7 +180,15 @@ namespace EasySslStream.Connection.Full
             ConnectedClients[ConnectionID].WriteText(Message);
         }
 
+        public void SendRawBytesToClient(int ConnectionID, byte[] Message)
+        {
+            ConnectedClients[ConnectionID].SendRawBytes(Message);
+        }
 
+        public void SendRawBytesToClient(IPEndPoint clientEndpoint, byte[] Message)
+        {
+            ConnectedClientsByEndPoint[clientEndpoint].SendRawBytes(Message);
+        }
 
         /// <summary>
         /// Sends file to client
@@ -200,6 +209,50 @@ namespace EasySslStream.Connection.Full
         {
             ConnectedClientsByEndPoint[clientEndpoint].SendFile(Path);
         }
+
+        /// <summary>
+        /// Sends Directory to client
+        /// </summary>
+        /// <param name="ConnectionID">Connection id</param>
+        /// <param name="Path">Path to directory to send</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+        /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        public void SendDirectoryToClient(int ConnectionID,string Path,bool StopAndThrowOnFailedTransfer = true ,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByNumber[ConnectionID].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        /// <summary>
+        /// Sends Directory to client
+        /// </summary>
+        /// <param name="clientEndPoint">Client endpoint</param>
+        /// <param name="Path">Path to directory to send</param>
+        /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+        /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        public void SendDirectoryToClient(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByEndPoint[clientEndPoint].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        /// <summary>
+        /// Optimized - Sends directory to client
+        /// </summary>
+        /// <param name="ConnectionID"></param>
+        /// <param name="Path"></param>
+        /// <param name="StopAndThrowOnFailedTransfer"></param>
+        /// <param name="FailSafeInterval"></param>
+        public void SendDirectoryToClientV2(int ConnectionID, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
+        {
+            ConnectedClientsByNumber[ConnectionID].SendDirectoryV2(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+        }
+
+        public void SendDirectoryToClientV2(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        {
+            ConnectedClientsByEndPoint[clientEndPoint].SendDirectoryV2(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
+        }
+
+        
+
 
         /// <summary>
         /// Location for the received file from clients
@@ -393,6 +446,7 @@ namespace EasySslStream.Connection.Full
             SendFile = 2,
             SendRawBytes = 3,
             SendDirectory = 4,
+            SendDirectoryV2 = 5,
 
             Confirmation = 200,
 
@@ -509,6 +563,12 @@ namespace EasySslStream.Connection.Full
                             case 4:
                                 Busy = true; privateBusy = true;
                                 await GetDirectory();
+                                Busy = false; privateBusy = false;
+                                break;
+
+                            case 5:
+                                Busy = true; privateBusy = true;
+                                await GetDirectoryV2();
                                 Busy = false; privateBusy = false;
                                 break;
 
@@ -720,10 +780,10 @@ namespace EasySslStream.Connection.Full
 
             string WorkDir = "";
 
-            if (srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory) 
+            if (srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
             {
                 WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
-                Directory.CreateDirectory(WorkDir+DirectoryName);
+                Directory.CreateDirectory(WorkDir + DirectoryName);
             }
             else if (srv.ReceivedFilesLocation == "")
             {
@@ -792,7 +852,7 @@ namespace EasySslStream.Connection.Full
 
                         if (innerPath.Contains("\\"))
                         {
-                            Directory.CreateDirectory(WorkDir + DirectoryName+"\\"+ Path.GetDirectoryName(innerPath));
+                            Directory.CreateDirectory(WorkDir + DirectoryName + "\\" + Path.GetDirectoryName(innerPath));
                         }
                         // Console.WriteLine(innerPath);
 
@@ -800,7 +860,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-                        FileStream fs = new FileStream(WorkDir + DirectoryName +"\\"+ innerPath, FileMode.Create, FileAccess.Write);
+                        FileStream fs = new FileStream(WorkDir + DirectoryName + "\\" + innerPath, FileMode.Create, FileAccess.Write);
 
                         DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = 0;
                         DirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes = fs.Length;
@@ -847,6 +907,122 @@ namespace EasySslStream.Connection.Full
 
             return Task.CompletedTask;
         }
+
+
+
+        private Task GetDirectoryV2()
+        {
+            CancellationTokenSource GDCancel = new CancellationTokenSource();
+
+            if (DirectoryReceiveEventAndStats.AutoStartDirectoryReceiveSpeedCheck)
+            {
+                Task.Run(() =>
+                {
+                    DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
+                        DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
+
+                });
+
+
+            }
+
+            //////////////////////////////
+            /// Directory name
+            int directoryBytesCount = 0;
+            byte[] DirectoryNameBuffer = new byte[1024];
+            directoryBytesCount = sslstream_.Read(DirectoryNameBuffer);
+
+            string DirectoryName = FilenameEncoding.GetString(DirectoryNameBuffer).Trim(Convert.ToChar(0x00)).TrimStart('\\').TrimStart('/');
+
+            int FileInfosBytesCount = 0;
+            byte[] FileInfosReceiveBuffer = new byte[1024];
+            FileInfosBytesCount = sslstream_.Read(FileInfosReceiveBuffer);
+
+            string base64Message = FilenameEncoding.GetString(FileInfosReceiveBuffer).Trim(Convert.ToChar(0x00));
+
+
+            string DecodedMessage = FilenameEncoding.GetString(Convert.FromBase64String(base64Message));
+
+
+
+            string WorkDir = "";
+
+            if (this.srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+                Directory.CreateDirectory(WorkDir + DirectoryName);
+            }
+            else if (this.srv.ReceivedFilesLocation == "")
+            {
+                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
+            }
+            else
+            {
+                WorkDir = this.srv.ReceivedFilesLocation + "\\";
+            }
+
+
+
+
+            string[] files = DecodedMessage.Split("^^^");
+            foreach (string file in files)
+            {
+                string[] InfoSplit = file.Split("@@@");
+                string InnerPath = InfoSplit[0];
+                long FileLength = Convert.ToInt64(InfoSplit[1]);
+                DirectoryReceiveEventAndStats.CurrentReceiveFile++;
+
+                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                if (InnerPath.Contains("\\"))
+                {
+                    Directory.CreateDirectory(WorkDir + DirectoryName + "\\" + Path.GetDirectoryName(InnerPath));
+                }
+
+                // Console.WriteLine(WorkDir);
+                //Console.WriteLine(DirectoryName);
+                //Console.WriteLine(InnerPath);
+                FileStream fs = new FileStream(WorkDir + DirectoryName + "\\" + InnerPath, FileMode.Create, FileAccess.Write);
+                DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = 0;
+                DirectoryReceiveEventAndStats.CurrentReceiveFileTotalBytes = fs.Length;
+                DirectoryReceiveEventAndStats.CurrentReceivedFileName = InnerPath;
+                while ((sslstream_.Read(DataChunk, 0, DataChunk.Length) != 0))
+                {
+                    fs.Write(DataChunk);
+                    if (fs.Length >= FileLength)
+                    {
+                        DirectorySendEventAndStats.CurrentSendFileCurrentBytes = (int)fs.Length;
+                        break;
+                    }
+                }
+                long ReceivedFileLength = fs.Length;
+
+                if (ReceivedFileLength > FileLength) // as buffer is usually larger than last chunk of bytes
+                {                                    // we have to cut stream to oryginal file length
+                    fs.SetLength(FileLength);        // to remove NULL bytes from the stream
+                }
+
+                fs.Dispose();
+
+                sslstream_.Flush();
+                DirectoryReceiveEventAndStats.RaiseOnFileFromDirectoryReceiveProcessed();
+
+                GDCancel.Cancel();
+
+            }
+
+
+
+
+
+
+
+
+
+            return Task.CompletedTask;
+        }
+
+
 
 
 
@@ -1010,18 +1186,11 @@ namespace EasySslStream.Connection.Full
                             DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
 
                     });
-
-
                 }
-
-
-
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
 
-
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
-
                 // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
@@ -1036,7 +1205,7 @@ namespace EasySslStream.Connection.Full
                 Action SendDirectoryName = () =>
                 {
                     sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
-                    //  Console.WriteLine(Path.GetFileName(DirPath));
+                      Console.WriteLine(Path.GetFileName(DirPath));
                 };
 
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
@@ -1047,21 +1216,21 @@ namespace EasySslStream.Connection.Full
                     sslstream_.Write(BitConverter.GetBytes(Files.Length));
                 }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendFileAmount);
 
-                bool LoopCancel = false;
+
                 ///////////////////////////////      
 
 
 
 
 
-
+                bool LoopCancel = false;
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
                     byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
                     DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
-
+                    //Console.WriteLine(innerPath);
 
                     Action SendInnerDirectory = () =>
                     {
@@ -1156,17 +1325,196 @@ namespace EasySslStream.Connection.Full
         }
 
 
+
+
+
+        public void SendDirectoryV2(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
+        {
+            Task.Run(async () =>
+            {
+                CancellationTokenSource SDCancel = new CancellationTokenSource();
+
+                if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
+                {
+                    Task.Run(() =>
+                    {
+                        DirectorySendEventAndStats.StartDirectorySendSpeedCheck(DirectorySendEventAndStats.DirectorySendCheckInterval,
+                        DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
+
+                    });
+
+
+                }
+
+
+
+
+                List<string> FileInfos = new List<string>();
+                string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
+                DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
+
+                foreach (string File in Files)
+                {
+                    string f = File.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00)); ;
+
+                    FileInfo inf = new FileInfo(File);
+                    string Info = f;
+                    Info += $"@@@{inf.Length}";
+                    FileInfos.Add(Info);
+                //    Console.WriteLine(Info);
+                }
+
+                string Message = "";
+                foreach (string FileInfo in FileInfos)
+                {
+                    Message += FileInfo + "^^^";
+
+                }
+                Message = Message.TrimEnd('^');
+                Console.WriteLine(Message);
+
+                string Base64Message = Convert.ToBase64String(srv.FileNameEncoding.GetBytes(Message));
+                byte[] Base64Buffer = srv.FileNameEncoding.GetBytes(Base64Message);
+
+
+
+
+                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+
+                Action SendSteer = () =>
+                {
+                    sslstream_.Write(BitConverter.GetBytes((int)SteerCodes.SendDirectoryV2));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendSteer);
+
+                Action SendDirectoryName = () =>
+                {
+                    sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
+                    Console.WriteLine(Path.GetFileName(DirPath));
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendDirectoryName);
+
+
+
+                Action SendFileInfos = () =>
+                {
+                    sslstream_.Write(Base64Buffer, 0, Base64Buffer.Length);
+                };
+                await ServerSendingQueue.Writer.WaitToWriteAsync();
+                await ServerSendingQueue.Writer.WriteAsync(SendFileInfos);
+
+
+                bool LoopCancel = false;
+                foreach (string file in Files)
+                {
+                    DirectorySendEventAndStats.CurrentSendFile++;
+                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
+                    DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
+                    //Console.WriteLine(innerPath);
+
+                    Action SendInnerDirectory = () =>
+                    {
+                        try
+                        {
+                            FileStream fs = new FileStream(file, FileMode.Open);
+                            DirectorySendEventAndStats.CurrentSendFileCurrentBytes = 0;
+                            DirectorySendEventAndStats.CurrentSendFileTotalBytes = fs.Length;
+                            DirectorySendEventAndStats.CurrentSendFilename = innerPath;
+
+                            //    Task.Delay(100).Wait();
+                            //    sslstream_.Write(srv.FileNameEncoding.GetBytes(innerPath));
+                            //   Task.Delay(10000).Wait();
+                            //   sslstream_.Write(BitConverter.GetBytes(fs.Length));
+
+
+
+                            // Transfer will fail for unknown(for me) reason,if filename or directory name contains diacretic characters,
+                            // Converting names to base64 prevents this error from occuring
+
+                            string mes = innerPath + "$$$" + fs.Length;
+                            mes = Convert.ToBase64String(srv.FileNameEncoding.GetBytes(mes));
+                            // Console.WriteLine(mes);
+                            byte[] message = srv.FileNameEncoding.GetBytes(mes);
+                            sslstream_.Write(message, 0, mes.Length);
+
+                            Task.Delay(FailSafeSendInterval).Wait();
+
+                            int sent = 0;
+
+                            while (sent != fs.Length)
+                            {
+                                sent += fs.Read(chunk, 0, chunk.Length);
+
+                                sslstream_.Write(chunk);
+                                DirectorySendEventAndStats.CurrentSendFileCurrentBytes = sent;
+
+                            }
+
+                            sslstream_.Flush();
+                            fs.Dispose();
+                            DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
+                            SDCancel.Cancel();
+                            // Task.Delay(100).Wait();
+
+                        }
+                        catch (System.UnauthorizedAccessException e)
+                        {
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            {
+                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
+                            }
+
+                            if (StopAndThrowOnFailedTransfer)
+                            {
+                                throw new Exceptions.ServerException($"Acces denied to files in the folder {e.Message}\n{e.StackTrace}");
+                                LoopCancel = true;
+                            }
+                            else
+                            {
+                                sslstream_.Write(BitConverter.GetBytes((long)-10));
+                            }
+
+                        }
+
+
+
+
+
+                    }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendInnerDirectory);
+
+                    if (LoopCancel == true)
+                    {
+                        break;
+                    }
+
+
+
+                    //await Task.Delay(2000);
+
+                    DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
+                }
+            });
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
-
-
-
-
-
-
-
-
-
-
-
+    
 
 }
