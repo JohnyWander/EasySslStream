@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySslStream", "EasySslStream.csproj", "{FBEFC813-9037-4771-8AAC-43CA5719982A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBEFC813-9037-4771-8AAC-43CA5719982A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBEFC813-9037-4771-8AAC-43CA5719982A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBEFC813-9037-4771-8AAC-43CA5719982A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBEFC813-9037-4771-8AAC-43CA5719982A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1D78CA84-2930-417B-90C3-F92364D1F1CC}
+	EndGlobalSection
+EndGlobal
