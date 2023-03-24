@@ -1186,18 +1186,11 @@ namespace EasySslStream.Connection.Full
                             DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
 
                     });
-
-
                 }
-
-
-
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
 
-
                 byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
-
                 // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
