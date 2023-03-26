@@ -8,7 +8,7 @@ namespace EasySslStream.Exceptions
 {
     internal class SignCSRConfigurationException : Exception
     {
-        public SignCSRConfigurationException(string message)
+        public SignCSRConfigurationException(string message) : base(message)
         {
 
         }

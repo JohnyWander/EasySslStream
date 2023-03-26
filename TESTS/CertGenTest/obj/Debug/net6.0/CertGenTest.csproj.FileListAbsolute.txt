@@ -1,0 +1,17 @@
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\CertGenTest.exe
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\CertGenTest.deps.json
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\CertGenTest.runtimeconfig.json
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\CertGenTest.dll
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\CertGenTest.pdb
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\bin\Debug\net6.0\EasySslStream.dll
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.csproj.AssemblyReference.cache
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.AssemblyInfoInputs.cache
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.AssemblyInfo.cs
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.csproj.CoreCompileInputs.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.csproj.CopyComplete
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.dll
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\refint\CertGenTest.dll
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.pdb
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\CertGenTest.genruntimeconfig.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\TESTS\CertGenTest\obj\Debug\net6.0\ref\CertGenTest.dll

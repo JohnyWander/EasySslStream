@@ -177,9 +177,9 @@ namespace EasySslStream
         public HashAlgorithms? HashAlgorithm;
         public KeyLengths? KeyLength;
         public Encodings Encoding = Encodings.Default;
-        
 
-        public int Days { internal get; set; } // ex. 356
+
+        public int Days { internal get; set; } = 365;// ex. 356
 
         internal string? CountryCodeString;
         public string? CountryCode

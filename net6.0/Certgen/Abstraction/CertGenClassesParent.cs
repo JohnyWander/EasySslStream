@@ -27,7 +27,7 @@ namespace EasySslStream.Abstraction
           protected string? CAGenerationEncoding;           /// <summary>Encoding of certificate fields</summary>
         public CertGenClassesParent()
         {
-            LoadCAconfig();
+          //  LoadCAconfig();
             //Console.WriteLine("parent ctor");
 
         }

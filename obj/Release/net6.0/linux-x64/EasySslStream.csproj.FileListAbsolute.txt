@@ -1,0 +1,15 @@
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\bin\Release\net6.0\linux-x64\EasySslStream
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\bin\Release\net6.0\linux-x64\EasySslStream.deps.json
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\bin\Release\net6.0\linux-x64\EasySslStream.runtimeconfig.json
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\bin\Release\net6.0\linux-x64\EasySslStream.dll
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\bin\Release\net6.0\linux-x64\EasySslStream.xml
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.csproj.AssemblyReference.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.AssemblyInfoInputs.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.AssemblyInfo.cs
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.csproj.CoreCompileInputs.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.dll
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\refint\EasySslStream.dll
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.xml
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\EasySslStream.genruntimeconfig.cache
+C:\Users\Janek\Source\Repos\JohnyWander\EasySslStream\obj\Release\net6.0\linux-x64\ref\EasySslStream.dll

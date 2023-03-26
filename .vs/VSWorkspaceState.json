@@ -1,0 +1,14 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Certgen",
+    "\\Certgen\\Abstraction",
+    "\\Certgen\\GenerationClasses",
+    "\\Configuration",
+    "\\Connection",
+    "\\Connection\\Full",
+    "\\Misc"
+  ],
+  "SelectedNode": "\\Connection\\Full\\Server.cs",
+  "PreviewInSolutionExplorer": false
+}

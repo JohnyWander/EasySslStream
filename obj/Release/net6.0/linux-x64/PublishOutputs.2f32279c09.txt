@@ -1,0 +1,5 @@
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\linux\EasySslStream
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\linux\EasySslStream.dll
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\linux\EasySslStream.deps.json
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\linux\EasySslStream.runtimeconfig.json
+C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\linux\EasySslStream.xml
