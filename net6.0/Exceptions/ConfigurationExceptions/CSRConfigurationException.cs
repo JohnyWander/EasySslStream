@@ -14,5 +14,10 @@ namespace EasySslStream.Exceptions
 
         }
 
+        public CSRConfigurationException(string Message) : base(Message)
+        {
+
+        }
+
     }
 }

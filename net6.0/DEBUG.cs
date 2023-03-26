@@ -35,13 +35,13 @@ namespace EasySslStream
               CertGenerationClasses.OpensslCertGeneration gen = new OpensslCertGeneration();
 
                //gen.GenerateCA("xd");
-            Task.Run(async () =>
-            {
-                await gen.GenerateCA_Async("xdasync");
-            }).Wait();
-            /*   
+      //      Task.Run(async () =>
+           // {
+           //     await gen.GenerateCA_Async("async2");
+           // }).Wait();
+               
                 CSRConfiguration conf = new CSRConfiguration();
-                conf.Organization = "ME";
+               // conf.Organization = "ME";
                 conf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
                 conf.CommonName = "mypc.com";
                 conf.alt_names.Add("mypc.com");
@@ -53,8 +53,8 @@ namespace EasySslStream
                 conf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
 
 
-                //gen.GenerateCSR(conf);
-
+                gen.GenerateCSR(conf);
+/*
                 SignCSRConfig signconf = new SignCSRConfig();
                 signconf.copyallextensions = true;
                 signconf.SetAuthorityKeyIdentifiers(SignCSRConfig.authorityKeyIdentifiers.keyid_and_issuer);

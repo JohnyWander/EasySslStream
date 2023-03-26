@@ -68,9 +68,9 @@ distinguished_name = dn
                 openssl.EnableRaisingEvents = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
+               // {
+               //     openssl.StartInfo.WorkingDirectory = OutputPath;
+               // }
                 openssl.Exited += (sender, args) =>
                 {
                     if (openssl.ExitCode != 0)
@@ -84,10 +84,15 @@ distinguished_name = dn
                     }
                 };
 
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+                
                 openssl.Start();
                 openssl.WaitForExit();
-                File.Delete("genconf.txt");
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+            //    Task.Run(() =>
+               // {
+                    File.Delete(OutputPath =="default"? "genconf.txt":$"{OutputPath}" + "/genconf.txt");
+              //  }).Wait();
+                
                 return generation_completion.Task;
             }
 
@@ -153,10 +158,9 @@ distinguished_name = dn
                 // {
 
                 //};
-                File.Delete("genconf.txt");
+                
                 openssl.WaitForExit();
                 
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 
                 if (openssl.ExitCode != 0)
@@ -168,7 +172,12 @@ distinguished_name = dn
                 
             }
 
+             File.Delete("genconf.txt");
 
+         
+            
+
+            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
         }
 
 
@@ -178,7 +187,7 @@ distinguished_name = dn
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public override void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
+        public override void GenerateCSR(CSRConfiguration config,string Filename="certificate",string OutputPath= "default")
         {
             config.VerifyConfiguration();
             if (OutputPath != "default")

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -79,10 +80,12 @@ namespace EasySslStream
         internal void VerifyConfiguration()
         {
 
-            if(HashAlgorithm is null || KeyLength is null || CountryCodeString is null || State is null || City is null || Organization is null || CommonName is null)
-            {
-                throw new Exceptions.CSRConfigurationException();
-            }
+    
+
+            if(HashAlgorithm is null) { throw new Exceptions.CSRConfigurationException("Hash algorithm is null or is not set propertly"); }
+            if(KeyLength is null) { throw new Exceptions.CSRConfigurationException("RSA keylength is null or is not set propertly"); }
+            if(CommonName is null) { throw new Exceptions.CSRConfigurationException("Common name for csr is null or not set propertly"); }
+            
 
 
         }
