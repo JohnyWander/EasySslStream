@@ -24,6 +24,7 @@ namespace EasySslStream.CertGenerationClasses
         /// <returns></returns>
         public override Task GenerateCA_Async(string OutputPath="default")
           {
+            LoadCAconfig();
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
            // generation_completion.Task.ConfigureAwait(false);
             if (OutputPath != "default")
@@ -34,17 +35,25 @@ namespace EasySslStream.CertGenerationClasses
 
 
 
+
             string configFile = @$"[req]
 default_bits= {base.CAKeyLength}
 prompt = no
 default_md = {base.CAHashAlgo}
 distinguished_name = dn
-[dn]
-C={base.CACountry}
-ST={base.CAState}
-L={base.CALocation}
-O={base.CAOrganisation}
-CN={base.CACommonName}";
+[dn]" + "\n";
+            if (base.CACountry is not null) { configFile += $"C={base.CACountry}\n"; }
+            if (base.CAState is not null) { configFile += $"ST={base.CAState}\n"; }
+            if (base.CALocation is not null) { configFile += $"L={base.CALocation}\n"; }
+            if (base.CAOrganisation is not null) { configFile += $"O={base.CAOrganisation}\n"; }
+            if (base.CACommonName is not null) { configFile += $"CN={base.CACommonName}\n"; }
+
+            if (base.CAHashAlgo == "" || base.CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("Hash alghorithm is not set in DynamicConfiguration"); }
+
+            if (!configFile.IsNormalized(NormalizationForm.FormD) && base.CAGenerationEncoding != "-utf8")
+            {
+                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration");
+            }
 
 
 
@@ -78,6 +87,7 @@ CN={base.CACommonName}";
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
                 openssl.Start();
                 openssl.WaitForExit();
+                File.Delete("genconf.txt");
                 return generation_completion.Task;
             }
 
@@ -113,6 +123,11 @@ distinguished_name = dn
 
             if(base.CAHashAlgo=="" || base.CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("Hash alghorithm is not set in DynamicConfiguration"); }
 
+            if (!configFile.IsNormalized(NormalizationForm.FormD) && base.CAGenerationEncoding!="-utf8")
+            {
+                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration");
+            }
+        
 
             File.WriteAllText("genconf.txt", configFile);
             string cmdargs = $"req -new -x509 -{base.CAHashAlgo} -nodes -newkey rsa:{base.CAKeyLength} -days {base.CAdays} {base.CAGenerationEncoding} -keyout CA.key -out CA.crt -config genconf.txt";
@@ -138,8 +153,9 @@ distinguished_name = dn
                 // {
 
                 //};
-
+                File.Delete("genconf.txt");
                 openssl.WaitForExit();
+                
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
 

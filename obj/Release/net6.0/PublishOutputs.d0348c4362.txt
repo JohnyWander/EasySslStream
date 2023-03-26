@@ -1,5 +1,0 @@
-C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\EasySslStream.exe
-C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\EasySslStream.dll
-C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\EasySslStream.deps.json
-C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\EasySslStream.runtimeconfig.json
-C:\Users\Janek\source\repos\JohnyWander\EasySslStream\TESTS\EasySslStream.xml

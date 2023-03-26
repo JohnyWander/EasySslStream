@@ -22,20 +22,23 @@ namespace EasySslStream
 
               DynamicConfiguration.EnableDebugMode(DynamicConfiguration.DEBUG_MODE.Console);
             
-            //  DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
+              DynamicConfiguration.CA_CONFIG.Encoding = CA_CertGen.Encodings.UTF8;
               DynamicConfiguration.CA_CONFIG.KeyLength = CA_CertGen.KeyLengths.RSA_2048;
               DynamicConfiguration.CA_CONFIG.HashAlgorithm = CA_CertGen.HashAlgorithms.sha256;
             //  DynamicConfiguration.CA_CONFIG.Location = "New York";
              // DynamicConfiguration.CA_CONFIG.Organisation = "White Hause";
-              DynamicConfiguration.CA_CONFIG.CommonName = "gfvgv.com";
+              DynamicConfiguration.CA_CONFIG.CommonName = "gfvąąąąv.com";
             //  DynamicConfiguration.CA_CONFIG.CountryCode = "US";
              // DynamicConfiguration.CA_CONFIG.CountryState = "Florida";
             //  DynamicConfiguration.CA_CONFIG.Days = 365;
             
               CertGenerationClasses.OpensslCertGeneration gen = new OpensslCertGeneration();
 
-               gen.GenerateCA();
-
+               //gen.GenerateCA("xd");
+            Task.Run(async () =>
+            {
+                await gen.GenerateCA_Async("xdasync");
+            }).Wait();
             /*   
                 CSRConfiguration conf = new CSRConfiguration();
                 conf.Organization = "ME";
