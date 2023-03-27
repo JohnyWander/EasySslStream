@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -208,16 +209,16 @@ default_md={config.HashAlgorithm.ToString()}
 ";
             confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
 
-confile+=@$"distinguished_name = dn
+            confile += @$"distinguished_name = dn
 
-[ dn ]
-C={config.CountryCodeString}
-ST={config.State}
-L={config.City}
-O={config.Organization}
-CN={config.CommonName}
+[ dn ]"+"\n";
+            if (config.CountryCodeString is not null) { confile += $"C={config.CountryCodeString}\n"; }
+            if (config.State is not null) { confile += $"ST={config.State}\n"; }
+            if(config.City is not null) { confile += $"L={config.City}\n";}
+            if (config.Organization is not null) { confile += $"O={config.Organization}\n"; }
+            if (config.CommonName is not null) { confile += $"CN={config.CommonName}\n"; }
 
-";
+
             if (config.alt_names.Count != 0)
             {
                 confile += $@"[req_ext]
