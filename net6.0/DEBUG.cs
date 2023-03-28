@@ -53,7 +53,10 @@ namespace EasySslStream
                 conf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
 
 
-                gen.GenerateCSR(conf);
+            //  gen.GenerateCSR(conf,"csr");
+            //gen.Generate_Async(conf, "csrAsync");
+             gen.GenerateCSRAsync(conf, "csrAsync");
+
 /*
                 SignCSRConfig signconf = new SignCSRConfig();
                 signconf.copyallextensions = true;

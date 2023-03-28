@@ -79,7 +79,10 @@ namespace EasySslStream
 
         internal void VerifyConfiguration()
         {
-
+            if (CSRFileName.Contains(".csr"))
+            {
+                CSRFileName = CSRFileName.Replace(".csr", "");
+            }
     
 
             if(HashAlgorithm is null) { throw new Exceptions.CSRConfigurationException("Hash algorithm is null or is not set propertly"); }

@@ -52,7 +52,7 @@ namespace EasySslStream.Abstraction
         /// </summary>
         /// <param name="config">CSRConfiguration class instance with configuration</param>
         /// <param name="OutputPath">path for .csr and .key</param>
-        public abstract void GenerateCSR(CSRConfiguration config,string Filename, string OutputPath);
+        public abstract void GenerateCSR(CSRConfiguration config, string OutputPath);
 
         /// <summary>
         /// Base function for generating csr

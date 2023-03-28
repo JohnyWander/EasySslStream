@@ -188,7 +188,7 @@ distinguished_name = dn
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public override void GenerateCSR(CSRConfiguration config,string Filename="certificate",string OutputPath= "default")
+        public override void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
         {
             config.VerifyConfiguration();
             if (OutputPath != "default")
@@ -196,10 +196,7 @@ distinguished_name = dn
                 try { Directory.SetCurrentDirectory(OutputPath); }
                 catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
             }
-            else
-            {
-              
-            }
+      
 
 
             string confile = $@"[req]
@@ -245,7 +242,7 @@ subjectAltName = @alt_names
             }
 
 
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconfcsr.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName}.csr -config genconfcsr.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
@@ -270,6 +267,7 @@ subjectAltName = @alt_names
                     DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
              
                 }
+                File.Delete("genconfcsr.txt");
                 // Console.WriteLine(openssl.StandardError.ReadToEnd());
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
@@ -312,14 +310,12 @@ default_md={config.HashAlgorithm.ToString()}
 
             confile += @$"distinguished_name = dn
 
-[ dn ]
-C={config.CountryCodeString}
-ST={config.State}
-L={config.City}
-O={config.Organization}
-CN={config.CommonName}
-
-";
+[ dn ]" + "\n";
+            if (config.CountryCodeString is not null) { confile += $"C={config.CountryCodeString}\n"; }
+            if (config.State is not null) { confile += $"ST={config.State}\n"; }
+            if (config.City is not null) { confile += $"L={config.City}\n"; }
+            if (config.Organization is not null) { confile += $"O={config.Organization}\n"; }
+            if (config.CommonName is not null) { confile += $"CN={config.CommonName}\n"; }
             if (config.alt_names.Count != 0)
             {
                 confile += $@"[req_ext]
@@ -346,7 +342,7 @@ subjectAltName = @alt_names
                 encoding = "-utf8";
             }
 
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName} -config genconfcsr.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName}.csr -config genconfcsr.txt";
 
             using (Process openssl = new Process())
             {
@@ -383,7 +379,7 @@ subjectAltName = @alt_names
                     openssl.StartInfo.WorkingDirectory = OutputPath;
                 }
                 openssl.WaitForExit();
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+                
 
 
                 if (openssl.ExitCode != 0)
@@ -391,6 +387,13 @@ subjectAltName = @alt_names
                     DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
 
                 }
+
+               // Task.Run(() =>
+            //    {
+                    File.Delete("genconfcsr.txt");
+
+                //}).Wait() ;
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
                 // Console.WriteLine(openssl.StandardError.ReadToEnd());
                 return CSRgenCompletion.Task;
                 
