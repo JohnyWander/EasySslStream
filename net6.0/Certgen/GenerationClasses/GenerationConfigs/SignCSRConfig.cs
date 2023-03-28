@@ -72,6 +72,8 @@ namespace EasySslStream
             Enduser
         }
 
+        public string Filename;
+
         public int days;
         public bool copyallextensions = false;
 
