@@ -544,7 +544,7 @@ subjectAltName = @alt_names
                 try { Directory.SetCurrentDirectory(OutputPath); }
                 catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
             }
-            if (Certname.Contains(".pfx"))
+            if (!Certname.Contains(".pfx"))
             {
                 Certname += ".pfx";
             }
@@ -571,7 +571,7 @@ subjectAltName = @alt_names
         }
 
 
-        public override Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Password, string Certname, string OutputPath)
+        public override Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Certname, string Password, string OutputPath="default")
         {
             TaskCompletionSource<object> convertcompletion = new TaskCompletionSource<object>();
             if (OutputPath != "default")
@@ -580,7 +580,7 @@ subjectAltName = @alt_names
                 catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
             }
            
-            if (Certname.Contains(".pfx"))
+            if (!Certname.Contains(".pfx"))
             {
                 Certname += ".pfx";
             }
