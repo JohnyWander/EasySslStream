@@ -439,6 +439,7 @@ subjectAltName = @alt_names
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 openssl.StartInfo.CreateNoWindow = true;
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
