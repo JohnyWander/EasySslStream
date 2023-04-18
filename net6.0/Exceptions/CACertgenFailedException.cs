@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Exceptions
 {
+    [Serializable]
     internal class CACertgenFailedException : Exception
     {
-
-        public CACertgenFailedException(string message)
+        string defaultMessage = "Certificate signing failed, Unknown error";
+        public CACertgenFailedException(string message) : base (message)
         {
 
         }

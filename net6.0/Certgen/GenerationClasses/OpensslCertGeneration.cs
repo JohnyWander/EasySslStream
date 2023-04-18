@@ -476,21 +476,31 @@ subjectAltName = @alt_names
 
             if (OutputPath != "default")
             {
-                try { Directory.SetCurrentDirectory(OutputPath); }
+                try { Directory.SetCurrentDirectory(OutputPath); OutputPath += "/"; }
                 catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
             }
+            else
+            {
+                OutputPath = "";
+            }
+
+
+
+
+        
             if (!CertName.Contains(".crt")) { CertName += ".crt"; }
             string copyExtensions = "";
             if (config.copyallextensions == true) { copyExtensions = "-copy_extensions copyall"; }
 
             File.WriteAllText("signconf.txt", config.BuildConfFile());
-            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {CertName} -days {config.days} -copy_extensions copyall -config signconf.txt";
+            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {OutputPath}{CertName} -days {config.days} -copy_extensions copyall -config signconf.txt";
             Console.WriteLine(command);
 
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
                 openssl.StartInfo.CreateNoWindow = true;
+                openssl.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 //  openssl.StartInfo.UseShellExecute = false;
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;

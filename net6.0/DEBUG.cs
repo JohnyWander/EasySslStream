@@ -70,7 +70,10 @@ namespace EasySslStream
                 signconf.days = 365;
 
 
-            gen.SignCSR(signconf,"csr/certificate.csr","CA/CA.crt","CA/CA.key","certificate","crt");
+            //gen.SignCSR(signconf,"csr/certificate.csr","CA/CA.crt","CA/CA.key","certificate","crt"); // ok
+            gen.SignCSRAsync(signconf, "csr/certificate.csr", "CA/CA.crt", "CA/CA.key", "certificateByAsync", "crt").Wait();
+           
+            
             /*
                             //gen.ConvertX509ToPfx("cert.crt", "certificate.csr.key", "cert.pfx", "123");
 

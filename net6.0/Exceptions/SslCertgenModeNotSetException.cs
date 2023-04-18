@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Exceptions
 {
+    [Serializable]
     internal class SslCertgenModeNotSetException : Exception
     {
 

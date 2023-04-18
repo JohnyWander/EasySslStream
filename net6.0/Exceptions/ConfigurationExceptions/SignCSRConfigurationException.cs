@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Exceptions
 {
+    [Serializable]
     internal class SignCSRConfigurationException : Exception
     {
         public SignCSRConfigurationException(string message) : base(message)

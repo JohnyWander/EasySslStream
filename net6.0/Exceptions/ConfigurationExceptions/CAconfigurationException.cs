@@ -9,7 +9,7 @@ namespace EasySslStream.Exceptions
     [Serializable]
     public class CAconfigurationException : Exception
     {
-
+        
         public CAconfigurationException()
         { }
 
