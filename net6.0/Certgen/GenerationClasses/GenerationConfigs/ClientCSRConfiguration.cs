@@ -27,15 +27,8 @@ namespace EasySslStream
             Default,
             UTF8
         }
+
         public string CSRFileName="certificate.csr";
-
-     
-        
-        
-
-
-
-
 
         public HashAlgorithms? HashAlgorithm;
         public KeyLengths? KeyLength;
@@ -84,13 +77,10 @@ namespace EasySslStream
                 CSRFileName = CSRFileName.Replace(".csr", "");
             }
     
-
             if(HashAlgorithm is null) { throw new Exceptions.CSRConfigurationException("Hash algorithm is null or is not set propertly"); }
             if(KeyLength is null) { throw new Exceptions.CSRConfigurationException("RSA keylength is null or is not set propertly"); }
             if(CommonName is null) { throw new Exceptions.CSRConfigurationException("Common name for csr is null or not set propertly"); }
             
-
-
         }
 
 }

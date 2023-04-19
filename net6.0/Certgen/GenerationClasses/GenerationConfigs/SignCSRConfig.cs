@@ -13,7 +13,6 @@ namespace EasySslStream
     /// </summary>
     public class SignCSRConfig
     {
-
         public enum authorityKeyIdentifiers
         {
             keyid,

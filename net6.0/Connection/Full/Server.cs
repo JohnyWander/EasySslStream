@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Channels;
@@ -454,6 +455,15 @@ namespace EasySslStream.Connection.Full
             SendDisconnect = 99
         }
 
+
+        /// <summary>
+        /// U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
+        /// </summary>
+        public SslProtocols SslProtocols;
+
+        
+
+
         public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.CreateFileReceive();
         public IFileSendEventAndStats FileSendEventAndStats = ConnectionCommons.CreateFileSend();
         public IDirectorySendEventAndStats DirectorySendEventAndStats = ConnectionCommons.CreateDirectorySendEventAndStats();
@@ -485,13 +495,17 @@ namespace EasySslStream.Connection.Full
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
-                sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true);
+                if(this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false,this.SslProtocols,true); }
 
             }
             else
             {
                 sslstream_ = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidadeClientCert));
-                sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true);
+                if(this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true,this.SslProtocols,true); }
+                
+                
             }
 
             Thread ServerSender = new Thread(() =>

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Channels;
@@ -80,6 +81,13 @@ namespace EasySslStream.Connection.Full
             Confirmation = 200
 
         }
+
+        /// <summary>
+        /// U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
+        /// </summary>
+        public SslProtocols SslProtocols;
+
+
 
         public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.CreateFileReceive();
         public IFileSendEventAndStats FileSendEventAndStats = ConnectionCommons.CreateFileSend();
@@ -177,7 +185,18 @@ namespace EasySslStream.Connection.Full
                 {
                     stream.WriteTimeout = -1;
                     stream.ReadTimeout = -1;
-                    stream.AuthenticateAsClient(ip);
+                    if(this.SslProtocols == null) { stream.AuthenticateAsClient(ip); }
+                    else {
+
+                        SslClientAuthenticationOptions opt = new SslClientAuthenticationOptions();
+                        opt.TargetHost = ip;
+                        opt.EnabledSslProtocols = this.SslProtocols;
+                        opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
+                        stream.AuthenticateAsClient(opt);
+                        
+                        }
+                   
+                    
 
                     Thread ListeningThread = new Thread(() =>
                     {
@@ -331,7 +350,16 @@ namespace EasySslStream.Connection.Full
                 X509Certificate2 clientCert = new X509Certificate2(clientCertLocation, certPassword, X509KeyStorageFlags.PersistKeySet);
                 X509Certificate2Collection certs = new X509Certificate2Collection(clientCert);
 
-                stream.AuthenticateAsClient(ip, certs, false);
+                SslClientAuthenticationOptions opt = new SslClientAuthenticationOptions();
+
+                opt.TargetHost = ip;
+                opt.ClientCertificates = certs;
+                opt.EnabledSslProtocols = this.SslProtocols;
+                opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
+
+                // stream.AuthenticateAsClient(ip, certs, false);
+                stream.AuthenticateAsClient(opt);
+                
                 try
                 {
                     stream.WriteTimeout = -1;
