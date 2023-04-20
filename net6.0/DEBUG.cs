@@ -95,39 +95,34 @@ namespace EasySslStream
                                         Thread.Sleep(10000);
 
 
-
-
-
-
-
-
             foreach (SSLClient cl in server.ConnectedClients)
             {
-                
-
+                /*
                     IDirectoryReceiveEventAndStats dreas = cl.DirectoryReceiveEventAndStats;
                     dreas.AutoStartDirectoryReceiveSpeedCheck = true;
                     dreas.DefaultDirectoryReceiveUnit = ConnectionCommons.Unit.MBs;
                     dreas.DirectoryReceiveCheckInterval = 1000;
                     dreas.OnDirectoryReceiveSpeedChecked += (object sender, EventArgs e) =>
-                    {
-                        
+                    {             
                         Console.WriteLine(dreas.CurrentReceiveFile);
                     };
+                */
+                IDirectorySendEventAndStats seas = cl.DirectorySendEventAndStats;
+                seas.AutoStartDirectorySendSpeedCheck = true;
+                seas.DefaultDirectorySendUnit = ConnectionCommons.Unit.MBs;
+                seas.DirectorySendCheckInterval = 1000;
+                seas.OnDirectorySendSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(seas.stringDirectorySendSpeed);
+                };
 
 
-                
-            
+                cl.SendDirectoryV2("C:\\TEST");
             }
 
-            //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
-
-            // Thread.Sleep(10000);
-            //  server.TestList();
-
-            //
-            /*
-       */
+            
+          
+       
         }
 
 

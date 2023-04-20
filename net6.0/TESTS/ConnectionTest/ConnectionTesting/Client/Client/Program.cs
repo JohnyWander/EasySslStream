@@ -34,12 +34,12 @@ namespace Client
 
                 Thread.Sleep(15000);
                 //client.SendDirectoryV2("C:\\TEST2śśęęąą");
-               // client.SendDirectoryV2("C:\\TEST");
-               // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
-               // client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
-               //  {
-               //     Console.WriteLine(client.FileSendEventAndStats.stringSendSpeed);
-               // };
+                // client.SendDirectoryV2("C:\\TEST");
+                // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
+                // client.FileSendEventAndStats.OnSendSpeedChecked += (object sender, EventArgs e) =>
+                //  {
+                //     Console.WriteLine(client.FileSendEventAndStats.stringSendSpeed);
+                // };
 
                 // Thread.Sleep(12000);
 
@@ -48,15 +48,22 @@ namespace Client
                 //    Thread.Sleep(2000);
 
                 // client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 });
-                  client.SendDirectoryV2("C:\\TEST");
+                IDirectorySendEventAndStats seas = client.DirectorySendEventAndStats;
+                seas.AutoStartDirectorySendSpeedCheck = true;
+                seas.DefaultDirectorySendUnit = ConnectionCommons.Unit.MBs;
+                seas.OnDirectorySendSpeedChecked += (object sender, EventArgs e) =>
+                {
+                    Console.WriteLine(seas.stringDirectorySendSpeed);
+                };
+
+
+
+                client.SendDirectoryV2("C:\\TEST");
 
 
 
 
-
-
-
-
+      
 
 
 

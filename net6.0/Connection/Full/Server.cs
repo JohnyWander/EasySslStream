@@ -1292,7 +1292,7 @@ namespace EasySslStream.Connection.Full
                             sslstream_.Flush();
                             fs.Dispose();
                             DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
-                            SDCancel.Cancel();
+                            
                             // Task.Delay(100).Wait();
 
                         }
@@ -1332,7 +1332,7 @@ namespace EasySslStream.Connection.Full
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
-
+                SDCancel.Cancel();
 
 
 
@@ -1475,7 +1475,7 @@ namespace EasySslStream.Connection.Full
                             sslstream_.Flush();
                             fs.Dispose();
                             DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
-                            SDCancel.Cancel();
+                            
                             // Task.Delay(100).Wait();
 
                         }
@@ -1515,8 +1515,13 @@ namespace EasySslStream.Connection.Full
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
+
+                SDCancel.Cancel();
+
             });
+            
         }
+        
 
 
 
@@ -1524,8 +1529,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-
-
+        
 
 
 
@@ -1534,6 +1538,6 @@ namespace EasySslStream.Connection.Full
 
 
     }
-    
+
 
 }
