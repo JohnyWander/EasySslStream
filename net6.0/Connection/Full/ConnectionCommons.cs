@@ -201,12 +201,14 @@ namespace EasySslStream.Connection.Full
 
         public async Task StartDirectorySendSpeedCheck(int Interval,Unit unit,CancellationToken cts = default(CancellationToken))
         {
+            
             while (!cts.IsCancellationRequested)
             {
                 int current = CurrentSendFileCurrentBytes;
                 await Task.Delay(Interval);
                 int AfterInvterval = CurrentSendFileCurrentBytes;
 
+                
 
                 DirectorySendSpeed = (AfterInvterval - current) / (Interval / 1000);
 
@@ -259,7 +261,8 @@ namespace EasySslStream.Connection.Full
 
         public void RaiseOnDirectoryReceiveSpeedChecked()
         {
-            OnDirectorySendSpeedChecked?.Invoke(this, EventArgs.Empty);
+            OnDirectoryReceiveSpeedChecked?.Invoke(this, EventArgs.Empty);
+            
         }
 
         public float DirectoryReceiveSpeed { get; set; } = 0;
@@ -273,10 +276,12 @@ namespace EasySslStream.Connection.Full
         {
             while (!cts.IsCancellationRequested)
             {
+                
                 int current = CurrentReceiveFileCurrentBytes;
                 await Task.Delay(Interval);
                 int AfterInvterval = CurrentReceiveFileCurrentBytes;
 
+                Console.WriteLine(current);
 
                 DirectoryReceiveSpeed = (AfterInvterval - current) / (Interval / 1000);
 

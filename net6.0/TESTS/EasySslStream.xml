@@ -277,6 +277,11 @@
             Location of the received files
             </summary>
         </member>
+        <member name="F:EasySslStream.Connection.Full.Client.SslProtocols">
+            <summary>
+            U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
+            </summary>
+        </member>
         <member name="M:EasySslStream.Connection.Full.Client.Disconnect">
             <summary>
             Disconnects from the server, disposes client's sslstream
@@ -603,6 +608,33 @@
             <param name="clientEndpoint">client endpoint</param>
             <param name="Path">path to the file to send</param>
         </member>
+        <member name="M:EasySslStream.Connection.Full.Server.SendDirectoryToClient(System.Int32,System.String,System.Boolean,System.Int32)">
+            <summary>
+            Sends Directory to client
+            </summary>
+            <param name="ConnectionID">Connection id</param>
+            <param name="Path">Path to directory to send</param>
+            <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+            <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.Server.SendDirectoryToClient(System.Net.IPEndPoint,System.String,System.Boolean,System.Int32)">
+            <summary>
+            Sends Directory to client
+            </summary>
+            <param name="clientEndPoint">Client endpoint</param>
+            <param name="Path">Path to directory to send</param>
+            <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
+            <param name="FailSafeInterval">If connection crashes try to raise this value</param>
+        </member>
+        <member name="M:EasySslStream.Connection.Full.Server.SendDirectoryToClientV2(System.Int32,System.String,System.Boolean,System.Int32)">
+            <summary>
+            Optimized - Sends directory to client
+            </summary>
+            <param name="ConnectionID"></param>
+            <param name="Path"></param>
+            <param name="StopAndThrowOnFailedTransfer"></param>
+            <param name="FailSafeInterval"></param>
+        </member>
         <member name="F:EasySslStream.Connection.Full.Server.ReceivedFilesLocation">
             <summary>
             Location for the received file from clients
@@ -656,6 +688,11 @@
             Optionally informs client about closing connection
             </summary>
             <param name="InformClient">False by default. If set to true client will be informed that it has been disconnected </param>
+        </member>
+        <member name="F:EasySslStream.Connection.Full.SSLClient.SslProtocols">
+            <summary>
+            U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
+            </summary>
         </member>
         <member name="M:EasySslStream.Connection.Full.SSLClient.#ctor(System.Net.Sockets.TcpClient,System.Security.Cryptography.X509Certificates.X509Certificate2,System.Boolean,EasySslStream.Connection.Full.Server)">
             <summary>

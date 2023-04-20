@@ -34,7 +34,7 @@ namespace EasySslStream
             
               CertGenerationClasses.OpensslCertGeneration gen = new OpensslCertGeneration();
 
-               gen.GenerateCA("CA");
+             //  gen.GenerateCA("CA");
       //      Task.Run(async () =>
            // {
            //     await gen.GenerateCA_Async("async2");
@@ -71,13 +71,13 @@ namespace EasySslStream
 
 
             //gen.SignCSR(signconf,"csr/certificate.csr","CA/CA.crt","CA/CA.key","certificate","crt"); // ok
-            gen.SignCSRAsync(signconf, "csr/certificate.csr", "CA/CA.crt", "CA/CA.key", "certificateByAsync", "crt").Wait();
+           // gen.SignCSRAsync(signconf, "csr/certificate.csr", "CA/CA.crt", "CA/CA.key", "certificateByAsync", "crt").Wait();
            
             
             
                          //   gen.ConvertX509ToPfx("crt\\certificate.crt", "csr//certificate.key", "cert.pfx", "123"); // ok
-                            gen.ConvertX509ToPfxAsync("crt\\certificate.crt", "csr//certificate.key", "cert.pfx", "123"); // ok
-            /*
+                          //  gen.ConvertX509ToPfxAsync("crt\\certificate.crt", "csr//certificate.key", "cert.pfx", "123"); // ok
+           
 
                                         //DynamicConfiguration.TransportBufferSize = 4096; // WORKS FINE
                                         DynamicConfiguration.TransportBufferSize = 8192;// Works fine, better transfer speed very rarely
@@ -89,7 +89,7 @@ namespace EasySslStream
 
 
 
-                                        server.StartServer(IPAddress.Any, 10000, "pfxcert.pfx.pfx", "231", false);
+                                        server.StartServer(IPAddress.Any, 10000, "cert.pfx", "123", false);
 
 
                                         Thread.Sleep(10000);
@@ -101,83 +101,33 @@ namespace EasySslStream
 
 
 
-                                       foreach (SSLClient cl in server.ConnectedClients)
-                                       {
+            foreach (SSLClient cl in server.ConnectedClients)
+            {
+                
 
-                                            IDirectorySendEventAndStats deas = cl.DirectorySendEventAndStats;
-                                            deas.OnDirectorySendSpeedChecked += (object sender,EventArgs e) =>
-                                            {
-
-                                              //  Console.WriteLine(deas.stringDirectorySendSpeed);
-
-                                            };
-
-                                            deas.OnFileFromDirectorySendProcessed += (object sender, EventArgs e) =>
-                                            {
-                                                Console.WriteLine(deas.CurrentSendFilename);
-                                            };
+                    IDirectoryReceiveEventAndStats dreas = cl.DirectoryReceiveEventAndStats;
+                    dreas.AutoStartDirectoryReceiveSpeedCheck = true;
+                    dreas.DefaultDirectoryReceiveUnit = ConnectionCommons.Unit.MBs;
+                    dreas.DirectoryReceiveCheckInterval = 1000;
+                    dreas.OnDirectoryReceiveSpeedChecked += (object sender, EventArgs e) =>
+                    {
+                        
+                        Console.WriteLine(dreas.CurrentReceiveFile);
+                    };
 
 
+                
+            
+            }
 
-                                            deas.AutoStartDirectorySendSpeedCheck = true;
+            //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
 
-                                            Thread.Sleep(2000);
-                                            //cl.SendDirectory("C:\\TEST");
+            // Thread.Sleep(10000);
+            //  server.TestList();
 
-                                            IFileReceiveEventAndStats reas = cl.FileReceiveEventAndStats;
-
-                                            //ceas.OnDataChunkReceived += (object sender, EventArgs e) =>
-                                            //{
-                                            //    Console.WriteLine(ceas.CurrentBytes + "/" + ceas.TotalBytes);
-
-                                            //};
-                                            reas.OnReceiveSpeedChecked += (object sender,EventArgs e) =>
-                                            {
-                                                Console.WriteLine(reas.stringReceiveSpeed);
-
-
-                                            };
-                                            reas.AutoStartFileReceiveSpeedCheck = true;
-
-                                             reas.DefaultIntervalForFileReceiveCheck = 1000;
-                                            reas.DefaultReceiveSpeedUnit = ConnectionCommons.Unit.MBs;
-
-
-
-                                            IFileSendEventAndStats seas = cl.FileSendEventAndStats;
-
-                                            seas.OnSendSpeedChecked += (object sender, EventArgs e) =>
-                                            {
-                                            //    Console.WriteLine(seas.stringSendSpeed);
-                                            };
-                                            seas.AutoStartFileSendSpeedCheck = true;
-                                            seas.DefaultFileSendCheckUnit = ConnectionCommons.Unit.MBs;
-                                            seas.FileSendSpeedCheckInterval = 1000;
-
-
-                                            Thread.Sleep(3000);
-                                            // cl.SendFile("86998.zip");
-
-                                            // ceas.StartFileReceiveSpeedCheck(1000, ConnectionCommons.Unit.MBs).Wait();
-
-                                           // cl.SendDirectoryV2("TEST");
-
-
-
-                                            //Console.WriteLine("IS CONNECTION");
-                                            //cl.SendDirectory("C:\\Program Files\\Common Files",false);
-                                              //cl.SendDirectoryV2("C:\\TEST");
-                                           // cl.SendDirectory("C:\\TEST");
-
-                                        }
-
-                                        //  server.WriteTextToClient(0,Encoding.UTF8.GetBytes("booga ooga"));
-
-                                        // Thread.Sleep(10000);
-                                        //  server.TestList();
-
-                                        //
-                                    */
+            //
+            /*
+       */
         }
 
 

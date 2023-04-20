@@ -27,12 +27,12 @@ namespace Client
                     Console.WriteLine(client.FileReceiveEventAndStats.stringReceiveSpeed + "  " +
                         client.FileReceiveEventAndStats.CurrentReceivedBytes + " / " + client.FileReceiveEventAndStats.TotalBytesToReceive);
                };
-                Thread.Sleep(13000);
+               // Thread.Sleep(13000);
               //  client.WriteText(Encoding.UTF8.GetBytes("Test text message to client from server éééę")); // OK
                 //client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 }); // OK
                 //client.SendFile("x.zip");
 
-                Thread.Sleep(1000);
+                Thread.Sleep(15000);
                 //client.SendDirectoryV2("C:\\TEST2śśęęąą");
                // client.SendDirectoryV2("C:\\TEST");
                // client.FileSendEventAndStats.AutoStartFileSendSpeedCheck = true ;
@@ -48,7 +48,7 @@ namespace Client
                 //    Thread.Sleep(2000);
 
                 // client.SendRawBytes(new byte[] { 0x00, 0x11, 0x12, 0x12, 0x20, 0x21 });
-                  client.SendDirectoryV2("TEST2");
+                  client.SendDirectoryV2("C:\\TEST");
 
 
 

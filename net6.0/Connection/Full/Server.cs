@@ -930,12 +930,15 @@ namespace EasySslStream.Connection.Full
 
             if (DirectoryReceiveEventAndStats.AutoStartDirectoryReceiveSpeedCheck)
             {
-                Task.Run(() =>
-                {
-                    DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
-                        DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
+                  Task.Run(() =>
+                  {
+                      
+                      DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
+                         DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
 
-                });
+                  });
+
+          
 
 
             }
@@ -1005,9 +1008,11 @@ namespace EasySslStream.Connection.Full
                     fs.Write(DataChunk);
                     if (fs.Length >= FileLength)
                     {
-                        DirectorySendEventAndStats.CurrentSendFileCurrentBytes = (int)fs.Length;
+                        DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = (int)fs.Length;
+                        
                         break;
                     }
+                    DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = (int)fs.Length;
                 }
                 long ReceivedFileLength = fs.Length;
 
@@ -1021,11 +1026,11 @@ namespace EasySslStream.Connection.Full
                 sslstream_.Flush();
                 DirectoryReceiveEventAndStats.RaiseOnFileFromDirectoryReceiveProcessed();
 
-                GDCancel.Cancel();
+                
 
             }
 
-
+            GDCancel.Cancel();
 
 
 
