@@ -1332,7 +1332,7 @@ namespace EasySslStream.Connection.Full
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
-                SDCancel.Cancel();
+               // SDCancel.Cancel();
 
 
 
@@ -1349,19 +1349,21 @@ namespace EasySslStream.Connection.Full
 
         public void SendDirectoryV2(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
+            
             Task.Run(async () =>
             {
-                CancellationTokenSource SDCancel = new CancellationTokenSource();
 
+                CancellationTokenSource SDCancele = new CancellationTokenSource();
                 if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
                 {
-                    Task.Run(() =>
-                    {
+                  
+                    Thread t = new Thread(() => { 
+
                         DirectorySendEventAndStats.StartDirectorySendSpeedCheck(DirectorySendEventAndStats.DirectorySendCheckInterval,
-                        DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancel.Token);
+                        DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancele.Token).Wait();
 
                     });
-
+                    t.Start();
 
                 }
 
@@ -1380,7 +1382,7 @@ namespace EasySslStream.Connection.Full
                     string Info = f;
                     Info += $"@@@{inf.Length}";
                     FileInfos.Add(Info);
-                //    Console.WriteLine(Info);
+                    //    Console.WriteLine(Info);
                 }
 
                 string Message = "";
@@ -1390,7 +1392,7 @@ namespace EasySslStream.Connection.Full
 
                 }
                 Message = Message.TrimEnd('^');
-                Console.WriteLine(Message);
+                //Console.WriteLine(Message);
 
                 string Base64Message = Convert.ToBase64String(srv.FileNameEncoding.GetBytes(Message));
                 byte[] Base64Buffer = srv.FileNameEncoding.GetBytes(Base64Message);
@@ -1475,7 +1477,7 @@ namespace EasySslStream.Connection.Full
                             sslstream_.Flush();
                             fs.Dispose();
                             DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
-                            
+
                             // Task.Delay(100).Wait();
 
                         }
@@ -1516,12 +1518,11 @@ namespace EasySslStream.Connection.Full
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
 
-                SDCancel.Cancel();
+               
+
 
             });
-            
         }
-        
 
 
 
@@ -1529,7 +1530,8 @@ namespace EasySslStream.Connection.Full
 
 
 
-        
+
+
 
 
 

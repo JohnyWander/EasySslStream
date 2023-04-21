@@ -204,14 +204,15 @@ namespace EasySslStream.Connection.Full
             
             while (!cts.IsCancellationRequested)
             {
+               
                 int current = CurrentSendFileCurrentBytes;
                 await Task.Delay(Interval);
                 int AfterInvterval = CurrentSendFileCurrentBytes;
 
-                
+                float DividableInterval = (float)Interval;
 
-                DirectorySendSpeed = (AfterInvterval - current) / (Interval / 1000);
-
+                DirectorySendSpeed = (AfterInvterval - current) / (DividableInterval / 1000);
+                float zero = 0;
                 switch (unit)
                 {
                     case Unit.Bps:
@@ -223,7 +224,8 @@ namespace EasySslStream.Connection.Full
                         break;
                     case Unit.MBs:
                         DirectorySendSpeed = DirectorySendSpeed / 1024 / 1024;
-                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.MBs.ToString();
+                       
+                        stringDirectorySendSpeed = (DirectorySendSpeed > 0 ? DirectorySendSpeed.ToString() : 0) + " " + Unit.MBs.ToString();
                         break;
 
 

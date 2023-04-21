@@ -265,7 +265,7 @@ namespace EasySslStream.Connection.Full
                         catch (System.IO.IOException e)
                         {
                             DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message");
-                             throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
+                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
 
                         }
                         catch (System.NullReferenceException)

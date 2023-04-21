@@ -113,9 +113,12 @@ namespace EasySslStream
                 seas.DirectorySendCheckInterval = 1000;
                 seas.OnDirectorySendSpeedChecked += (object sender, EventArgs e) =>
                 {
+                    Console.Clear();
                     Console.WriteLine(seas.stringDirectorySendSpeed);
+                    
                 };
 
+                Thread.Sleep(3000);
 
                 cl.SendDirectoryV2("C:\\TEST");
             }
