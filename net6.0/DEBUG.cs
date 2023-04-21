@@ -120,7 +120,7 @@ namespace EasySslStream
 
                 Thread.Sleep(3000);
 
-                cl.SendDirectoryV2("C:\\TEST");
+                cl.SendDirectory("C:\\TEST");
             }
 
             
