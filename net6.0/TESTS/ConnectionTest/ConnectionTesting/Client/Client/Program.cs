@@ -58,7 +58,7 @@ namespace Client
 
 
 
-              //  client.SendDirectoryV2("C:\\TEST");
+                client.SendDirectoryV2("C:\\TEST");
 
 
 

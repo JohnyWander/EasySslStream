@@ -216,11 +216,11 @@ namespace EasySslStream.Connection.Full
                 switch (unit)
                 {
                     case Unit.Bps:
-                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.Bps.ToString();
+                        stringDirectorySendSpeed = (DirectorySendSpeed > 0 ? DirectorySendSpeed.ToString() : 0) + " " + Unit.Bps.ToString();
                         break;
                     case Unit.KBs:
                         DirectorySendSpeed = DirectorySendSpeed / 1024;
-                        stringDirectorySendSpeed = DirectorySendSpeed + " " + Unit.KBs.ToString();
+                        stringDirectorySendSpeed = (DirectorySendSpeed > 0 ? DirectorySendSpeed.ToString() : 0) + " " + Unit.KBs.ToString();
                         break;
                     case Unit.MBs:
                         DirectorySendSpeed = DirectorySendSpeed / 1024 / 1024;

@@ -461,7 +461,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public SslProtocols SslProtocols;
 
-        
+
 
 
         public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.CreateFileReceive();
@@ -495,17 +495,17 @@ namespace EasySslStream.Connection.Full
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
-                if(this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true); }
-                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false,this.SslProtocols,true); }
+                if (this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, this.SslProtocols, true); }
 
             }
             else
             {
                 sslstream_ = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidadeClientCert));
-                if(this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true); }
-                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true,this.SslProtocols,true); }
-                
-                
+                if (this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, this.SslProtocols, true); }
+
+
             }
 
             Thread ServerSender = new Thread(() =>
@@ -930,15 +930,15 @@ namespace EasySslStream.Connection.Full
 
             if (DirectoryReceiveEventAndStats.AutoStartDirectoryReceiveSpeedCheck)
             {
-                  Task.Run(() =>
-                  {
-                      
-                      DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
-                         DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
+                Task.Run(() =>
+                {
 
-                  });
+                    DirectoryReceiveEventAndStats.StartDirectoryReceiveSpeedCheck(DirectoryReceiveEventAndStats.DirectoryReceiveCheckInterval,
+                       DirectoryReceiveEventAndStats.DefaultDirectoryReceiveUnit, GDCancel.Token);
 
-          
+                });
+
+
 
 
             }
@@ -1009,7 +1009,7 @@ namespace EasySslStream.Connection.Full
                     if (fs.Length >= FileLength)
                     {
                         DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = (int)fs.Length;
-                        
+
                         break;
                     }
                     DirectoryReceiveEventAndStats.CurrentReceiveFileCurrentBytes = (int)fs.Length;
@@ -1026,7 +1026,7 @@ namespace EasySslStream.Connection.Full
                 sslstream_.Flush();
                 DirectoryReceiveEventAndStats.RaiseOnFileFromDirectoryReceiveProcessed();
 
-                
+
 
             }
 
@@ -1182,7 +1182,8 @@ namespace EasySslStream.Connection.Full
         }
 
         /// <summary>
-        /// Sends directory over Sslstream
+        /// Sends directory over Sslstream, supports max 4096 bytes buffer size!</br>
+        /// if it crashes please use SendDirectoryV2
         /// </summary>
         /// <param name="DirPath">path to the directory</param>
         /// <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
@@ -1191,6 +1192,7 @@ namespace EasySslStream.Connection.Full
         /// 20ms by default </param>
         /// <exception cref="Exceptions.ServerException"></exception>
         /// 
+       
         public void SendDirectory(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
             Task.Run(async () =>
@@ -1332,13 +1334,17 @@ namespace EasySslStream.Connection.Full
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
-               // SDCancel.Cancel();
 
+                while (ServerSendingQueue.Reader.Count > 0)
+                {
+                    await Task.Delay(10);
+                }
+                SDCancel.Cancel();
 
 
 
             });
-
+            //SDCancel.Cancel();
 
 
         }
@@ -1503,7 +1509,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-
+                       // SDCancele.Cancel();
                     }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendInnerDirectory);
 
                     if (LoopCancel == true)
@@ -1512,14 +1518,19 @@ namespace EasySslStream.Connection.Full
                     }
 
 
-
+                   
                     //await Task.Delay(2000);
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
 
-               
-
+                
+                while(ServerSendingQueue.Reader.Count > 0)
+                {
+                    await Task.Delay(10);
+                }
+                SDCancele.Cancel();
+                
 
             });
         }
