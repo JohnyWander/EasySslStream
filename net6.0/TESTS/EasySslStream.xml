@@ -721,18 +721,7 @@
             </summary>
             <param name="path">Path to the file</param>
         </member>
-        <member name="M:EasySslStream.Connection.Full.SSLClient.SendDirectory(System.String,System.Boolean,System.Int32)">
-            <summary>
-            Sends directory over Sslstream
-            </summary>
-            <param name="DirPath">path to the directory</param>
-            <param name="StopAndThrowOnFailedTransfer">Stops transfer when any file transfer failed, if true. if false it ignores files that couldn't be send</param>
-            <param name="FailSafeSendInterval">Sometimes connection crashes after file info is sent, inverval can be set to prevent this issue from happenning
-            Higher = slower transfer, smaller chance to fail
-            20ms by default </param>
-            <exception cref="T:EasySslStream.Exceptions.ServerException"></exception>
-            
-        </member>
+        <!-- Badly formed XML comment ignored for member "M:EasySslStream.Connection.Full.SSLClient.SendDirectory(System.String,System.Boolean,System.Int32)" -->
         <member name="T:EasySslStream.Interop.User32">
             <summary>
             Contains functions invoked from User32.dll

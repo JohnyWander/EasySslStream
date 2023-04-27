@@ -93,6 +93,7 @@ namespace EasySslStream.Connection.Full
 
             if (NoJobs == true)
             {
+                if(!GentleStopLock.Task.IsCompleted)
                 GentleStopLock.SetResult(null);
             }
 
