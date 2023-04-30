@@ -529,17 +529,20 @@ namespace EasySslStream.Connection.Full
                     }
                     catch (System.ObjectDisposedException e)
                     {
-                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                        if (DynamicConfiguration.RaiseMessage is not null)
+                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception"); }
                         throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                     }
                     catch (System.IO.IOException e)
                     {
-                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                        if (DynamicConfiguration.RaiseMessage is not null)
+                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception"); }
                         throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
                     }
                     catch (Exception e)
                     {
-                        DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                        if (DynamicConfiguration.RaiseMessage is not null)
+                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception"); }
                         throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
                     }
                 }).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -599,19 +602,21 @@ namespace EasySslStream.Connection.Full
                 }
                 catch (System.ObjectDisposedException e)
                 {
-                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception");
+                    if (DynamicConfiguration.RaiseMessage is not null)
+                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                 }
                 catch (System.IO.IOException e)
                 {
-                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception");
+                    if (DynamicConfiguration.RaiseMessage is not null)
+                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
                 }
                 catch (Exception e)
                 {
-                    DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception");
+                    if (DynamicConfiguration.RaiseMessage is not null)
+                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
-
                 }
             }).GetAwaiter().GetResult();
 

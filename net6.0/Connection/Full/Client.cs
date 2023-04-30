@@ -110,7 +110,8 @@ namespace EasySslStream.Connection.Full
             }
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
             {
-                DynamicConfiguration.RaiseMessage("CERT NOT AVAIABLE?!", "???");
+                if (DynamicConfiguration.RaiseMessage is not null)
+                { DynamicConfiguration.RaiseMessage("CERT NOT AVAIABLE?!", "???"); };
                 return false;
             }
             else
@@ -121,8 +122,10 @@ namespace EasySslStream.Connection.Full
                     return true;
                 }
 
-
-                DynamicConfiguration.RaiseMessage("???", "???");
+                if (DynamicConfiguration.RaiseMessage is not null)
+                {
+                    DynamicConfiguration.RaiseMessage("???", "???");
+                }
                 return false;
             }
         }
@@ -259,23 +262,26 @@ namespace EasySslStream.Connection.Full
                         }
                         catch (System.ObjectDisposedException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Client message");
+                            if (DynamicConfiguration.RaiseMessage is not null)
+                            { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Client message"); }
                             throw new Exceptions.ConnectionException("Connection closed by client");
                         }
                         catch (System.IO.IOException e)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message");
-                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
-
+                            if (DynamicConfiguration.RaiseMessage is not null)
+                            { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message"); }
+                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);                           
                         }
                         catch (System.NullReferenceException)
                         {
-                            DynamicConfiguration.RaiseMessage("Disconnected from server", "Client Exception");
+                            if (DynamicConfiguration.RaiseMessage is not null)
+                            { DynamicConfiguration.RaiseMessage("Disconnected from server", "Client Exception"); }
                             throw new Exceptions.ConnectionException("Client disconnected from server");
                         }
                         catch (Exception e)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            if (DynamicConfiguration.RaiseMessage is not null)
+                            { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
                             throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
 
                         }
@@ -302,18 +308,20 @@ namespace EasySslStream.Connection.Full
                         }
                         catch (System.ObjectDisposedException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message");
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message"); }
                             throw new Exceptions.ConnectionException("Connection closed by client");
                         }
                         catch (System.IO.IOException)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message");
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message"); }
                             throw new Exceptions.ConnectionException("Server closed");
-
                         }
                         catch (Exception e)
                         {
-                            DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception");
+                            if (DynamicConfiguration.RaiseMessage != null)
+                            { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
                             throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
 
                         }
