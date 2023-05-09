@@ -22,12 +22,16 @@ namespace EasySslStream
 
 
 
-            Server srv = new Server();
-            srv.CertificateCheckSettings.VerifyCertificateChain = false;
-            srv.CertificateCheckSettings.VerifyCertificateName = false;
-            srv.StartServer(IPAddress.Any, 5000, "cert.pfx", "123", false);
-            
-            
+            TESTING.ServerSide serverTest = new TESTING.ServerSide();
+           
+            TESTING.Config.ServerTestConfig testconfig = new TESTING.Config.ServerTestConfig();
+            testconfig.ListenPort = 5000;
+            testconfig.ListenOnIpString = "127.0.0.1";
+            serverTest.LaunchTestServer(testconfig);
+            serverTest.StartTest(new TESTING.Config.ServerTestObjects() , ConnectionCommons.Unit.MBs, 1);
+
+
+
             //Thread.Sleep(1000000);
             
         }
