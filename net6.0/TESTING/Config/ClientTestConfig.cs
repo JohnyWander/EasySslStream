@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.TESTING.Config
 {
-    internal class ClientTestConfig
+    public  class ClientTestConfig
     {
         /// <summary>
         /// Connect to server with this representation of ip
         /// </summary>
         public string ServerIPstring; 
-        public IPAddress ServerIPAddress = IPAddress.Any;
+        
         public int ServerPort;
 
         /// <summary>
@@ -32,7 +32,10 @@ namespace EasySslStream.TESTING.Config
         /// </summary>
         public bool VerifyCertificateName = false;
 
-
+        /// <summary>
+        /// Set to true if  server verifies 
+        /// </summary>
+        public bool ServerVerifiesClientCertificate = false;
         /// <summary>
         /// Use only if server verifies client cert. - Path to the pfx certificate, by default it uses cert obtained from Cert generation test class
         /// </summary>

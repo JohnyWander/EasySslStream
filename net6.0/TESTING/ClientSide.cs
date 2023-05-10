@@ -37,9 +37,17 @@ namespace EasySslStream.TESTING
         {
             try
             {
-                client.VerifyCertificateChain
+                client.VerifyCertificateChain = conf.VerifyCertificateChain;
+                client.VerifyCertificateName = conf.VerifyCertificateName;
 
-
+                if (conf.ServerVerifiesClientCertificate)
+                {
+                    client.Connect(conf.ServerIPstring, conf.ServerPort);
+                }
+                else
+                {
+                    client.Connect(conf.ServerIPstring, conf.ServerPort);
+                }
 
 
             }catch (Exception ex)
