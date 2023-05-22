@@ -42,18 +42,22 @@ namespace EasySslStream.TESTING
 
                 if (conf.ServerVerifiesClientCertificate)
                 {
-                    client.Connect(conf.ServerIPstring, conf.ServerPort);
+                    client.Connect(conf.ServerIPstring,
+                    conf.ServerPort,
+                    conf.PathToDefaultClientCert,
+                    conf.CertificatePassword);
                 }
                 else
                 {
                     client.Connect(conf.ServerIPstring, conf.ServerPort);
                 }
 
-
+                CommunnicateResults?.Invoke("Successfully connected to the server");
             }catch (Exception ex)
             {
-            
-            
+                string ErrorMessage = $"Test clientFailed with exception: {ex.GetType().Name}\t and it's message: {ex.Message}";
+                CommunnicateResults?.Invoke(ErrorMessage);
+
             }
         }
 

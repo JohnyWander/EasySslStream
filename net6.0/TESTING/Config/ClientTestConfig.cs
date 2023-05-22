@@ -39,7 +39,7 @@ namespace EasySslStream.TESTING.Config
         /// <summary>
         /// Use only if server verifies client cert. - Path to the pfx certificate, by default it uses cert obtained from Cert generation test class
         /// </summary>
-        public string PathToDefaultServerCert;
+        public string PathToDefaultClientCert;
 
         /// <summary>
         /// Use only if server verifies client cert. - Password to the specified pfx certificate, by default it is password used for cert generation test class
