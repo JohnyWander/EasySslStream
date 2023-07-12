@@ -9,9 +9,9 @@ using static EasySslStream.CA_CertGen;
 
 namespace EasySslStream
 {
-/// <summary>
-/// Event that fires when debug message is raised
-/// </summary>
+    /// <summary>
+    /// Event that fires when debug message is raised
+    /// </summary>
     public delegate void DebugLocalVariableEventRaised();
 
     /// <summary>
@@ -71,7 +71,7 @@ namespace EasySslStream
         /// True - Lib will try to output debug Messages through specified 
         /// </summary>
         internal static bool DEBUG = false;
-     
+
         /// <summary>
         /// Latest debug message
         /// </summary>
@@ -80,7 +80,7 @@ namespace EasySslStream
         /// Latest debug message title
         /// </summary>
         public static string? debug_title;
-        
+
         /// <summary>
         /// Event that fires when debug message is changed
         /// </summary>
@@ -142,12 +142,12 @@ namespace EasySslStream
             RaiseMessage = null;
         }
 
-       
+
         public static void SelectCertgenMode(SSL_Certgen_mode CertGenMode_)
         {
             Certgen_Mode = CertGenMode_;
         }
-        
+
 
 
     }
@@ -156,17 +156,17 @@ namespace EasySslStream
     {
         public enum HashAlgorithms
         {
-          sha256,
-          sha384
+            sha256,
+            sha384
         }
-        
+
         public enum KeyLengths
         {
             RSA_1024,
             RSA_2048,
             RSA_4096
         }
-        
+
         public enum Encodings
         {
             Default,
@@ -204,8 +204,8 @@ namespace EasySslStream
 
             }
         }
-        public string? CountryState { internal get; set; } 
-        public string? Location { internal get; set; } 
+        public string? CountryState { internal get; set; }
+        public string? Location { internal get; set; }
         public string? Organisation { internal get; set; }
         public string? CommonName { internal get; set; }
 
@@ -217,8 +217,8 @@ namespace EasySslStream
     }
 
 
-    
- 
+
+
     public class OpenSSLConfig_
     {
 
@@ -240,14 +240,14 @@ namespace EasySslStream
         public void SetOpenSSl_PATH(string path)
         {
             OpenSSL_PATH = path;
-            
+
         }
 
 
         public void TryToFindOpenSSl()
         {
-            
-            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)+"\\OpenSSL\\bin";
+
+            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "\\OpenSSL\\bin";
             string pathx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\OpenSSL\\bin";
             DynamicConfiguration.RaiseMessage?.Invoke("Failed to find openSSL", "OpenSSL error");
 
@@ -261,8 +261,8 @@ namespace EasySslStream
                 OpenSSL_PATH = pathx64;
             }
         }
-        
-        
+
+
     }
 
 
