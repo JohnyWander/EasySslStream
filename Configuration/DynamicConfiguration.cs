@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using static EasySslStream.CA_CertGen;
+
 
 namespace EasySslStream
 {
@@ -19,10 +19,7 @@ namespace EasySslStream
     /// </summary>
     public static class DynamicConfiguration
     {
-        /// <summary>
-        /// Contains configuration for CA certificate generation
-        /// </summary>
-        public static CA_CertGen CA_CONFIG = new CA_CertGen();
+       
 
         /// <summary>
         /// Contains configuration 
@@ -152,69 +149,7 @@ namespace EasySslStream
 
     }
 
-    public class CA_CertGen
-    {
-        public enum HashAlgorithms
-        {
-            sha256,
-            sha384
-        }
-
-        public enum KeyLengths
-        {
-            RSA_1024,
-            RSA_2048,
-            RSA_4096
-        }
-
-        public enum Encodings
-        {
-            Default,
-            UTF8
-        }
-
-
-        public HashAlgorithms? HashAlgorithm;
-        public KeyLengths? KeyLength;
-        public Encodings Encoding = Encodings.Default;
-
-
-        public int Days { internal get; set; } = 365;// ex. 356
-
-        internal string? CountryCodeString;
-        public string? CountryCode
-        {
-            internal get
-            {
-                if (CountryCode is not null)
-                {
-                    return CountryCodeString;
-                }
-                else
-                {
-                    throw new Exceptions.CountryCodeInvalidException("CountryCode is NULL");
-                }
-            }
-            set
-            {
-                int length;
-                if (value is null) { throw new Exceptions.CountryCodeInvalidException("Passed value is NULL"); }
-                if (VerifyCountryCode(value, out length)) { CountryCodeString = value?.ToUpper(); }
-                else { throw new Exceptions.CountryCodeInvalidException(length); }
-
-            }
-        }
-        public string? CountryState { internal get; set; }
-        public string? Location { internal get; set; }
-        public string? Organisation { internal get; set; }
-        public string? CommonName { internal get; set; }
-
-        private bool VerifyCountryCode(string CountryCode, out int length)
-        {
-            length = CountryCode.Length;
-            return CountryCode.Length == 2 ? true : false;
-        }
-    }
+    
 
 
 
