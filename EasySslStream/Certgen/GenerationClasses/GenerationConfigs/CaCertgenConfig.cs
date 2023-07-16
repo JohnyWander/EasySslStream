@@ -2,7 +2,7 @@
 using EasySslStream.Exceptions;
 
 
-namespace EasySslStream
+namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 {
     public class CaCertgenConfig
     {

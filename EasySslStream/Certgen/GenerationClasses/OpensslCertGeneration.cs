@@ -1,4 +1,4 @@
-﻿using EasySslStream.Abstraction;
+﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -12,69 +12,27 @@ using System.Transactions;
 
 namespace EasySslStream.CertGenerationClasses
 {
- 
 
-    public partial class OpensslCertGeneration : Abstraction.CertGenClassesParent
+
+    public partial class OpensslCertGeneration
     {
-        private readonly CaCertgenConfig _conf;
-        public OpensslCertGeneration(CaCertgenConfig conf)
+        
+        public OpensslCertGeneration()
         {
-            _conf = conf;
+            
         }
 
-        internal override void LoadCAconfig()
-        {
-
-            CAHashAlgo = _conf.HashAlgorithm.ToString();
-            try
-            {
-                CAKeyLength = _conf.KeyLength.ToString().Split('_')[1];
-            }
-            catch (IndexOutOfRangeException)
-            {
-                throw new Exceptions.CAconfigurationException("Key length not set correctly in DynamicConfiguration");
-
-            }
-            CAdays = Convert.ToString(_conf.Days);
-            CACountry = _conf.CountryCodeString;
-            CAState = _conf.CountryState;
-            CALocation = _conf.Location;
-            CAOrganisation = _conf.Organisation;
-            CACommonName = _conf.CommonName;
-
-            if (_conf.Encoding == CaCertgenConfig.Encodings.UTF8)
-            {
-                CAGenerationEncoding = "-utf8";
-            }
-            else
-            {
-                CAGenerationEncoding = string.Empty;
-            }
-
-
-            // if (CAHashAlgo is null || CAKeyLength is null || CAdays is null || CACountry is null || CAState is null || CALocation is null || CACommonName is null)
-            // {
-            //    throw new Exceptions.CAconfigurationException("At least one of the required parameters for CA certificate generation is NOT set");
-            //}
-
-            if (CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("CA hash algorithm is not set in DynamicConfiguration"); }
-            if (CAKeyLength is null) { throw new Exceptions.CAconfigurationException("RSA key lentgh for CA certificate is not set in DynamicConfiguration"); }
-            if (CAdays is null) { throw new Exceptions.CAconfigurationException("Validity days of CA certificate are not set in DynamicConfiguration"); }
-            if (CACommonName is null) { throw new Exceptions.CAconfigurationException("Common name for CA cetificate is not set in DynamicConfiguration"); }
-
-
-        }
+        #region Generation Methods
 
         /// <summary>
         /// Asynchronously Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
         /// <returns></returns>
-        public override Task GenerateCA_Async(string OutputPath="default")
-          {
-            LoadCAconfig();
+        public Task GenerateCaAsync(CaCertgenConfig conf,string OutputPath="default")
+        {         
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
-           // generation_completion.Task.ConfigureAwait(false);
+           
             if (OutputPath != "default")
             {
                 try { Directory.SetCurrentDirectory(OutputPath); }
@@ -83,30 +41,33 @@ namespace EasySslStream.CertGenerationClasses
 
 
 
+            string CreateOpensslCaConfig()
+            {
+
+            }
+
 
             string configFile = @$"[req]
-default_bits= {base.CAKeyLength}
+default_bits= {conf.KeyLength.ToString()}
 prompt = no
-default_md = {base.CAHashAlgo}
+default_md = {conf.HashAlgorithm.ToString()}
 distinguished_name = dn
 [dn]" + "\n";
-            if (base.CACountry is not null) { configFile += $"C={base.CACountry}\n"; }
-            if (base.CAState is not null) { configFile += $"ST={base.CAState}\n"; }
-            if (base.CALocation is not null) { configFile += $"L={base.CALocation}\n"; }
-            if (base.CAOrganisation is not null) { configFile += $"O={base.CAOrganisation}\n"; }
-            if (base.CACommonName is not null) { configFile += $"CN={base.CACommonName}\n"; }
+            if (conf.CountryCode is not null) { configFile += $"C={conf.CountryCode}\n"; }
+            if (conf.CountryState is not null) { configFile += $"ST={conf.CountryState}\n"; }
+            if (conf.Location is not null) { configFile += $"L={conf.Location}\n"; }
+            if (conf.Organisation is not null) { configFile += $"O={conf.Organisation}\n"; }
+            if (conf.CommonName is not null) { configFile += $"CN={conf.CommonName}\n"; }
 
-            if (base.CAHashAlgo == "" || base.CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("Hash alghorithm is not set in DynamicConfiguration"); }
-
-            if (!configFile.IsNormalized(NormalizationForm.FormD) && base.CAGenerationEncoding != "-utf8")
+            if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration");
+                generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration"));
             }
 
 
 
             File.WriteAllText("genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{base.CAHashAlgo} -nodes -newkey rsa:{base.CAKeyLength} -days {base.CAdays} {base.CAGenerationEncoding} -keyout CA.key -out CA.crt -config genconf.txt";
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLength} -days {conf.Days} -{conf.Encoding} -keyout CA.key -out CA.crt -config genconf.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
@@ -153,7 +114,7 @@ distinguished_name = dn
         /// Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
-        public override void GenerateCA(string OutputPath = "default")
+        public void GenerateCA(string OutputPath = "default")
         {
             LoadCAconfig();
             if (OutputPath != "default")
@@ -235,7 +196,7 @@ distinguished_name = dn
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public override void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
+        public void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
         {
             config.VerifyConfiguration();
             if (OutputPath != "default")
@@ -329,7 +290,7 @@ subjectAltName = @alt_names
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
         /// <returns>Task object that indicates task completion</returns>
-        public override Task GenerateCSRAsync(CSRConfiguration config, string OutputPath = "default")
+        public Task GenerateCSRAsync(CSRConfiguration config, string OutputPath = "default")
         {
             TaskCompletionSource<object> CSRgenCompletion = new TaskCompletionSource<object>();
             try
@@ -460,7 +421,7 @@ subjectAltName = @alt_names
         /// <param name="CAKeyPath"></param>
         /// <param name="CertName"></param>
         /// <param name="OutputPath"></param>
-        public override void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertName, string OutputPath = "default")
+        public void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertName, string OutputPath = "default")
         {
             if (OutputPath != "default")
             {
@@ -516,7 +477,7 @@ subjectAltName = @alt_names
         /// <param name="CertName"></param>
         /// <param name="OutputPath"></param>
         /// <returns></returns>
-        public override Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string OutputPath = "default")
+        public Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertName, string OutputPath = "default")
         {
             
             TaskCompletionSource<object> SignCompletion = new TaskCompletionSource<object>();
@@ -584,7 +545,7 @@ subjectAltName = @alt_names
 
 
 
-        public override void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string OutputPath = "default")
+        public void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string OutputPath = "default")
         {
             if (OutputPath != "default")
             {
@@ -618,7 +579,7 @@ subjectAltName = @alt_names
         }
 
 
-        public override Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Certname, string Password, string OutputPath="default")
+        public Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Certname, string Password, string OutputPath="default")
         {
             TaskCompletionSource<object> convertcompletion = new TaskCompletionSource<object>();
             if (OutputPath != "default")
@@ -672,10 +633,36 @@ subjectAltName = @alt_names
             }
         }
 
-       
 
 
 
+        #endregion
+
+        #region Config Builders
+
+
+
+
+        #endregion
+
+        #region Checkers
+
+        private void VeryfyConfig(CaCertgenConfig conf,TaskCompletionSource tcs)
+        {
+            if (conf.HashAlgorithm is null)
+            {
+                tcs.SetException(new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class"));
+            }
+
+            if (conf.KeyLength is null)
+            {
+                tcs.SetException(new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class"));
+            }
+
+        }
+
+
+        #region
 
     }
 }
