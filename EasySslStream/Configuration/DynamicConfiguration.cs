@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using static EasySslStream.CA_CertGen;
+
 
 namespace EasySslStream
 {
-/// <summary>
-/// Event that fires when debug message is raised
-/// </summary>
+    /// <summary>
+    /// Event that fires when debug message is raised
+    /// </summary>
     public delegate void DebugLocalVariableEventRaised();
 
     /// <summary>
@@ -19,10 +19,7 @@ namespace EasySslStream
     /// </summary>
     public static class DynamicConfiguration
     {
-        /// <summary>
-        /// Contains configuration for CA certificate generation
-        /// </summary>
-        public static CA_CertGen CA_CONFIG = new CA_CertGen();
+       
 
         /// <summary>
         /// Contains configuration 
@@ -71,7 +68,7 @@ namespace EasySslStream
         /// True - Lib will try to output debug Messages through specified 
         /// </summary>
         internal static bool DEBUG = false;
-     
+
         /// <summary>
         /// Latest debug message
         /// </summary>
@@ -80,7 +77,7 @@ namespace EasySslStream
         /// Latest debug message title
         /// </summary>
         public static string? debug_title;
-        
+
         /// <summary>
         /// Event that fires when debug message is changed
         /// </summary>
@@ -142,83 +139,21 @@ namespace EasySslStream
             RaiseMessage = null;
         }
 
-       
+
         public static void SelectCertgenMode(SSL_Certgen_mode CertGenMode_)
         {
             Certgen_Mode = CertGenMode_;
         }
-        
+
 
 
     }
-
-    public class CA_CertGen
-    {
-        public enum HashAlgorithms
-        {
-          sha256,
-          sha384
-        }
-        
-        public enum KeyLengths
-        {
-            RSA_1024,
-            RSA_2048,
-            RSA_4096
-        }
-        
-        public enum Encodings
-        {
-            Default,
-            UTF8
-        }
-
-
-        public HashAlgorithms? HashAlgorithm;
-        public KeyLengths? KeyLength;
-        public Encodings Encoding = Encodings.Default;
-
-
-        public int Days { internal get; set; } = 365;// ex. 356
-
-        internal string? CountryCodeString;
-        public string? CountryCode
-        {
-            internal get
-            {
-                if (CountryCode is not null)
-                {
-                    return CountryCodeString;
-                }
-                else
-                {
-                    throw new Exceptions.CountryCodeInvalidException("CountryCode is NULL");
-                }
-            }
-            set
-            {
-                int length;
-                if (value is null) { throw new Exceptions.CountryCodeInvalidException("Passed value is NULL"); }
-                if (VerifyCountryCode(value, out length)) { CountryCodeString = value?.ToUpper(); }
-                else { throw new Exceptions.CountryCodeInvalidException(length); }
-
-            }
-        }
-        public string? CountryState { internal get; set; } 
-        public string? Location { internal get; set; } 
-        public string? Organisation { internal get; set; }
-        public string? CommonName { internal get; set; }
-
-        private bool VerifyCountryCode(string CountryCode, out int length)
-        {
-            length = CountryCode.Length;
-            return CountryCode.Length == 2 ? true : false;
-        }
-    }
-
 
     
- 
+
+
+
+
     public class OpenSSLConfig_
     {
 
@@ -240,14 +175,14 @@ namespace EasySslStream
         public void SetOpenSSl_PATH(string path)
         {
             OpenSSL_PATH = path;
-            
+
         }
 
 
         public void TryToFindOpenSSl()
         {
-            
-            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)+"\\OpenSSL\\bin";
+
+            string pathx32 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + "\\OpenSSL\\bin";
             string pathx64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\OpenSSL\\bin";
             DynamicConfiguration.RaiseMessage?.Invoke("Failed to find openSSL", "OpenSSL error");
 
@@ -261,8 +196,8 @@ namespace EasySslStream
                 OpenSSL_PATH = pathx64;
             }
         }
-        
-        
+
+
     }
 
 

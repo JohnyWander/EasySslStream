@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace EasySslStream.Exceptions
 {
     [Serializable]
-    internal class CountryCodeInvalidException : Exception
+    public class CountryCodeInvalidException : Exception
     {
         public CountryCodeInvalidException(string message) : base(message)
         {

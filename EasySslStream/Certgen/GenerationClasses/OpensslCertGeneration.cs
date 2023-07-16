@@ -16,7 +16,54 @@ namespace EasySslStream.CertGenerationClasses
 
     public partial class OpensslCertGeneration : Abstraction.CertGenClassesParent
     {
+        private readonly CaCertgenConfig _conf;
+        public OpensslCertGeneration(CaCertgenConfig conf)
+        {
+            _conf = conf;
+        }
 
+        internal override void LoadCAconfig()
+        {
+
+            CAHashAlgo = _conf.HashAlgorithm.ToString();
+            try
+            {
+                CAKeyLength = _conf.KeyLength.ToString().Split('_')[1];
+            }
+            catch (IndexOutOfRangeException)
+            {
+                throw new Exceptions.CAconfigurationException("Key length not set correctly in DynamicConfiguration");
+
+            }
+            CAdays = Convert.ToString(_conf.Days);
+            CACountry = _conf.CountryCodeString;
+            CAState = _conf.CountryState;
+            CALocation = _conf.Location;
+            CAOrganisation = _conf.Organisation;
+            CACommonName = _conf.CommonName;
+
+            if (_conf.Encoding == CaCertgenConfig.Encodings.UTF8)
+            {
+                CAGenerationEncoding = "-utf8";
+            }
+            else
+            {
+                CAGenerationEncoding = string.Empty;
+            }
+
+
+            // if (CAHashAlgo is null || CAKeyLength is null || CAdays is null || CACountry is null || CAState is null || CALocation is null || CACommonName is null)
+            // {
+            //    throw new Exceptions.CAconfigurationException("At least one of the required parameters for CA certificate generation is NOT set");
+            //}
+
+            if (CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("CA hash algorithm is not set in DynamicConfiguration"); }
+            if (CAKeyLength is null) { throw new Exceptions.CAconfigurationException("RSA key lentgh for CA certificate is not set in DynamicConfiguration"); }
+            if (CAdays is null) { throw new Exceptions.CAconfigurationException("Validity days of CA certificate are not set in DynamicConfiguration"); }
+            if (CACommonName is null) { throw new Exceptions.CAconfigurationException("Common name for CA cetificate is not set in DynamicConfiguration"); }
+
+
+        }
 
         /// <summary>
         /// Asynchronously Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
@@ -625,48 +672,7 @@ subjectAltName = @alt_names
             }
         }
 
-        internal override void LoadCAconfig()
-        {
-            
-                CAHashAlgo = DynamicConfiguration.CA_CONFIG.HashAlgorithm.ToString();
-            try
-            {
-                CAKeyLength = DynamicConfiguration.CA_CONFIG.KeyLength.ToString().Split('_')[1];
-            }
-            catch (IndexOutOfRangeException)
-            {
-                 throw new Exceptions.CAconfigurationException("Key length not set correctly in DynamicConfiguration");
-               
-            }
-                CAdays = Convert.ToString(DynamicConfiguration.CA_CONFIG.Days);
-                CACountry = DynamicConfiguration.CA_CONFIG.CountryCodeString;
-                CAState = DynamicConfiguration.CA_CONFIG.CountryState;
-                CALocation = DynamicConfiguration.CA_CONFIG.Location;
-                CAOrganisation = DynamicConfiguration.CA_CONFIG.Organisation;
-                CACommonName = DynamicConfiguration.CA_CONFIG.CommonName;
-
-                if(DynamicConfiguration.CA_CONFIG.Encoding == CA_CertGen.Encodings.UTF8)
-                {
-                CAGenerationEncoding = "-utf8";
-                }
-                else
-                {
-                CAGenerationEncoding = string.Empty;
-                }
-
-
-           // if (CAHashAlgo is null || CAKeyLength is null || CAdays is null || CACountry is null || CAState is null || CALocation is null || CACommonName is null)
-           // {
-            //    throw new Exceptions.CAconfigurationException("At least one of the required parameters for CA certificate generation is NOT set");
-            //}
-            
-            if(CAHashAlgo is null){ throw new Exceptions.CAconfigurationException("CA hash algorithm is not set in DynamicConfiguration"); }
-            if(CAKeyLength is null) { throw new Exceptions.CAconfigurationException("RSA key lentgh for CA certificate is not set in DynamicConfiguration"); }
-            if(CAdays is null) { throw new Exceptions.CAconfigurationException("Validity days of CA certificate are not set in DynamicConfiguration"); }
-            if(CACommonName is null) { throw new Exceptions.CAconfigurationException("Common name for CA cetificate is not set in DynamicConfiguration"); }
-
-
-        }
+       
 
 
 
