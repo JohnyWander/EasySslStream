@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySslStreamTests", "EasySslStreamTests\EasySslStreamTests.csproj", "{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{CB616EC6-1066-40F4-90F9-40F09627B9AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB616EC6-1066-40F4-90F9-40F09627B9AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB616EC6-1066-40F4-90F9-40F09627B9AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
