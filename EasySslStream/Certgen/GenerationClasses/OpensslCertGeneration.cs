@@ -25,91 +25,80 @@ namespace EasySslStream.CertGenerationClasses
         #region Generation Methods
 
         /// <summary>
-        /// Asynchronously Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
+        /// Asynchronously Creates x509 CA certificate, based on ca configuration provided.
         /// </summary>
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
         /// <returns></returns>
-        public Task GenerateCaAsync(CaCertgenConfig conf,string OutputPath="default")
+        public Task GenerateCaAsync(CaCertgenConfig conf,string SaveDir="",string CertFileName = "CA.crt", string KeySaveAs="CA.key")
         {         
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
            
-            if (OutputPath != "default")
+            if(SaveDir == "")
             {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
+            
 
 
-
-            string CreateOpensslCaConfig()
-            {
-
-            }
-
-
-            string configFile = @$"[req]
-default_bits= {conf.KeyLength.ToString()}
-prompt = no
-default_md = {conf.HashAlgorithm.ToString()}
-distinguished_name = dn
-[dn]" + "\n";
-            if (conf.CountryCode is not null) { configFile += $"C={conf.CountryCode}\n"; }
-            if (conf.CountryState is not null) { configFile += $"ST={conf.CountryState}\n"; }
-            if (conf.Location is not null) { configFile += $"L={conf.Location}\n"; }
-            if (conf.Organisation is not null) { configFile += $"O={conf.Organisation}\n"; }
-            if (conf.CommonName is not null) { configFile += $"CN={conf.CommonName}\n"; }
+            string configFile = CreateOpensslCaConfig(conf);
+            
 
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration"));
+               // generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
             }
 
+           
+                
 
 
             File.WriteAllText("genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLength} -days {conf.Days} -{conf.Encoding} -keyout CA.key -out CA.crt -config genconf.txt";
-            using (Process openssl = new Process())
-            {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
-                openssl.StartInfo.CreateNoWindow = true;
-                openssl.StartInfo.UseShellExecute = false;
-                openssl.StartInfo.Arguments = cmdargs;
-                openssl.EnableRaisingEvents = true;
-                openssl.StartInfo.RedirectStandardError = true;
-                if (OutputPath != "default")
-               // {
-               //     openssl.StartInfo.WorkingDirectory = OutputPath;
-               // }
-                openssl.Exited += (sender, args) =>
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout CA.key -out CA.crt -config genconf.txt";
+            
+                using (Process openssl = new Process())
                 {
-                    if (openssl.ExitCode != 0)
+                    openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
+                    openssl.StartInfo.CreateNoWindow = true;
+                    openssl.StartInfo.UseShellExecute = false;
+                    openssl.StartInfo.Arguments = cmdargs;
+                    openssl.EnableRaisingEvents = true;
+                    openssl.StartInfo.RedirectStandardError = true;
+                    openssl.StartInfo.WorkingDirectory = SaveDir;
+
+
+                    openssl.Exited += (sender, args) =>
                     {
-                        string err = openssl.StandardError.ReadToEnd();                     
-                        generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));                        
-                    }
-                    else
-                    {
-                        generation_completion.SetResult(null); 
-                    }
-                };
-
-                
-                openssl.Start();
-                openssl.WaitForExit();
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-            //    Task.Run(() =>
-               // {
-                    File.Delete(OutputPath =="default"? "genconf.txt":$"{OutputPath}" + "/genconf.txt");
-              //  }).Wait();
-                
-                return generation_completion.Task;
-            }
+                        if (openssl.ExitCode != 0)
+                        {
+                            string err = openssl.StandardError.ReadToEnd();
+                            generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        }
+                        else
+                        {
+                            generation_completion.SetResult(null);
+                        }
+                    };
 
 
+                    openssl.Start();
+                    openssl.WaitForExit();
+                    
+                    //    Task.Run(() =>
+                    // {
+                    //   File.Delete(OutputPath =="default"? "genconf.txt":$"{OutputPath}" + "/genconf.txt");
+                    //  }).Wait();
+                    
+                }
+            
+          
+        
+             
+            
+            return generation_completion.Task;
         }
 
 
-
+        /*
         /// <summary>
         /// Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
@@ -633,21 +622,39 @@ subjectAltName = @alt_names
             }
         }
 
-
-
+       
+         */
 
         #endregion
 
         #region Config Builders
 
+        string CreateOpensslCaConfig(CaCertgenConfig conf)
+        {
+            StringBuilder builder = new StringBuilder();
 
+            builder.Append(@$"[req]
+default_bits= {conf.KeyLength.ToString()}
+prompt = no
+default_md = {conf.HashAlgorithm.ToString()}
+distinguished_name = dn
+[dn]" + "\n");
+
+            if (conf.CountryCode is not null) { builder.Append($"C={conf.CountryCode}\n"); }
+            if (conf.CountryState is not null) { builder.Append($"ST={conf.CountryState}\n"); }
+            if (conf.Location is not null) { builder.Append($"L={conf.Location}\n"); }
+            if (conf.Organisation is not null) { builder.Append($"O={conf.Organisation}\n"); }
+            if (conf.CommonName is not null) { builder.Append($"CN={conf.CommonName}\n"); }
+
+            return builder.ToString();
+        }
 
 
         #endregion
 
         #region Checkers
 
-        private void VeryfyConfig(CaCertgenConfig conf,TaskCompletionSource tcs)
+        private void VerifyConfig(CaCertgenConfig conf,TaskCompletionSource tcs)
         {
             if (conf.HashAlgorithm is null)
             {
@@ -662,7 +669,7 @@ subjectAltName = @alt_names
         }
 
 
-        #region
+        #endregion
 
     }
 }

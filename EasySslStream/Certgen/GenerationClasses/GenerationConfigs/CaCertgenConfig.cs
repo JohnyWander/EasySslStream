@@ -27,18 +27,48 @@ namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 
 
         public HashAlgorithms? HashAlgorithm;
-        public KeyLengths? KeyLength;
-        public Encodings Encoding = Encodings.Default;
+
+        public string KeyLengthAsNumber;
+        private KeyLengths? _KeyLength;
+        public KeyLengths? KeyLength
+        {
+            get
+            {
+                return _KeyLength;
+            }
+            set
+            {
+                _KeyLength = value;
+                KeyLengthAsNumber = _KeyLength.ToString().Split("_")[1];
+            }
+        }
+
+        internal string encodingAsString;
+        private Encodings _Encoding;
+        public Encodings Encoding
+        {
+            get { return _Encoding; }
+            set
+            {
+                _Encoding = value;
+                encodingAsString = $"-{_Encoding.ToString()}";
+            }
+
+        }
+           
+         
+
+        
 
 
         public int Days { internal get; set; } = 365;// ex. 356
 
-        internal string? CountryCodeString;
+        private string? CountryCodeString;
         public string? CountryCode
         {
-            internal get
+            get
             {
-                if (CountryCode is not null)
+                if (CountryCodeString is not null)
                 {
                     return CountryCodeString;
                 }
@@ -66,6 +96,8 @@ namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
             length = CountryCode.Length;
             return CountryCode.Length == 2 ? true : false;
         }
+
+        
     }
 
 }
