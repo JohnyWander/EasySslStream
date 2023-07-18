@@ -39,18 +39,13 @@ namespace EasySslStream.CertGenerationClasses
             }
             
 
-
             string configFile = CreateOpensslCaConfig(conf);
             
 
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-               // generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
+                generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
             }
-
-           
-                
-
 
             File.WriteAllText("genconf.txt", configFile);
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout CA.key -out CA.crt -config genconf.txt";
@@ -64,7 +59,6 @@ namespace EasySslStream.CertGenerationClasses
                     openssl.EnableRaisingEvents = true;
                     openssl.StartInfo.RedirectStandardError = true;
                     openssl.StartInfo.WorkingDirectory = SaveDir;
-
 
                     openssl.Exited += (sender, args) =>
                     {
@@ -89,11 +83,7 @@ namespace EasySslStream.CertGenerationClasses
                     //  }).Wait();
                     
                 }
-            
-          
-        
-             
-            
+     
             return generation_completion.Task;
         }
 

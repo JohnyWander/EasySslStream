@@ -2,6 +2,7 @@ using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses;
 using EasySslStream.Exceptions;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace EasySslStreamTests
 {
@@ -10,6 +11,9 @@ namespace EasySslStreamTests
         private OpensslCertGeneration OpensslCertGen;
         private CaCertgenConfig CorrectCaCertgenConfig;
         private CaCertgenConfig InvalidCaCertgenConfig;
+
+    
+
 
         [OneTimeSetUp]
         public void Setup()
@@ -43,7 +47,33 @@ namespace EasySslStreamTests
         [Test,Order(3)]
         public async Task TestCaGenerationAsyncWithCorrectConfig()
         {
+            
             await OpensslCertGen.GenerateCaAsync(this.CorrectCaCertgenConfig);
+            MethodInfo genInfo = typeof(OpensslCertGeneration).GetMethod("GenerateCaAsync");
+            ParameterInfo[] param = genInfo.GetParameters();
+            foreach (ParameterInfo p in param)
+            {
+                if (p.IsOptional)
+                {
+                    if(p.Position != 1)
+                    {
+                        Assert.That(File.Exists((string)p.DefaultValue));
+                    }                                    
+                }
+            }
+            
+        }
+
+        [Test, Order(4)]
+        public async Task TestCaGenerationAsyncWithInvalidConfig()
+        {
+            Assert.ThrowsAsync<CountryCodeInvalidException>
+                (
+                async() => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig);
+                });
+            InvalidCaCertgenConfig.CountryCode = "US";
+
+            await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig);
         }
 
 
