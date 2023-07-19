@@ -15,11 +15,17 @@ namespace EasySslStreamTests
     
 
 
-        [OneTimeSetUp]
+        [SetUp]
         public void Setup()
         {
             OpensslCertGen = new OpensslCertGeneration();
-          
+            CorrectCaCertgenConfig = new CaCertgenConfig();
+            InvalidCaCertgenConfig = new CaCertgenConfig();
+
+            CorrectCaCertgenConfig.KeyLength = CaCertgenConfig.KeyLengths.RSA_2048;
+            CorrectCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
+            CorrectCaCertgenConfig.CountryCode = "US";
+
         }
 
 
@@ -67,14 +73,34 @@ namespace EasySslStreamTests
         [Test, Order(4)]
         public async Task TestCaGenerationAsyncWithInvalidConfig()
         {
-            Assert.ThrowsAsync<CountryCodeInvalidException>
+            Assert.Multiple(async () =>
+            {
+                Assert.ThrowsAsync<CountryCodeInvalidException>
                 (
-                async() => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig);
-                });
-            InvalidCaCertgenConfig.CountryCode = "US";
+                    async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+                );
+                InvalidCaCertgenConfig.CountryCode = "US";
+                CAconfigurationException CACe = Assert.ThrowsAsync<CAconfigurationException>
+                (
+                    async() => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+                );
+                Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
+                InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
 
-            await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig);
+                CACe = Assert.ThrowsAsync<CAconfigurationException>
+                (
+                    async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+                );
+                Assert.That(CACe.Message.Equals("Key length is not set correctly in configuration class"));
+                InvalidCaCertgenConfig.KeyLength = CaCertgenConfig.KeyLengths.RSA_2048;
+                
+                await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig,"","CAFromInvalid.crt","CAFromInvalid.key");
+            });
+                
+
         }
+
+
 
 
 

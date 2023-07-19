@@ -29,10 +29,10 @@ namespace EasySslStream.CertGenerationClasses
         /// </summary>
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
         /// <returns></returns>
-        public Task GenerateCaAsync(CaCertgenConfig conf,string SaveDir="",string CertFileName = "CA.crt", string KeySaveAs="CA.key")
+        public Task GenerateCaAsync(CaCertgenConfig conf,string SaveDir="",string CertFileName = "CA.crt", string KeyFileName="CA.key")
         {         
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
-           
+            VerifyConfig(conf, generation_completion);
             if(SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -44,11 +44,12 @@ namespace EasySslStream.CertGenerationClasses
 
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                generation_completion.SetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
+                generation_completion.TrySetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
+                
             }
 
             File.WriteAllText("genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout CA.key -out CA.crt -config genconf.txt";
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
             
                 using (Process openssl = new Process())
                 {
@@ -65,7 +66,7 @@ namespace EasySslStream.CertGenerationClasses
                         if (openssl.ExitCode != 0)
                         {
                             string err = openssl.StandardError.ReadToEnd();
-                            generation_completion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                            generation_completion.TrySetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));                           
                         }
                         else
                         {
@@ -644,17 +645,21 @@ distinguished_name = dn
 
         #region Checkers
 
-        private void VerifyConfig(CaCertgenConfig conf,TaskCompletionSource tcs)
+        private void VerifyConfig(CaCertgenConfig conf,TaskCompletionSource<object> tcs)
         {
             if (conf.HashAlgorithm is null)
             {
-                tcs.SetException(new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class"));
+                tcs.TrySetException(new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class"));
+                return;
             }
 
-            if (conf.KeyLength is null)
+            if (conf.KeyLength is null || conf.KeyLengthAsNumber is null)
             {
-                tcs.SetException(new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class"));
+                tcs.TrySetException(new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class"));
+                return;
             }
+
+           
 
         }
 
