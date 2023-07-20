@@ -89,88 +89,56 @@ namespace EasySslStream.CertGenerationClasses
         }
 
 
-        /*
+        
         /// <summary>
         /// Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
-        public void GenerateCA(string OutputPath = "default")
-        {
-            LoadCAconfig();
-            if (OutputPath != "default")
+        public void GenerateCA(CaCertgenConfig conf, string SaveDir = "", string CertFileName = "CA.crt", string KeyFileName = "CA.key")
+        {            
+            VerifyConfig(conf);
+            if (SaveDir == "")
             {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
 
-            string configFile = @$"[req]
-default_bits= {base.CAKeyLength}
-prompt = no
-default_md = {base.CAHashAlgo}
-distinguished_name = dn
-[dn]" + "\n";
-            if (base.CACountry is not null) { configFile += $"C={base.CACountry}\n"; }
-            if (base.CAState is not null) { configFile += $"ST={base.CAState}\n"; }
-            if (base.CALocation is not null) { configFile += $"L={base.CALocation}\n"; }
-            if (base.CAOrganisation is not null) { configFile += $"O={base.CAOrganisation}\n"; }
-            if (base.CACommonName is not null) { configFile += $"CN={base.CACommonName}\n"; }
+            string configFile = CreateOpensslCaConfig(conf);
 
-            if(base.CAHashAlgo=="" || base.CAHashAlgo is null) { throw new Exceptions.CAconfigurationException("Hash alghorithm is not set in DynamicConfiguration"); }
-
-            if (!configFile.IsNormalized(NormalizationForm.FormD) && base.CAGenerationEncoding!="-utf8")
+            if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in DynamicConfiguration");
+                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class");
             }
-        
 
             File.WriteAllText("genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{base.CAHashAlgo} -nodes -newkey rsa:{base.CAKeyLength} -days {base.CAdays} {base.CAGenerationEncoding} -keyout CA.key -out CA.crt -config genconf.txt";
-
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
 
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH+"\\" + "openssl.exe";
+                openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
                 openssl.StartInfo.CreateNoWindow = true;
-              //  openssl.StartInfo.UseShellExecute = false;
+                openssl.StartInfo.UseShellExecute = false;
                 openssl.StartInfo.Arguments = cmdargs;
-                openssl.StartInfo.RedirectStandardOutput = true;
+                openssl.EnableRaisingEvents = true;
                 openssl.StartInfo.RedirectStandardError = true;
+                openssl.StartInfo.WorkingDirectory = SaveDir;
+
+                openssl.Exited += (sender, args) =>
+                {
+                    if (openssl.ExitCode != 0)
+                    {
+                        string err = openssl.StandardError.ReadToEnd();
+                        throw new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} ");
+                    }               
+                };
+
+
                 openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
-                // openssl.BeginErrorReadLine();
-                //  openssl.BeginOutputReadLine();
-
-                // openssl.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
-                // {
-
-                //};
-                
                 openssl.WaitForExit();
-                
-
-
-                if (openssl.ExitCode != 0)
-                {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
-                }
-               // Console.WriteLine(openssl.StandardError.ReadToEnd());
-
-                
-            }
-
-             File.Delete("genconf.txt");
-
-         
-            
-
-            Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+            }         
         }
 
 
-        
+        /*
         /// <summary>
         /// Generates csr based on settings from CSRConfiguration class
         /// </summary>
@@ -657,10 +625,20 @@ distinguished_name = dn
             {
                 tcs.TrySetException(new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class"));
                 return;
+            }       
+        }
+
+        private void VerifyConfig(CaCertgenConfig conf)
+        {
+            if (conf.HashAlgorithm is null)
+            {
+                throw new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class");               
             }
 
-           
-
+            if (conf.KeyLength is null || conf.KeyLengthAsNumber is null)
+            {
+                throw new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class");               
+            }
         }
 
 

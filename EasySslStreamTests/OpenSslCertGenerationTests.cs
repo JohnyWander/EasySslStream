@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace EasySslStreamTests
 {
-    public class OpenSslCetGenerationTests
+    public class OpenSslCertGenerationTests
     {
         private OpensslCertGeneration OpensslCertGen;
         private CaCertgenConfig CorrectCaCertgenConfig;
@@ -53,7 +53,6 @@ namespace EasySslStreamTests
         [Test,Order(3)]
         public async Task TestCaGenerationAsyncWithCorrectConfig()
         {
-            
             await OpensslCertGen.GenerateCaAsync(this.CorrectCaCertgenConfig);
             MethodInfo genInfo = typeof(OpensslCertGeneration).GetMethod("GenerateCaAsync");
             ParameterInfo[] param = genInfo.GetParameters();
@@ -75,33 +74,82 @@ namespace EasySslStreamTests
         {
             Assert.Multiple(async () =>
             {
-                Assert.ThrowsAsync<CountryCodeInvalidException>
-                (
-                    async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
-                );
-                InvalidCaCertgenConfig.CountryCode = "US";
-                CAconfigurationException CACe = Assert.ThrowsAsync<CAconfigurationException>
-                (
-                    async() => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
-                );
-                Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
-                InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
+            Assert.ThrowsAsync<CountryCodeInvalidException>
+            (
+                async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+            );
+            InvalidCaCertgenConfig.CountryCode = "US";
+            CAconfigurationException CACe = Assert.ThrowsAsync<CAconfigurationException>
+            (
+                async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+            );
+            Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
+            InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
 
-                CACe = Assert.ThrowsAsync<CAconfigurationException>
-                (
-                    async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
-                );
-                Assert.That(CACe.Message.Equals("Key length is not set correctly in configuration class"));
-                InvalidCaCertgenConfig.KeyLength = CaCertgenConfig.KeyLengths.RSA_2048;
-                
-                await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig,"","CAFromInvalid.crt","CAFromInvalid.key");
+            CACe = Assert.ThrowsAsync<CAconfigurationException>
+            (
+                async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+            );
+            Assert.That(CACe.Message.Equals("Key length is not set correctly in configuration class"));
+            InvalidCaCertgenConfig.KeyLength = CaCertgenConfig.KeyLengths.RSA_2048;
+
+            await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig, "", "CAFromInvalid.crt", "CAFromInvalid.key");
+            Assert.That(() => File.Exists("CAFromInvalid.crt"));
+            Assert.That(() => File.Exists("CAFromInvalid.key"));
             });
                 
 
         }
 
+        [Test,Order(5)]
+        public void TestCaGenerationWithCorrectConfig()
+        {
+            OpensslCertGen.GenerateCA(this.CorrectCaCertgenConfig);
+            MethodInfo genInfo = typeof(OpensslCertGeneration).GetMethod("GenerateCaAsync");
+            ParameterInfo[] param = genInfo.GetParameters();
+            foreach (ParameterInfo p in param)
+            {
+                if (p.IsOptional)
+                {
+                    if (p.Position != 1)
+                    {
+                        Assert.That(File.Exists((string)p.DefaultValue));
+                    }
+                }
+            }
 
+        }
 
+        [Test,Order(6)]
+        public void TestCaGenerationWithInvalidConfig()
+        {
+            Assert.Multiple(() =>
+            {
+                Assert.Throws<CountryCodeInvalidException>
+                (
+                    () => { OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
+                );
+                InvalidCaCertgenConfig.CountryCode = "US";
+                CAconfigurationException CACe = Assert.Throws<CAconfigurationException>
+                (
+                    () => { OpensslCertGen.GenerateCA(InvalidCaCertgenConfig); }
+                );
+                Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
+                InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
+
+                CACe = Assert.Throws<CAconfigurationException>
+                (
+                    () => { OpensslCertGen.GenerateCA(InvalidCaCertgenConfig); }
+                );
+                Assert.That(CACe.Message.Equals("Key length is not set correctly in configuration class"));
+                InvalidCaCertgenConfig.KeyLength = CaCertgenConfig.KeyLengths.RSA_2048;
+
+                OpensslCertGen.GenerateCA(InvalidCaCertgenConfig, "", "CAFromInvalid.crt", "CAFromInvalid.key");
+                Assert.That(() => File.Exists("CAFromInvalid.crt"));
+                Assert.That(() => File.Exists("CAFromInvalid.key"));
+            });
+
+        }
 
 
 
