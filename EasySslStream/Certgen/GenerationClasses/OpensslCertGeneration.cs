@@ -16,7 +16,9 @@ namespace EasySslStream.CertGenerationClasses
 
     public partial class OpensslCertGeneration
     {
-        
+        private string _OpenSSLPath;
+
+
         public OpensslCertGeneration()
         {
             
