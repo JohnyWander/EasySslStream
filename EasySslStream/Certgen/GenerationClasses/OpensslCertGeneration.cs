@@ -32,12 +32,19 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
         /// <returns></returns>
         public Task GenerateCaAsync(CaCertgenConfig conf,string SaveDir="",string CertFileName = "CA.crt", string KeyFileName="CA.key")
-        {         
+        {           
             TaskCompletionSource<object> generation_completion = new TaskCompletionSource<object>();
             VerifyConfig(conf, generation_completion);
             if(SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            else
+            {
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
             }
             
 
@@ -50,7 +57,7 @@ namespace EasySslStream.CertGenerationClasses
                 
             }
 
-            File.WriteAllText("genconf.txt", configFile);
+            File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
             
                 using (Process openssl = new Process())
@@ -103,6 +110,13 @@ namespace EasySslStream.CertGenerationClasses
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
+            else
+            {
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
+            }
 
             string configFile = CreateOpensslCaConfig(conf);
 
@@ -111,7 +125,8 @@ namespace EasySslStream.CertGenerationClasses
                 throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class");
             }
 
-            File.WriteAllText("genconf.txt", configFile);
+           
+            File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
 
             using (Process openssl = new Process())

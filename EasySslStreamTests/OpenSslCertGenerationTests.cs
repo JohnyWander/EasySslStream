@@ -12,7 +12,11 @@ namespace EasySslStreamTests
         private CaCertgenConfig CorrectCaCertgenConfig;
         private CaCertgenConfig InvalidCaCertgenConfig;
 
-    
+        [OneTimeSetUp]
+        public void OneTimeSetup()
+        {
+          
+        }
 
 
         [SetUp]
@@ -150,6 +154,27 @@ namespace EasySslStreamTests
             });
 
         }
+
+        [Test, Order(7)]
+        public void TestGenerationWithCustomPaths()
+        {
+            // Relative
+            OpensslCertGen.GenerateCA(this.CorrectCaCertgenConfig, "CustomDirCA\\Sync", "CAcustomName.crt", "CAKeycustomName.key");
+            Task.Run(async () =>{await OpensslCertGen.GenerateCaAsync(this.CorrectCaCertgenConfig, "CustomDirCA\\Async", "CAcustomName.crt", "CAKeycustomName.key"); });
+
+            Assert.That(File.Exists("CustomDirCA\\Sync\\CAcustomName.crt"));
+            Assert.That(File.Exists("CustomDirCA\\Sync\\CAKeycustomName.key"));
+
+            Assert.That(File.Exists("CustomDirCA\\Async\\CAcustomName.crt"));
+            Assert.That(File.Exists("CustomDirCA\\Sync\\CAKeycustomName.key"));
+
+
+
+
+
+
+        }
+
 
 
 
