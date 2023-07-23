@@ -72,6 +72,10 @@ namespace EasySslStream.CertGenerationClasses
             {
                 return @"C:\Program Files\OpenSSL\bin\openssl.exe";
             }
+            else if (File.Exists(@"C:\Program Files (x86)\OpenSSL\bin\openssl.exe"))
+            {
+                return @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
+            }
             else
             {
                 return "";
