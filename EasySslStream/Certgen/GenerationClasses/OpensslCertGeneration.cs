@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -21,7 +22,60 @@ namespace EasySslStream.CertGenerationClasses
 
         public OpensslCertGeneration()
         {
-            
+            _OpenSSLPath = TryToFindOpenSSL();
+        }
+
+        string TryToFindOpenSSL()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return GetOpenSSLLinux();
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                throw new NotImplementedException();
+            }
+            else
+            { 
+                throw new NotImplementedException();
+            }
+        }
+
+        string GetOpenSSLLinux()
+        {
+            using (Process which = new Process())
+            {
+                which.StartInfo.FileName = "which";
+                which.StartInfo.UseShellExecute = false;
+                which.StartInfo.RedirectStandardOutput = true;
+                which.StartInfo.RedirectStandardError = true;
+
+                which.Start();
+                which.WaitForExit();
+
+                if(which.ExitCode == 0)
+                {                    
+                    string output = which.StandardOutput.ReadToEnd();
+                    return output;
+                }
+                else
+                {
+                    throw new Exception("Could not run which");
+                }
+
+            }
+        }
+
+        string GetOpenSSlWindows()
+        {
+            if(File.Exists(@"C:\Program Files\OpenSSL\bin\openssl.exe"))
+            {
+                return @"C:\Program Files\OpenSSL\bin\openssl.exe";
+            }
+            else
+            {
+                return "";
+            }
         }
 
         #region Generation Methods
