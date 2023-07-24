@@ -1,4 +1,5 @@
 ﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
+using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream.Exceptions;
 using System;
 using System.Collections.Generic;
@@ -17,14 +18,30 @@ namespace EasySslStream.CertGenerationClasses
 
     public partial class OpensslCertGeneration
     {
-        private string _OpenSSLPath;
+        public string _OpenSSLPath;
 
 
         public OpensslCertGeneration()
         {
             _OpenSSLPath = TryToFindOpenSSL();
+            if(_OpenSSLPath is null ||  _OpenSSLPath == "")
+            {
+                throw new Exception("Could not found Openssl automatically. Please use specify path to openssl using constructor with string argument. ");                
+            }
         }
 
+        public OpensslCertGeneration(string OpenSSLPath)
+        {
+            if (File.Exists(OpenSSLPath))
+            {
+                _OpenSSLPath = OpenSSLPath;
+            }
+            else
+            {
+                throw new Exception($"Provided path is not a valid OpenSSL path");
+            }
+        }
+        #region Finding openssl
         string TryToFindOpenSSL()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -33,7 +50,7 @@ namespace EasySslStream.CertGenerationClasses
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                throw new NotImplementedException();
+                return GetOpenSSlWindows();
             }
             else
             { 
@@ -68,7 +85,7 @@ namespace EasySslStream.CertGenerationClasses
 
         string GetOpenSSlWindows()
         {
-            if(File.Exists(@"C:\Program Files\OpenSSL\bin\openssl.exe"))
+            if (File.Exists(@"C:\Program Files\OpenSSL\bin\openssl.exe"))
             {
                 return @"C:\Program Files\OpenSSL\bin\openssl.exe";
             }
@@ -82,6 +99,7 @@ namespace EasySslStream.CertGenerationClasses
             }
         }
 
+        #endregion
         #region Generation Methods
 
         /// <summary>
@@ -105,19 +123,15 @@ namespace EasySslStream.CertGenerationClasses
                 }
             }
             
-
             string configFile = CreateOpensslCaConfig(conf);
             
-
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
                 generation_completion.TrySetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
                 
             }
-
             File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
-            
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";            
                 using (Process openssl = new Process())
                 {
                     openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
@@ -127,7 +141,6 @@ namespace EasySslStream.CertGenerationClasses
                     openssl.EnableRaisingEvents = true;
                     openssl.StartInfo.RedirectStandardError = true;
                     openssl.StartInfo.WorkingDirectory = SaveDir;
-
                     openssl.Exited += (sender, args) =>
                     {
                         if (openssl.ExitCode != 0)
@@ -140,18 +153,9 @@ namespace EasySslStream.CertGenerationClasses
                             generation_completion.SetResult(null);
                         }
                     };
-
-
                     openssl.Start();
-                    openssl.WaitForExit();
-                    
-                    //    Task.Run(() =>
-                    // {
-                    //   File.Delete(OutputPath =="default"? "genconf.txt":$"{OutputPath}" + "/genconf.txt");
-                    //  }).Wait();
-                    
-                }
-     
+                    openssl.WaitForExit();                                          
+                }     
             return generation_completion.Task;
         }
 
@@ -177,16 +181,13 @@ namespace EasySslStream.CertGenerationClasses
             }
 
             string configFile = CreateOpensslCaConfig(conf);
-
+            
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
                 throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class");
-            }
-
-           
+            }           
             File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
-
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
@@ -196,7 +197,6 @@ namespace EasySslStream.CertGenerationClasses
                 openssl.EnableRaisingEvents = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 openssl.StartInfo.WorkingDirectory = SaveDir;
-
                 openssl.Exited += (sender, args) =>
                 {
                     if (openssl.ExitCode != 0)
@@ -205,30 +205,32 @@ namespace EasySslStream.CertGenerationClasses
                         throw new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} ");
                     }               
                 };
-
-
                 openssl.Start();
                 openssl.WaitForExit();
             }         
         }
 
 
-        /*
+        
         /// <summary>
         /// Generates csr based on settings from CSRConfiguration class
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public void GenerateCSR(CSRConfiguration config,string OutputPath= "default")
+        public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CertFileName = "CERT.csr", string KeyFileName = "CERT.key")
         {
             config.VerifyConfiguration();
-            if (OutputPath != "default")
+            if (SaveDir == "")
             {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
-      
-
+            else
+            {
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
+            }
 
             string confile = $@"[req]
 default_bits={config.KeyLength.ToString().Split('_')[1]}
@@ -282,13 +284,12 @@ subjectAltName = @alt_names
                 openssl.StartInfo.Arguments = cmdargs;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
-               
-           
+                openssl.StartInfo.WorkingDirectory = SaveDir;
+
                 openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
+                
+                    
+                
                 openssl.WaitForExit();
               
 
@@ -306,7 +307,7 @@ subjectAltName = @alt_names
 
 
         }
-
+        /*
         /// <summary>
         /// Asynchronously generates csr based on settings from CSRConfiguration class
         /// </summary>
@@ -656,8 +657,8 @@ subjectAltName = @alt_names
             }
         }
 
-       
-         */
+       */
+         
 
         #endregion
 

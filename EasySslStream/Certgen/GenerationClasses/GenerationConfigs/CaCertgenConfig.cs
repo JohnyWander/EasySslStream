@@ -6,6 +6,9 @@ namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 {
     public class CaCertgenConfig
     {
+
+
+
         public enum HashAlgorithms
         {
             sha256,

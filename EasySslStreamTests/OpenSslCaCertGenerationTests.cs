@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace EasySslStreamTests
 {
-    public class OpenSslCertGenerationTests
+    public class OpenSslCaCertGenerationTests
     {
         private OpensslCertGeneration OpensslCertGen;
         private CaCertgenConfig CorrectCaCertgenConfig;
