@@ -28,11 +28,25 @@ namespace EasySslStream.CertGenerationClasses.GenerationConfigs
             UTF8
         }
 
-        public string CSRFileName="certificate.csr";
+        
 
         public HashAlgorithms? HashAlgorithm;
         public KeyLengths? KeyLength;
-        public Encodings? Encoding = Encodings.Default;
+
+        private Encodings _Encoding;
+        internal string EncodingAsString;
+        public Encodings Encoding 
+        {
+            get { return _Encoding; }
+            set 
+            { 
+                _Encoding = value;
+                EncodingAsString = _Encoding == Encodings.Default ? "" : $"-{_Encoding.ToString()}"; 
+            } 
+        
+        
+        }
+
 
         internal string? CountryCodeString;
         public string? CountryCode
@@ -70,18 +84,6 @@ namespace EasySslStream.CertGenerationClasses.GenerationConfigs
             return CountryCode.Length == 2 ? true : false;
         }
 
-        internal void VerifyConfiguration()
-        {
-            if (CSRFileName.Contains(".csr"))
-            {
-                CSRFileName = CSRFileName.Replace(".csr", "");
-            }
-    
-            if(HashAlgorithm is null) { throw new Exceptions.CSRConfigurationException("Hash algorithm is null or is not set propertly"); }
-            if(KeyLength is null) { throw new Exceptions.CSRConfigurationException("RSA keylength is null or is not set propertly"); }
-            if(CommonName is null) { throw new Exceptions.CSRConfigurationException("Common name for csr is null or not set propertly"); }
-            
-        }
-
+       
 }
 }

@@ -217,9 +217,9 @@ namespace EasySslStream.CertGenerationClasses
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CertFileName = "CERT.csr", string KeyFileName = "CERT.key")
+        public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CSRFileName = "CERT.csr", string KeyFileName = "CERT.key")
         {
-            config.VerifyConfiguration();
+            
             if (SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -267,15 +267,9 @@ subjectAltName = @alt_names
 
             File.WriteAllText("genconfcsr.txt", confile);
 
-            string encoding="";
+          
 
-            if(config.Encoding == CSRConfiguration.Encodings.UTF8)
-            {
-                encoding = "-utf8";
-            }
-
-
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName}.csr -config genconfcsr.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
@@ -285,27 +279,16 @@ subjectAltName = @alt_names
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 openssl.StartInfo.WorkingDirectory = SaveDir;
-
                 openssl.Start();
-                
-                    
-                
                 openssl.WaitForExit();
-              
-
 
                 if (openssl.ExitCode != 0)
                 {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+                    throw new CSRgenFailedException("CSR generation failed with error: " + openssl.StandardError.ReadToEnd());
              
                 }
-                File.Delete("genconfcsr.txt");
-                // Console.WriteLine(openssl.StandardError.ReadToEnd());
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-
+                File.Delete("genconfcsr.txt");                              
             }
-
-
         }
         /*
         /// <summary>
