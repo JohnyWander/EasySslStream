@@ -32,6 +32,17 @@ namespace EasySslStreamTests
 
         }
 
+        [TearDown] public void TearDown()
+        {
+            DirectoryInfo TestDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+            
+            foreach(FileInfo file in TestDir.EnumerateFiles("*")
+                .Where(x => x.Name.Contains(".csr") || x.Name.Contains(".crt") || x.Name.Contains(".key")))
+            {
+               file.Delete();
+            }
+        }
+
 
 
         [Test,Order(1)]

@@ -265,10 +265,10 @@ subjectAltName = @alt_names
             }
 
 
-            File.WriteAllText("genconfcsr.txt", confile);
 
-          
 
+
+            File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt", confile);
             string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
             using (Process openssl = new Process())
             {

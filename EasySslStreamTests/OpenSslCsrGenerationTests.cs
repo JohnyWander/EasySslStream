@@ -17,15 +17,7 @@ namespace EasySslStreamTests
 
         [OneTimeSetUp] public void OneTimeSetUp()
         {
-            if (Directory.Exists(Workspace))
-            {
-                Directory.SetCurrentDirectory(Workspace);
-            }
-            else
-            {
-                Directory.CreateDirectory(Workspace);
-                Directory.SetCurrentDirectory(Workspace);
-            }
+          
 
         }
 
@@ -39,15 +31,13 @@ namespace EasySslStreamTests
 
             ValidCsrConf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
             ValidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
-            
+            ValidCsrConf.CountryCode = "US";
         }
 
         [Test]
-        public void GenerateCSRsyncCorrectConfig()
+        public void TestGenerateCSRCorrectConfig()
         {
             csrgen.GenerateCSR(ValidCsrConf);
-            
-
             MethodInfo inf = csrgen.GetType().GetMethod("GenerateCSR");
             ParameterInfo[] parameters = inf.GetParameters();
             foreach(ParameterInfo param in parameters)
@@ -60,6 +50,12 @@ namespace EasySslStreamTests
                     }
                 }
             }
+        }
+
+        [Test]
+        public async Task TestGenerateCSRAsyncCorrectConfig()
+        {
+
         }
 
 
