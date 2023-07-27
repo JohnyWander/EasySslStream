@@ -32,7 +32,7 @@ namespace EasySslStreamTests
 
         }
 
-        [TearDown] public void TearDown()
+        [OneTimeTearDown] public void TearDown()
         {
             DirectoryInfo TestDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
             
@@ -178,11 +178,6 @@ namespace EasySslStreamTests
 
             Assert.That(File.Exists("CustomDirCA\\Async\\CAcustomName.crt"));
             Assert.That(File.Exists("CustomDirCA\\Sync\\CAKeycustomName.key"));
-
-
-
-
-
 
         }
 

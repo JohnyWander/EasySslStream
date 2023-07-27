@@ -15,12 +15,7 @@ namespace EasySslStreamTests
         
         private string Workspace ="CSRworkspace";
 
-        [OneTimeSetUp] public void OneTimeSetUp()
-        {
-          
-
-        }
-
+        
         [SetUp]
         public void Setup()
         {
@@ -33,6 +28,19 @@ namespace EasySslStreamTests
             ValidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
             ValidCsrConf.CountryCode = "US";
         }
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            DirectoryInfo TestDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+
+            foreach (FileInfo file in TestDir.EnumerateFiles("*")
+                .Where(x => x.Name.Contains(".csr") || x.Name.Contains(".crt") || x.Name.Contains(".key")))
+            {
+                file.Delete();
+            }
+        }
+
 
         [Test]
         public void TestGenerateCSRCorrectConfig()
@@ -55,7 +63,19 @@ namespace EasySslStreamTests
         [Test]
         public async Task TestGenerateCSRAsyncCorrectConfig()
         {
-
+            await csrgen.GenerateCSRAsync(ValidCsrConf);
+            MethodInfo inf = csrgen.GetType().GetMethod("GenerateCSR");
+            ParameterInfo[] parameters = inf.GetParameters();
+            foreach (ParameterInfo param in parameters)
+            {
+                if (param.IsOptional)
+                {
+                    if (param.Position != 1)
+                    {
+                        Assert.That(File.Exists((string)param.DefaultValue), $"Not Found output file - {param.DefaultValue}");
+                    }
+                }
+            }
         }
 
 

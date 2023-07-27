@@ -154,8 +154,9 @@ namespace EasySslStream.CertGenerationClasses
                         }
                     };
                     openssl.Start();
-                    openssl.WaitForExit();                                          
-                }     
+                    openssl.WaitForExit();
+                    File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt");
+            }     
             return generation_completion.Task;
         }
 
@@ -207,6 +208,7 @@ namespace EasySslStream.CertGenerationClasses
                 };
                 openssl.Start();
                 openssl.WaitForExit();
+                File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt");
             }         
         }
 
@@ -218,8 +220,7 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
         public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CSRFileName = "CERT.csr", string KeyFileName = "CERT.key")
-        {
-            
+        {            
             if (SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -232,43 +233,7 @@ namespace EasySslStream.CertGenerationClasses
                 }
             }
 
-            string confile = $@"[req]
-default_bits={config.KeyLength.ToString().Split('_')[1]}
-prompt=no
-default_md={config.HashAlgorithm.ToString()}
-";
-            confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
-
-            confile += @$"distinguished_name = dn
-
-[ dn ]"+"\n";
-            if (config.CountryCodeString is not null) { confile += $"C={config.CountryCodeString}\n"; }
-            if (config.State is not null) { confile += $"ST={config.State}\n"; }
-            if(config.City is not null) { confile += $"L={config.City}\n";}
-            if (config.Organization is not null) { confile += $"O={config.Organization}\n"; }
-            if (config.CommonName is not null) { confile += $"CN={config.CommonName}\n"; }
-
-
-            if (config.alt_names.Count != 0)
-            {
-                confile += $@"[req_ext]
-subjectAltName = @alt_names
-[alt_names]
-";
-                int alt_count = 1;
-                foreach (string altName in config.alt_names)
-                {
-                    confile += "DNS." + Convert.ToString(alt_count) + "= " + altName + "\n";
-                    alt_count++;
-                }
-
-            }
-
-
-
-
-
-            File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt", confile);
+            File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt", CreateOpensslCSRConfig(config));
             string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
             using (Process openssl = new Process())
             {
@@ -287,83 +252,40 @@ subjectAltName = @alt_names
                     throw new CSRgenFailedException("CSR generation failed with error: " + openssl.StandardError.ReadToEnd());
              
                 }
-                File.Delete("genconfcsr.txt");                              
+                File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt");
             }
         }
-        /*
+        
         /// <summary>
         /// Asynchronously generates csr based on settings from CSRConfiguration class
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
         /// <returns>Task object that indicates task completion</returns>
-        public Task GenerateCSRAsync(CSRConfiguration config, string OutputPath = "default")
+        public Task GenerateCSRAsync(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CERT.csr", string KeyFileName = "CERT.key")
         {
             TaskCompletionSource<object> CSRgenCompletion = new TaskCompletionSource<object>();
-            try
+
+            if (SaveDir == "")
             {
-                config.VerifyConfiguration();
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
-            catch(Exception e)
+            else
             {
-                CSRgenCompletion.SetException(e);
-            }
-            if (OutputPath != "default")
-            {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
-            }
-
-
-
-            string confile = $@"[req]
-default_bits={config.KeyLength.ToString().Split('_')[1]}
-prompt=no
-default_md={config.HashAlgorithm.ToString()}
-";
-            confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
-
-            confile += @$"distinguished_name = dn
-
-[ dn ]" + "\n";
-            if (config.CountryCodeString is not null) { confile += $"C={config.CountryCodeString}\n"; }
-            if (config.State is not null) { confile += $"ST={config.State}\n"; }
-            if (config.City is not null) { confile += $"L={config.City}\n"; }
-            if (config.Organization is not null) { confile += $"O={config.Organization}\n"; }
-            if (config.CommonName is not null) { confile += $"CN={config.CommonName}\n"; }
-            if (config.alt_names.Count != 0)
-            {
-                confile += $@"[req_ext]
-subjectAltName = @alt_names
-[alt_names]
-";
-                int alt_count = 1;
-                foreach (string altName in config.alt_names)
+                if (!Directory.Exists(SaveDir))
                 {
-                    confile += "DNS." + Convert.ToString(alt_count) + "= " + altName + "\n";
-                    alt_count++;
+                    Directory.CreateDirectory(SaveDir);
                 }
-
             }
 
 
-
-            File.WriteAllText("genconfcsr.txt", confile);
-
-            string encoding = "";
-
-            if (config.Encoding == CSRConfiguration.Encodings.UTF8)
-            {
-                encoding = "-utf8";
-            }
-
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {encoding} -keyout {config.CSRFileName}.key -out {config.CSRFileName}.csr -config genconfcsr.txt";
+            File.WriteAllText("genconfcsr.txt", CreateOpensslCSRConfig(config));
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
 
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
                 openssl.StartInfo.CreateNoWindow = true;
-                //  openssl.StartInfo.UseShellExecute = false;
                 openssl.StartInfo.Arguments = cmdargs;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
@@ -377,7 +299,7 @@ subjectAltName = @alt_names
                         string err = openssl.StandardError.ReadToEnd();
                         Console.WriteLine(err);
                         CSRgenCompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
-                        //Console.WriteLine("EVENT");
+                        
                     }
                     else
                     {
@@ -385,39 +307,18 @@ subjectAltName = @alt_names
                         // Console.WriteLine("EVENT");
 
                     }
-                };
-
-            
-                openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
+                };          
+                openssl.Start();             
                 openssl.WaitForExit();
-                
-
-
-                if (openssl.ExitCode != 0)
-                {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
-
-                }
-
-            
-                    File.Delete("genconfcsr.txt");
-
-                
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-                // Console.WriteLine(openssl.StandardError.ReadToEnd());
-                return CSRgenCompletion.Task;
-                
+                File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt");
+                return CSRgenCompletion.Task;                
             }
 
 
             
         }
 
-
+        /*
 
         /// <summary>
         /// Signs certificate signing request
@@ -641,7 +542,7 @@ subjectAltName = @alt_names
         }
 
        */
-         
+
 
         #endregion
 
@@ -667,6 +568,42 @@ distinguished_name = dn
             return builder.ToString();
         }
 
+        string CreateOpensslCSRConfig(CSRConfiguration config)
+        {
+            string confile = $@"[req]
+default_bits={config.KeyLength.ToString().Split('_')[1]}
+prompt=no
+default_md={config.HashAlgorithm.ToString()}
+";
+            confile += config.alt_names.Count > 0 ? "req_extensions = req_ext\n" : "";
+
+            confile += @$"distinguished_name = dn
+
+[ dn ]" + "\n";
+            if (config.CountryCodeString is not null) { confile += $"C={config.CountryCodeString}\n"; }
+            if (config.State is not null) { confile += $"ST={config.State}\n"; }
+            if (config.City is not null) { confile += $"L={config.City}\n"; }
+            if (config.Organization is not null) { confile += $"O={config.Organization}\n"; }
+            if (config.CommonName is not null) { confile += $"CN={config.CommonName}\n"; }
+
+
+            if (config.alt_names.Count != 0)
+            {
+                confile += $@"[req_ext]
+subjectAltName = @alt_names
+[alt_names]
+";
+                int alt_count = 1;
+                foreach (string altName in config.alt_names)
+                {
+                    confile += "DNS." + Convert.ToString(alt_count) + "= " + altName + "\n";
+                    alt_count++;
+                }
+
+            }
+
+            return confile;
+        }
 
         #endregion
 
