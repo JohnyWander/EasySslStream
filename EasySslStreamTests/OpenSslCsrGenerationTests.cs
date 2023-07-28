@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
+using System.Runtime.CompilerServices;
+
 namespace EasySslStreamTests
 {
     internal class OpenSslCsrGenerationTests
@@ -12,8 +14,33 @@ namespace EasySslStreamTests
         OpensslCertGeneration csrgen;
         CSRConfiguration ValidCsrConf;
         CSRConfiguration InvalidCsrConf;
+
+        private string Workspace = "CSRworkspace";
+
+
+        private string DefaultCSRPath;
+        private string DefaultKeyPath;
+
+        private string DefaultAsyncCSRPath;
+        private string DefaultAsyncKeyPath;
+        [OneTimeSetUp]
+        public void OneTimeSetup()
+        {
+            Type type = typeof(OpenSslCsrGenerationTests);
+            MethodInfo SyncGenMethod = type.GetMethod("GenerateCSR");
+            MethodInfo AsyncGenMethod = type.GetMethod("GenerateCSRAsync");
+
+            ParameterInfo[] SyncParams = SyncGenMethod.GetParameters();
+            ParameterInfo[] AsyncParams = AsyncGenMethod.GetParameters();
+            
+            DefaultCSRPath = SyncParams[2].ToString();
+            DefaultKeyPath = SyncParams[3].ToString();
+
+            DefaultAsyncCSRPath = AsyncParams[2].ToString();
+            DefaultAsyncKeyPath = AsyncParams[3].ToString();            
+        }
+
         
-        private string Workspace ="CSRworkspace";
 
         
         [SetUp]
@@ -46,36 +73,16 @@ namespace EasySslStreamTests
         public void TestGenerateCSRCorrectConfig()
         {
             csrgen.GenerateCSR(ValidCsrConf);
-            MethodInfo inf = csrgen.GetType().GetMethod("GenerateCSR");
-            ParameterInfo[] parameters = inf.GetParameters();
-            foreach(ParameterInfo param in parameters)
-            {
-                if (param.IsOptional)
-                {
-                    if(param.Position != 1)
-                    {
-                        Assert.That(File.Exists((string)param.DefaultValue),$"Not Found output file - {param.DefaultValue}");
-                    }
-                }
-            }
+            Assert.That(File.Exists(DefaultCSRPath));      
+            Assert.That(File.Exists(DefaultKeyPath));
+
         }
 
         [Test]
         public async Task TestGenerateCSRAsyncCorrectConfig()
         {
             await csrgen.GenerateCSRAsync(ValidCsrConf);
-            MethodInfo inf = csrgen.GetType().GetMethod("GenerateCSR");
-            ParameterInfo[] parameters = inf.GetParameters();
-            foreach (ParameterInfo param in parameters)
-            {
-                if (param.IsOptional)
-                {
-                    if (param.Position != 1)
-                    {
-                        Assert.That(File.Exists((string)param.DefaultValue), $"Not Found output file - {param.DefaultValue}");
-                    }
-                }
-            }
+              
         }
 
 
