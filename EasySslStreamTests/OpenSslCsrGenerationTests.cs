@@ -23,21 +23,22 @@ namespace EasySslStreamTests
 
         private string DefaultAsyncCSRPath;
         private string DefaultAsyncKeyPath;
+
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            Type type = typeof(OpenSslCsrGenerationTests);
+            Type type = typeof(OpensslCertGeneration);
             MethodInfo SyncGenMethod = type.GetMethod("GenerateCSR");
             MethodInfo AsyncGenMethod = type.GetMethod("GenerateCSRAsync");
 
             ParameterInfo[] SyncParams = SyncGenMethod.GetParameters();
             ParameterInfo[] AsyncParams = AsyncGenMethod.GetParameters();
-            
-            DefaultCSRPath = SyncParams[2].ToString();
-            DefaultKeyPath = SyncParams[3].ToString();
 
-            DefaultAsyncCSRPath = AsyncParams[2].ToString();
-            DefaultAsyncKeyPath = AsyncParams[3].ToString();            
+            DefaultCSRPath = SyncParams[2].DefaultValue.ToString();
+            DefaultKeyPath = SyncParams[3].DefaultValue.ToString();
+
+            DefaultAsyncCSRPath = AsyncParams[2].DefaultValue.ToString();
+            DefaultAsyncKeyPath = AsyncParams[3].DefaultValue.ToString();
         }
 
         
@@ -64,7 +65,7 @@ namespace EasySslStreamTests
             foreach (FileInfo file in TestDir.EnumerateFiles("*")
                 .Where(x => x.Name.Contains(".csr") || x.Name.Contains(".crt") || x.Name.Contains(".key")))
             {
-                file.Delete();
+                //file.Delete();
             }
         }
 
@@ -82,7 +83,8 @@ namespace EasySslStreamTests
         public async Task TestGenerateCSRAsyncCorrectConfig()
         {
             await csrgen.GenerateCSRAsync(ValidCsrConf);
-              
+            Assert.That(File.Exists(DefaultAsyncCSRPath),$"Not found file {DefaultAsyncCSRPath}");
+            Assert.That(File.Exists(DefaultAsyncKeyPath),$"Not found file {DefaultAsyncKeyPath}");
         }
 
 

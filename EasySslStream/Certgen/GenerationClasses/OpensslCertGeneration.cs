@@ -93,6 +93,14 @@ namespace EasySslStream.CertGenerationClasses
             {
                 return @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
             }
+            else if (File.Exists(@"C:\Program Files\Git\usr\bin\openssl.exe"))
+            {
+                return @"C:\Program Files\Git\usr\bin\openssl.exe";
+            }
+            else if (File.Exists(@"C:\Program Files (x86)\Git\usr\bin\openssl.exe"))
+            {
+                return @"C:\Program Files (x86)\Git\usr\bin\openssl.exe";
+            }
             else
             {
                 return "";
@@ -134,7 +142,7 @@ namespace EasySslStream.CertGenerationClasses
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";            
                 using (Process openssl = new Process())
                 {
-                    openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
+                    openssl.StartInfo.FileName = this._OpenSSLPath;
                     openssl.StartInfo.CreateNoWindow = true;
                     openssl.StartInfo.UseShellExecute = false;
                     openssl.StartInfo.Arguments = cmdargs;
@@ -191,7 +199,7 @@ namespace EasySslStream.CertGenerationClasses
             string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = @"C:\Program Files (x86)\OpenSSL\bin\openssl.exe";
+                openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;
                 openssl.StartInfo.UseShellExecute = false;
                 openssl.StartInfo.Arguments = cmdargs;
@@ -237,7 +245,7 @@ namespace EasySslStream.CertGenerationClasses
             string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;
                 //  openssl.StartInfo.UseShellExecute = false;
                 openssl.StartInfo.Arguments = cmdargs;
@@ -284,7 +292,7 @@ namespace EasySslStream.CertGenerationClasses
 
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;
                 openssl.StartInfo.Arguments = cmdargs;
                 openssl.StartInfo.RedirectStandardOutput = true;
