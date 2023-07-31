@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.Exceptions
 {
-    internal class CSRgenFailedException : Exception
+    public class CSRgenFailedException : Exception
     {
         public CSRgenFailedException(string Message) : base(Message)
         {

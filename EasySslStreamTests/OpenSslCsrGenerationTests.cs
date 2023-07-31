@@ -93,7 +93,16 @@ namespace EasySslStreamTests
         {
             Assert.Multiple(() =>
             {
-                Assert.Throws<ConfigurationException>(() => csrgen.GenerateCSR(InvalidCsrConf)) ;
+                ConfigurationException CSRex;
+                CSRex = Assert.Throws<ConfigurationException>(() => csrgen.GenerateCSR(InvalidCsrConf)) ;
+                Assert.That(CSRex.Message.Equals("Hash algorithm is not set propertly in configuration class"));
+                InvalidCsrConf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
+
+                CSRex = Assert.Throws<ConfigurationException>(()=>csrgen.GenerateCSR(InvalidCsrConf));
+                Assert.That(CSRex.Message.Equals("Key length is not set correctly in configuration class"));
+                InvalidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
+
+                CSRgenFailedException CSRGex = Assert.Throws<CSRgenFailedException>(()=>csrgen.GenerateCSR(InvalidCsrConf));
             });
             
         }
