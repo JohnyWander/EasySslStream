@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 namespace EasySslStream.Exceptions
 {
     [Serializable]
-    public class CAconfigurationException : Exception
+    public class ConfigurationException : Exception
     {
         
-        public CAconfigurationException()
+        public ConfigurationException()
         { }
 
-        public CAconfigurationException(string message)
+        public ConfigurationException(string message)
             : base(message)
         { }
 
-        public CAconfigurationException(string message, Exception innerException)
+        public ConfigurationException(string message, Exception innerException)
             : base(message, innerException)
         { }
 

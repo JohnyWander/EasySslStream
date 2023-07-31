@@ -94,14 +94,14 @@ namespace EasySslStreamTests
                 async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
             );
             InvalidCaCertgenConfig.CountryCode = "US";
-            CAconfigurationException CACe = Assert.ThrowsAsync<CAconfigurationException>
+            ConfigurationException CACe = Assert.ThrowsAsync<ConfigurationException>
             (
                 async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
             );
             Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
             InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
 
-            CACe = Assert.ThrowsAsync<CAconfigurationException>
+            CACe = Assert.ThrowsAsync<ConfigurationException>
             (
                 async () => { await OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
             );
@@ -145,14 +145,14 @@ namespace EasySslStreamTests
                     () => { OpensslCertGen.GenerateCaAsync(InvalidCaCertgenConfig); }
                 );
                 InvalidCaCertgenConfig.CountryCode = "US";
-                CAconfigurationException CACe = Assert.Throws<CAconfigurationException>
+                ConfigurationException CACe = Assert.Throws<ConfigurationException>
                 (
                     () => { OpensslCertGen.GenerateCA(InvalidCaCertgenConfig); }
                 );
                 Assert.That(CACe.Message.Equals("Hash algorithm is not set propertly in configuration class"));
                 InvalidCaCertgenConfig.HashAlgorithm = CaCertgenConfig.HashAlgorithms.sha256;
 
-                CACe = Assert.Throws<CAconfigurationException>
+                CACe = Assert.Throws<ConfigurationException>
                 (
                     () => { OpensslCertGen.GenerateCA(InvalidCaCertgenConfig); }
                 );

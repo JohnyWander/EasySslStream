@@ -135,11 +135,11 @@ namespace EasySslStream.CertGenerationClasses
             
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                generation_completion.TrySetException(new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
+                generation_completion.TrySetException(new Exceptions.ConfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class"));
                 
             }
             File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";            
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.EncodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";            
                 using (Process openssl = new Process())
                 {
                     openssl.StartInfo.FileName = this._OpenSSLPath;
@@ -193,10 +193,10 @@ namespace EasySslStream.CertGenerationClasses
             
             if (!configFile.IsNormalized(NormalizationForm.FormD) && conf.Encoding.ToString() != "UTF8")
             {
-                throw new Exceptions.CAconfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class");
+                throw new Exceptions.ConfigurationException("Strins provided for CA generation contains diacretics, please set encoding to utf-8 in Configuration class");
             }           
             File.WriteAllText(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconf.txt" : "genconf.txt", configFile);
-            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.encodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
+            string cmdargs = $"req -new -x509 -{conf.HashAlgorithm} -nodes -newkey rsa:{conf.KeyLengthAsNumber} -days {conf.Days} {conf.EncodingAsString} -keyout {KeyFileName} -out {CertFileName} -config genconf.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = this._OpenSSLPath;
@@ -227,8 +227,9 @@ namespace EasySslStream.CertGenerationClasses
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
-        public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CSRFileName = "CERT.csr", string KeyFileName = "CERT.key")
-        {            
+        public void GenerateCSR(CSRConfiguration config, string SaveDir = "",string CSRFileName = "CSR.csr", string KeyFileName = "CSR.key")
+        {
+            VerifyConfig(config);
             if (SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -270,7 +271,7 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
         /// <param name="OutputPath">Output path</param>
         /// <returns>Task object that indicates task completion</returns>
-        public Task GenerateCSRAsync(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CERT.csr", string KeyFileName = "CERT.key")
+        public Task GenerateCSRAsync(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CSRasync.csr", string KeyFileName = "CSRasync.key")
         {
             TaskCompletionSource<object> CSRgenCompletion = new TaskCompletionSource<object>();
 
@@ -570,7 +571,7 @@ distinguished_name = dn
             if (conf.CountryCode is not null) { builder.Append($"C={conf.CountryCode}\n"); }
             if (conf.CountryState is not null) { builder.Append($"ST={conf.CountryState}\n"); }
             if (conf.Location is not null) { builder.Append($"L={conf.Location}\n"); }
-            if (conf.Organisation is not null) { builder.Append($"O={conf.Organisation}\n"); }
+            if (conf.Organization is not null) { builder.Append($"O={conf.Organization}\n"); }
             if (conf.CommonName is not null) { builder.Append($"CN={conf.CommonName}\n"); }
 
             return builder.ToString();
@@ -617,33 +618,36 @@ subjectAltName = @alt_names
 
         #region Checkers
 
-        private void VerifyConfig(CaCertgenConfig conf,TaskCompletionSource<object> tcs)
+        private void VerifyConfig(Config conf,TaskCompletionSource<object> tcs)
         {
             if (conf.HashAlgorithm is null)
             {
-                tcs.TrySetException(new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class"));
+                tcs.TrySetException(new Exceptions.ConfigurationException("Hash algorithm is not set propertly in configuration class"));
                 return;
             }
 
             if (conf.KeyLength is null || conf.KeyLengthAsNumber is null)
             {
-                tcs.TrySetException(new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class"));
+                tcs.TrySetException(new Exceptions.ConfigurationException("Key length is not set correctly in configuration class"));
                 return;
             }       
         }
 
-        private void VerifyConfig(CaCertgenConfig conf)
+        private void VerifyConfig(Config conf)
         {
             if (conf.HashAlgorithm is null)
             {
-                throw new Exceptions.CAconfigurationException("Hash algorithm is not set propertly in configuration class");               
+                throw new Exceptions.ConfigurationException("Hash algorithm is not set propertly in configuration class");               
             }
 
             if (conf.KeyLength is null || conf.KeyLengthAsNumber is null)
             {
-                throw new Exceptions.CAconfigurationException("Key length is not set correctly in configuration class");               
+                throw new Exceptions.ConfigurationException("Key length is not set correctly in configuration class");               
             }
         }
+
+        
+        
 
 
         #endregion

@@ -65,7 +65,7 @@ namespace EasySslStreamTests
             foreach (FileInfo file in TestDir.EnumerateFiles("*")
                 .Where(x => x.Name.Contains(".csr") || x.Name.Contains(".crt") || x.Name.Contains(".key")))
             {
-                //file.Delete();
+                file.Delete();
             }
         }
 
@@ -87,7 +87,15 @@ namespace EasySslStreamTests
             Assert.That(File.Exists(DefaultAsyncKeyPath),$"Not found file {DefaultAsyncKeyPath}");
         }
 
-
+        [Test]
+        public void TestGenerateCSRIncorrectConfig()
+        {
+            Assert.Multiple(() =>
+            {
+                csrgen.GenerateCSR(InvalidCsrConf);
+            });
+            
+        }
 
 
     }

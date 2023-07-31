@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace EasySslStream
     /// <summary>
     /// Class that contains configuration for CSR signing with OpenSSL
     /// </summary>
-    public class SignCSRConfig
+    public class SignCSRConfig : Config
     {
         public enum authorityKeyIdentifiers
         {
