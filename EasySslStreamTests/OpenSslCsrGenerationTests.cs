@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using System.Runtime.CompilerServices;
+using EasySslStream.Exceptions;
 
 namespace EasySslStreamTests
 {
@@ -92,7 +93,7 @@ namespace EasySslStreamTests
         {
             Assert.Multiple(() =>
             {
-                csrgen.GenerateCSR(InvalidCsrConf);
+                Assert.Throws<ConfigurationException>(() => csrgen.GenerateCSR(InvalidCsrConf)) ;
             });
             
         }
