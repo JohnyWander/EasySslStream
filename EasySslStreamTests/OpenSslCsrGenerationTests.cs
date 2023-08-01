@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using System.Runtime.CompilerServices;
 using EasySslStream.Exceptions;
+using System.Diagnostics;
 
 namespace EasySslStreamTests
 {
@@ -17,7 +18,7 @@ namespace EasySslStreamTests
         CSRConfiguration InvalidCsrConf;
 
         private string Workspace = "CSRworkspace";
-
+        DirectoryInfo TestDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 
         private string DefaultCSRPath;
         private string DefaultKeyPath;
@@ -58,11 +59,9 @@ namespace EasySslStreamTests
             ValidCsrConf.CountryCode = "US";
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public void TearDown()
-        {
-            DirectoryInfo TestDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-
+        {          
             foreach (FileInfo file in TestDir.EnumerateFiles("*")
                 .Where(x => x.Name.Contains(".csr") || x.Name.Contains(".crt") || x.Name.Contains(".key")))
             {
@@ -103,11 +102,12 @@ namespace EasySslStreamTests
                 InvalidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
 
                 CSRgenFailedException CSRGex = Assert.Throws<CSRgenFailedException>(()=>csrgen.GenerateCSR(InvalidCsrConf));
-                Assert.That(CSRex.Message.Contains("No objects specified in config file"));
-
+                Assert.That(CSRGex.Message.Contains("No objects specified in config file"));
                 InvalidCsrConf.CountryCode = "US";
 
-
+                csrgen.GenerateCSR(InvalidCsrConf);
+                Assert.That(File.Exists(DefaultKeyPath));
+                Assert.That(File.Exists(DefaultCSRPath));
             });
             
         }
