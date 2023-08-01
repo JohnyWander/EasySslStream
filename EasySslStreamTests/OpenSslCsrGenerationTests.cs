@@ -103,6 +103,11 @@ namespace EasySslStreamTests
                 InvalidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
 
                 CSRgenFailedException CSRGex = Assert.Throws<CSRgenFailedException>(()=>csrgen.GenerateCSR(InvalidCsrConf));
+                Assert.That(CSRex.Message.Contains("No objects specified in config file"));
+
+                InvalidCsrConf.CountryCode = "US";
+
+
             });
             
         }
