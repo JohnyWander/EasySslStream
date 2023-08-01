@@ -112,6 +112,12 @@ namespace EasySslStreamTests
             
         }
 
+        [Test]
+        public async Task TestGenerateCSRAsyncIncorrectConfig() 
+        {
+        
+        }
+
 
     }
 }
