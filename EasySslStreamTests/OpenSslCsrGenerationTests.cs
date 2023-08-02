@@ -108,14 +108,31 @@ namespace EasySslStreamTests
                 csrgen.GenerateCSR(InvalidCsrConf);
                 Assert.That(File.Exists(DefaultKeyPath));
                 Assert.That(File.Exists(DefaultCSRPath));
-            });
-            
+            });            
         }
 
         [Test]
         public async Task TestGenerateCSRAsyncIncorrectConfig() 
         {
-        
+            Assert.Multiple(async() =>
+            {
+                ConfigurationException CSRex;
+                CSRex = Assert.ThrowsAsync<ConfigurationException>(() => csrgen.GenerateCSRAsync(InvalidCsrConf));
+                Assert.That(CSRex.Message.Equals("Hash algorithm is not set propertly in configuration class"));
+                InvalidCsrConf.HashAlgorithm = CSRConfiguration.HashAlgorithms.sha256;
+
+                CSRex = Assert.ThrowsAsync<ConfigurationException>(async() => await csrgen.GenerateCSRAsync(InvalidCsrConf));
+                Assert.That(CSRex.Message.Equals("Key length is not set correctly in configuration class"));
+                InvalidCsrConf.KeyLength = CSRConfiguration.KeyLengths.RSA_2048;
+
+                CSRgenFailedException CSRGex = Assert.ThrowsAsync<CSRgenFailedException>(async() => await csrgen.GenerateCSRAsync(InvalidCsrConf));
+                Assert.That(CSRGex.Message.Contains("No objects specified in config file"));
+                InvalidCsrConf.CountryCode = "US";
+
+                await csrgen.GenerateCSRAsync(InvalidCsrConf);
+                Assert.That(File.Exists(DefaultAsyncKeyPath));
+                Assert.That(File.Exists(DefaultAsyncCSRPath));
+            });
         }
 
 

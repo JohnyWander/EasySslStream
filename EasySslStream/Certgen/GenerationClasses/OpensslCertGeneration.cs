@@ -274,7 +274,7 @@ namespace EasySslStream.CertGenerationClasses
         public Task GenerateCSRAsync(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CSRasync.csr", string KeyFileName = "CSRasync.key")
         {
             TaskCompletionSource<object> CSRgenCompletion = new TaskCompletionSource<object>();
-
+            VerifyConfig(config,CSRgenCompletion);
             if (SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
@@ -289,7 +289,7 @@ namespace EasySslStream.CertGenerationClasses
 
 
             File.WriteAllText("genconfcsr.txt", CreateOpensslCSRConfig(config));
-            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLength.ToString().Split('_')[1]} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
+            string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLengthAsNumber} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
 
             using (Process openssl = new Process())
             {
@@ -302,29 +302,26 @@ namespace EasySslStream.CertGenerationClasses
 
                 openssl.Exited += (sender, args) =>
                 {
-
                     if (openssl.ExitCode != 0)
                     {
                         string err = openssl.StandardError.ReadToEnd();
                         Console.WriteLine(err);
-                        CSRgenCompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        CSRgenCompletion.TrySetException(new Exceptions.CSRgenFailedException($"Generation Failed with error:{err} "));
                         
                     }
                     else
                     {
                         CSRgenCompletion.SetResult(null);
-                        // Console.WriteLine("EVENT");
-
                     }
                 };          
                 openssl.Start();             
                 openssl.WaitForExit();
                 File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt");
-                return CSRgenCompletion.Task;                
+                              
             }
 
+            return CSRgenCompletion.Task;
 
-            
         }
 
         /*
@@ -562,7 +559,7 @@ namespace EasySslStream.CertGenerationClasses
             StringBuilder builder = new StringBuilder();
 
             builder.Append(@$"[req]
-default_bits= {conf.KeyLength.ToString()}
+default_bits= {conf.KeyLengthAsNumber}
 prompt = no
 default_md = {conf.HashAlgorithm.ToString()}
 distinguished_name = dn
@@ -580,7 +577,7 @@ distinguished_name = dn
         string CreateOpensslCSRConfig(CSRConfiguration config)
         {
             string confile = $@"[req]
-default_bits={config.KeyLength.ToString().Split('_')[1]}
+default_bits={config.KeyLengthAsNumber}
 prompt=no
 default_md={config.HashAlgorithm.ToString()}
 ";
@@ -637,12 +634,14 @@ subjectAltName = @alt_names
         {
             if (conf.HashAlgorithm is null)
             {
-                throw new Exceptions.ConfigurationException("Hash algorithm is not set propertly in configuration class");               
+                throw new Exceptions.ConfigurationException("Hash algorithm is not set propertly in configuration class");
+                return;
             }
 
             if (conf.KeyLength is null || conf.KeyLengthAsNumber is null)
             {
-                throw new Exceptions.ConfigurationException("Key length is not set correctly in configuration class");               
+                throw new Exceptions.ConfigurationException("Key length is not set correctly in configuration class");
+                return;
             }
         }
 
