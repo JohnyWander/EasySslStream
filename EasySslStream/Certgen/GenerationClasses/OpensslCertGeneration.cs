@@ -288,7 +288,7 @@ namespace EasySslStream.CertGenerationClasses
             }
 
 
-            File.WriteAllText("genconfcsr.txt", CreateOpensslCSRConfig(config));
+            File.WriteAllTextAsync(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\genconfcsr.txt" : "genconfcsr.txt", CreateOpensslCSRConfig(config)).Wait();
             string cmdargs = $"req -new -{config.HashAlgorithm.ToString()} -nodes -newkey rsa:{config.KeyLengthAsNumber} {config.EncodingAsString} -keyout {KeyFileName} -out {CSRFileName} -config genconfcsr.txt";
 
             using (Process openssl = new Process())
@@ -299,13 +299,14 @@ namespace EasySslStream.CertGenerationClasses
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 openssl.EnableRaisingEvents = true;
+                openssl.StartInfo.WorkingDirectory = SaveDir;
 
                 openssl.Exited += (sender, args) =>
                 {
                     if (openssl.ExitCode != 0)
                     {
                         string err = openssl.StandardError.ReadToEnd();
-                        Console.WriteLine(err);
+                        
                         CSRgenCompletion.TrySetException(new Exceptions.CSRgenFailedException($"Generation Failed with error:{err} "));
                         
                     }
@@ -324,7 +325,7 @@ namespace EasySslStream.CertGenerationClasses
 
         }
 
-        /*
+        
 
         /// <summary>
         /// Signs certificate signing request
@@ -335,29 +336,26 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="CAKeyPath"></param>
         /// <param name="CertName"></param>
         /// <param name="OutputPath"></param>
-        public void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertName, string OutputPath = "default")
+        public void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath,string CertFileName, string SaveDir = "")
         {
-            if (OutputPath != "default")
+            if (SaveDir == "")
             {
-                try { Directory.SetCurrentDirectory(OutputPath);OutputPath += "/"; }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
             else
             {
-                OutputPath = "";
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
             }
-
-            
-           
-            if (!CertName.Contains(".crt")) { CertName += ".crt"; }
+     
             string copyExtensions = "";
             if (config.copyallextensions == true) { copyExtensions = "-copy_extensions copyall"; }
 
             File.WriteAllText("signconf.txt",config.BuildConfFile());
-            Console.WriteLine(OutputPath);
-            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {OutputPath}{CertName} -days {config.days} -copy_extensions copyall -config signconf.txt";
-
-
+            
+            string command = @$"req -x509 -in {CSRpath} -CA {CAPath} -CAkey {CAKeyPath} -out {CertFileName} -days {config.days} {copyExtensions} -config signconf.txt";
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
@@ -366,21 +364,17 @@ namespace EasySslStream.CertGenerationClasses
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
-                openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
+                openssl.StartInfo.WorkingDirectory = SaveDir;
+                openssl.Start();                
                 openssl.WaitForExit();
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
                 if (openssl.ExitCode != 0)
                 {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
-
+                    throw new SignCsrException($"Signing csr failed with Exception: {openssl.StandardError.ReadToEnd()}");
                 }
             }
             }
-
+        /*
         /// <summary>
         /// Asynchrounously signs certificate signing request
         /// </summary>
