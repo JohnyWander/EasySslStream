@@ -373,7 +373,7 @@ namespace EasySslStream.CertGenerationClasses
                     throw new SignCsrException($"Signing csr failed with Exception: {openssl.StandardError.ReadToEnd()}");
                 }
             }
-            }
+        }
         /*
         /// <summary>
         /// Asynchrounously signs certificate signing request
