@@ -69,7 +69,8 @@ namespace EasySslStream
 
         public enum DefaultConfigs
         {
-            Enduser
+            Enduser,
+            Server
         }
 
         public string Filename;
@@ -249,13 +250,12 @@ namespace EasySslStream
                     });
                     days = 365;
                     copyallextensions = true;
-                    
-                    
+                                       
                break;
                 
+
+
             }
-
-
         }
 
 
