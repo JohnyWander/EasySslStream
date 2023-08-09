@@ -6,7 +6,7 @@ namespace EasySslStream
     /// <summary>
     /// Class that contains configuration for CSR signing with OpenSSL
     /// </summary>
-    public class SignCSRConfig : Config
+    public class SignCSRConfig
     {
         public enum authorityKeyIdentifiers
         {
@@ -248,7 +248,25 @@ namespace EasySslStream
 
                     break;
 
+                case DefaultConfigs.Server:
+                    SetAuthorityKeyIdentifiers(authorityKeyIdentifiers.keyid_and_issuer);
+                    SetBasicConstrainsList(basicConstrains.CAFalse);
+                    SetKeyUsageList(new KeyUsage[]
+                    {
+                        KeyUsage.digitalSignature,
+                        KeyUsage.nonRepudiation,
+                        KeyUsage.keyEncipherment,
+                        KeyUsage.dataEncipherment,
+                    });
+                    days = 365;
+                    copyallextensions = true;
 
+                    SetExtendedKeyUsage(new ExtendedKeyUsage[]
+                    {
+                        ExtendedKeyUsage.serverAuth,
+                        ExtendedKeyUsage.clientAuth
+                    });
+                    break;
 
             }
         }
