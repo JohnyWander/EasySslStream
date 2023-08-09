@@ -251,8 +251,27 @@ namespace EasySslStream
                     days = 365;
                     copyallextensions = true;
                                        
-               break;
-                
+                break;
+
+                case DefaultConfigs.Server:
+                    SetAuthorityKeyIdentifiers(authorityKeyIdentifiers.keyid_and_issuer);
+                    SetBasicConstrainsList(basicConstrains.CAFalse);
+                    SetKeyUsageList(new KeyUsage[]
+                    {
+                        KeyUsage.digitalSignature,
+                        KeyUsage.nonRepudiation,
+                        KeyUsage.keyEncipherment,
+                        KeyUsage.dataEncipherment,                       
+                    }) ;
+                    days = 365;
+                    copyallextensions = true;
+
+                    SetExtendedKeyUsage(new ExtendedKeyUsage[]
+                    {
+                        ExtendedKeyUsage.serverAuth,
+                        ExtendedKeyUsage.clientAuth            
+                    });
+                break;
 
 
             }
