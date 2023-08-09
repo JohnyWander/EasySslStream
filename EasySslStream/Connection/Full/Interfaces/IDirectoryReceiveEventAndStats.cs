@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Connection.Full
+﻿namespace EasySslStream.Connection.Full
 {
     public interface IDirectoryReceiveEventAndStats
     {
@@ -77,7 +71,7 @@ namespace EasySslStream.Connection.Full
         public ConnectionCommons.Unit DefaultDirectoryReceiveUnit { get; set; }
 
         public Task StartDirectoryReceiveSpeedCheck(int Interval, ConnectionCommons.Unit unit, CancellationToken cts = default(CancellationToken));
-        
+
 
 
 

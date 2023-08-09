@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-
-
-namespace EasySslStream
+﻿namespace EasySslStream
 {
     /// <summary>
     /// Event that fires when debug message is raised
@@ -19,7 +10,7 @@ namespace EasySslStream
     /// </summary>
     public static class DynamicConfiguration
     {
-       
+
 
         /// <summary>
         /// Contains configuration 
@@ -149,7 +140,7 @@ namespace EasySslStream
 
     }
 
-    
+
 
 
 

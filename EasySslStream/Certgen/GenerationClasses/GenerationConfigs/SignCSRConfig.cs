@@ -1,11 +1,5 @@
 ﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using static EasySslStream.SignCSRConfig;
 
 namespace EasySslStream
 {
@@ -21,11 +15,12 @@ namespace EasySslStream
             keyid_and_issuer
         }
 
-        public enum basicConstrains{
+        public enum basicConstrains
+        {
             CATrue,
             CAFalse,
             pathlen
-            
+
         }
 
         public enum KeyUsage
@@ -41,7 +36,7 @@ namespace EasySslStream
             decipherOnly
         }
 
-         public enum ExtendedKeyUsage
+        public enum ExtendedKeyUsage
         {
             serverAuth,
             clientAuth,
@@ -86,7 +81,7 @@ namespace EasySslStream
 
         public List<string> ExtendedkeyUsageList { private set; get; } = new List<string>();
 
-        public List<KeyValuePair<AltNames,string>> subjectAltNamesList = new List<KeyValuePair<AltNames,string>>();
+        public List<KeyValuePair<AltNames, string>> subjectAltNamesList = new List<KeyValuePair<AltNames, string>>();
 
         public void SetAuthorityKeyIdentifiers(authorityKeyIdentifiers AuthoritykeyIdentifier)
         {
@@ -101,9 +96,9 @@ namespace EasySslStream
         }
         public void SetAuthorityKeyIdentifiers(authorityKeyIdentifiers[] AuthorityKeyIdentifiers)
         {
-            foreach(authorityKeyIdentifiers aki in AuthorityKeyIdentifiers)
+            foreach (authorityKeyIdentifiers aki in AuthorityKeyIdentifiers)
             {
-                if(aki != authorityKeyIdentifiers.keyid_and_issuer)
+                if (aki != authorityKeyIdentifiers.keyid_and_issuer)
                 {
                     authorityKeyIdentifiersList.Add(aki.ToString());
                 }
@@ -118,13 +113,13 @@ namespace EasySslStream
 
         public void SetBasicConstrainsList(basicConstrains[] basicConstrains_)
         {
-            foreach(basicConstrains bc in basicConstrains_)
+            foreach (basicConstrains bc in basicConstrains_)
             {
                 if (bc != basicConstrains.pathlen)
                 {
                     basicConstrainsList.Add(bc.ToString());
                 }
-                else if(bc== basicConstrains.pathlen)
+                else if (bc == basicConstrains.pathlen)
                 {
                     throw new Exceptions.SignCSRConfigurationException("Can't add pathlen without int argument, use overload with int argument");
                 }
@@ -153,7 +148,7 @@ namespace EasySslStream
 
         }
 
-        public void SetBasicConstrainsList(basicConstrains basicConstrains_,int len)
+        public void SetBasicConstrainsList(basicConstrains basicConstrains_, int len)
         {
 
             if (basicConstrains_ != basicConstrains.pathlen)
@@ -202,7 +197,7 @@ namespace EasySslStream
 
         public void SetKeyUsageList(KeyUsage[] keyusage)
         {
-            foreach(KeyUsage ku in keyusage)
+            foreach (KeyUsage ku in keyusage)
             {
                 keyUsageList.Add(ku.ToString());
             }
@@ -210,18 +205,18 @@ namespace EasySslStream
 
         public void SetExtendedKeyUsage(ExtendedKeyUsage[] extendedkeyusage)
         {
-            foreach(ExtendedKeyUsage eku in extendedkeyusage)
+            foreach (ExtendedKeyUsage eku in extendedkeyusage)
             {
                 keyUsageList.Add(eku.ToString());
             }
 
         }
 
-        public void AddAltName(AltNames altname,string name)
+        public void AddAltName(AltNames altname, string name)
         {
-            if(altname == AltNames.DNS)
+            if (altname == AltNames.DNS)
             {
-                subjectAltNamesList.Add(new KeyValuePair<AltNames,string>(altname,name));
+                subjectAltNamesList.Add(new KeyValuePair<AltNames, string>(altname, name));
             }
             else
             {
@@ -250,28 +245,9 @@ namespace EasySslStream
                     });
                     days = 365;
                     copyallextensions = true;
-                                       
-                break;
 
-                case DefaultConfigs.Server:
-                    SetAuthorityKeyIdentifiers(authorityKeyIdentifiers.keyid_and_issuer);
-                    SetBasicConstrainsList(basicConstrains.CAFalse);
-                    SetKeyUsageList(new KeyUsage[]
-                    {
-                        KeyUsage.digitalSignature,
-                        KeyUsage.nonRepudiation,
-                        KeyUsage.keyEncipherment,
-                        KeyUsage.dataEncipherment,                       
-                    }) ;
-                    days = 365;
-                    copyallextensions = true;
+                    break;
 
-                    SetExtendedKeyUsage(new ExtendedKeyUsage[]
-                    {
-                        ExtendedKeyUsage.serverAuth,
-                        ExtendedKeyUsage.clientAuth            
-                    });
-                break;
 
 
             }
@@ -293,46 +269,46 @@ namespace EasySslStream
                     aki_string += aki + ",";
                 }
                 aki_string = aki_string.Trim(',');
-                confile.Append(aki_string+"\n");
+                confile.Append(aki_string + "\n");
             }
             ////////////////////////////////////////////
             if (basicConstrainsList.Count > 0)
             {
                 confile.Append("basicConstraints = ");
                 string constrains_string = "";
-                foreach(var basicConstrains in basicConstrainsList)
+                foreach (var basicConstrains in basicConstrainsList)
                 {
                     constrains_string += basicConstrains + ",";
                 }
                 constrains_string = constrains_string.Trim(',');
-                confile.Append(constrains_string+"\n");
+                confile.Append(constrains_string + "\n");
             }
             ////////////////////////////////////////////
-            if(keyUsageList.Count > 0)
+            if (keyUsageList.Count > 0)
             {
                 confile.Append("keyUsage = ");
                 string keyusage_string = "";
-                foreach(string keyusage in keyUsageList)
+                foreach (string keyusage in keyUsageList)
                 {
                     keyusage_string += keyusage + ",";
                 }
                 keyusage_string = keyusage_string.Trim(',');
-                confile.Append(keyusage_string+'\n');
+                confile.Append(keyusage_string + '\n');
             }
             ///////////////////////////////////////////
-            if(ExtendedkeyUsageList.Count > 0)
+            if (ExtendedkeyUsageList.Count > 0)
             {
                 confile.Append("extendedKeyUsage");
                 string extendedkeyusage = "";
-                foreach(string ekeysuage in ExtendedkeyUsageList)
+                foreach (string ekeysuage in ExtendedkeyUsageList)
                 {
                     extendedkeyusage += ekeysuage + ",";
                 }
-                extendedkeyusage=extendedkeyusage.Trim(',');
-                confile.Append(extendedkeyusage+'\n');
+                extendedkeyusage = extendedkeyusage.Trim(',');
+                confile.Append(extendedkeyusage + '\n');
             }
             ///////////////////////////////////////////
-            if(subjectAltNamesList.Count > 0)
+            if (subjectAltNamesList.Count > 0)
             {
                 foreach (KeyValuePair<AltNames, string> altn in subjectAltNamesList)
                 {
@@ -340,13 +316,13 @@ namespace EasySslStream
                     string altname = altn.Value;
 
                     confile.AppendLine($"subjectAltName={alttype}:{altname}");
-;
+                    ;
 
 
 
 
                 }
-               
+
             }
 
 

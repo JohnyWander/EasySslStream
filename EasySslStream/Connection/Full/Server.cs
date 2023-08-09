@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -11,8 +6,6 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using static System.Net.WebRequestMethods;
 
 namespace EasySslStream.Connection.Full
 {
@@ -93,8 +86,8 @@ namespace EasySslStream.Connection.Full
 
             if (NoJobs == true)
             {
-                if(!GentleStopLock.Task.IsCompleted)
-                GentleStopLock.SetResult(null);
+                if (!GentleStopLock.Task.IsCompleted)
+                    GentleStopLock.SetResult(null);
             }
 
 
@@ -117,9 +110,9 @@ namespace EasySslStream.Connection.Full
                         WorkLock();
                         Task.Delay(interval).Wait();
                     }
-                 
+
                 });
-                
+
 
 
                 await GentleStopLock.Task;
@@ -219,9 +212,9 @@ namespace EasySslStream.Connection.Full
         /// <param name="Path">Path to directory to send</param>
         /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
         /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
-        public void SendDirectoryToClient(int ConnectionID,string Path,bool StopAndThrowOnFailedTransfer = true ,int FailSafeInterval = 20)
+        public void SendDirectoryToClient(int ConnectionID, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
         {
-            ConnectedClientsByNumber[ConnectionID].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+            ConnectedClientsByNumber[ConnectionID].SendDirectory(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
         }
 
         /// <summary>
@@ -231,9 +224,9 @@ namespace EasySslStream.Connection.Full
         /// <param name="Path">Path to directory to send</param>
         /// <param name="StopAndThrowOnFailedTransfer">Stops transfer ic coulndn't read the file,if true.If false ignores any errors</param>
         /// <param name="FailSafeInterval">If connection crashes try to raise this value</param>
-        public void SendDirectoryToClient(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        public void SendDirectoryToClient(IPEndPoint clientEndPoint, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
         {
-            ConnectedClientsByEndPoint[clientEndPoint].SendDirectory(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+            ConnectedClientsByEndPoint[clientEndPoint].SendDirectory(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
         }
 
         /// <summary>
@@ -245,15 +238,15 @@ namespace EasySslStream.Connection.Full
         /// <param name="FailSafeInterval"></param>
         public void SendDirectoryToClientV2(int ConnectionID, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
         {
-            ConnectedClientsByNumber[ConnectionID].SendDirectoryV2(Path,StopAndThrowOnFailedTransfer,FailSafeInterval);
+            ConnectedClientsByNumber[ConnectionID].SendDirectoryV2(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
         }
 
-        public void SendDirectoryToClientV2(IPEndPoint clientEndPoint,string Path,bool StopAndThrowOnFailedTransfer = true,int FailSafeInterval = 20)
+        public void SendDirectoryToClientV2(IPEndPoint clientEndPoint, string Path, bool StopAndThrowOnFailedTransfer = true, int FailSafeInterval = 20)
         {
             ConnectedClientsByEndPoint[clientEndPoint].SendDirectoryV2(Path, StopAndThrowOnFailedTransfer, FailSafeInterval);
         }
 
-        
+
 
 
         /// <summary>
@@ -1198,7 +1191,7 @@ namespace EasySslStream.Connection.Full
         /// 20ms by default </param>
         /// <exception cref="Exceptions.ServerException"></exception>
         /// 
-       
+
         public void SendDirectory(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
             Task.Run(async () =>
@@ -1232,7 +1225,7 @@ namespace EasySslStream.Connection.Full
                 Action SendDirectoryName = () =>
                 {
                     sslstream_.Write(srv.FileNameEncoding.GetBytes(Path.GetFileName(DirPath)));
-                      Console.WriteLine(Path.GetFileName(DirPath));
+                    Console.WriteLine(Path.GetFileName(DirPath));
                 };
 
                 await ServerSendingQueue.Writer.WaitToWriteAsync();
@@ -1300,7 +1293,7 @@ namespace EasySslStream.Connection.Full
                             sslstream_.Flush();
                             fs.Dispose();
                             DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
-                            
+
                             // Task.Delay(100).Wait();
 
                         }
@@ -1361,15 +1354,16 @@ namespace EasySslStream.Connection.Full
 
         public void SendDirectoryV2(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
-            
+
             Task.Run(async () =>
             {
 
                 CancellationTokenSource SDCancele = new CancellationTokenSource();
                 if (DirectorySendEventAndStats.AutoStartDirectorySendSpeedCheck)
                 {
-                  
-                    Thread t = new Thread(() => { 
+
+                    Thread t = new Thread(() =>
+                    {
 
                         DirectorySendEventAndStats.StartDirectorySendSpeedCheck(DirectorySendEventAndStats.DirectorySendCheckInterval,
                         DirectorySendEventAndStats.DefaultDirectorySendUnit, SDCancele.Token).Wait();
@@ -1515,7 +1509,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-                       // SDCancele.Cancel();
+                        // SDCancele.Cancel();
                     }; await ServerSendingQueue.Writer.WaitToWriteAsync(); await ServerSendingQueue.Writer.WriteAsync(SendInnerDirectory);
 
                     if (LoopCancel == true)
@@ -1524,19 +1518,19 @@ namespace EasySslStream.Connection.Full
                     }
 
 
-                   
+
                     //await Task.Delay(2000);
 
                     DirectorySendEventAndStats.RaiseOnFileFromDirectorySendProcessed();
                 }
 
-                
-                while(ServerSendingQueue.Reader.Count > 0)
+
+                while (ServerSendingQueue.Reader.Count > 0)
                 {
                     await Task.Delay(10);
                 }
                 SDCancele.Cancel();
-                
+
 
             });
         }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Connection
+﻿namespace EasySslStream.Connection
 {
     /// <summary>
     /// Containts settings for certificate verification
@@ -15,6 +9,6 @@ namespace EasySslStream.Connection
         public bool VerifyCertificateName = true;
 
 
-      
+
     }
 }

@@ -1,9 +1,4 @@
 ﻿using EasySslStream.Exceptions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 {
@@ -61,7 +56,7 @@ namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 
         public int Days { internal get; set; } = 365;// ex. 356
 
-        
+
         internal string? CountryCodeString;
         public string? CountryCode
         {

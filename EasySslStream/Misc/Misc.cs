@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Misc
+﻿namespace EasySslStream.Misc
 {
     /// <summary>
     /// Miscellaneous methods
@@ -15,7 +9,7 @@ namespace EasySslStream.Misc
         public void TestRaiseMessage()
         {
 
-            DynamicConfiguration.RaiseMessage?.Invoke("Test Message","test title");
+            DynamicConfiguration.RaiseMessage?.Invoke("Test Message", "test title");
         }
 
 

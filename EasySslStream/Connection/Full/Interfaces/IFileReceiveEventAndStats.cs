@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Connection.Full
+﻿namespace EasySslStream.Connection.Full
 {
-    
+
     public interface IFileReceiveEventAndStats
     {
-       /// <summary>
-       /// Current bytes of transfer
-       /// </summary>
-        long CurrentReceivedBytes { get; set; } 
+        /// <summary>
+        /// Current bytes of transfer
+        /// </summary>
+        long CurrentReceivedBytes { get; set; }
 
         /// <summary>
         /// Total bytes of processed file
@@ -25,7 +19,7 @@ namespace EasySslStream.Connection.Full
         event EventHandler OnDataChunkReceived;
         internal void FireDataChunkReceived();
 
-        
+
 
 
 
@@ -36,7 +30,7 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public ConnectionCommons.Unit DefaultReceiveSpeedUnit { get; set; }
 
-    
+
         /// <summary>
         /// If true everytime file transfer start, StartFileReceiveSpeedCheck is started with pre-set settings
         /// </summary>
@@ -60,7 +54,7 @@ namespace EasySslStream.Connection.Full
         /// Calculated speed as float
         /// </summary>
         public float ReceiveSpeed { get; set; }
-        
+
         /// <summary>
         /// Transfer speed with it's unit
         /// </summary>
@@ -78,7 +72,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="unit">Unit of transfer speed</param>
         /// <param name="cts"></param>
         /// <returns></returns>
-        public Task StartFileReceiveSpeedCheck(int Interval,ConnectionCommons.Unit unit, CancellationToken cts = default(CancellationToken));
+        public Task StartFileReceiveSpeedCheck(int Interval, ConnectionCommons.Unit unit, CancellationToken cts = default(CancellationToken));
 
 
 

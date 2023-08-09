@@ -1,13 +1,6 @@
 ﻿using EasySslStream.CertGenerationClasses;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
-using System.Runtime.CompilerServices;
 using EasySslStream.Exceptions;
-using System.Diagnostics;
 
 namespace EasySslStreamTests
 {
@@ -157,7 +150,7 @@ namespace EasySslStreamTests
             });
         }
 
-        
+
 
     }
 }

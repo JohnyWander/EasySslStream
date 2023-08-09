@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Exceptions
+﻿namespace EasySslStream.Exceptions
 {
     [Serializable]
-    internal class ConnectionException :Exception
+    internal class ConnectionException : Exception
     {
 
 

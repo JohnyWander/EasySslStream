@@ -2,7 +2,6 @@ using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses;
 using EasySslStream.Exceptions;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace EasySslStreamTests.CertgenTests
 {

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Connection.Full
+﻿namespace EasySslStream.Connection.Full
 {
-    public partial class ConnectionCommons : IFileReceiveEventAndStats,IFileSendEventAndStats,IDirectorySendEventAndStats
+    public partial class ConnectionCommons : IFileReceiveEventAndStats, IFileSendEventAndStats, IDirectorySendEventAndStats
     {
         private ConnectionCommons() { }
         //File Transfer//////////////////////////////////////////////
@@ -44,16 +37,16 @@ namespace EasySslStream.Connection.Full
             OnReceiveSpeedChecked?.Invoke(this, EventArgs.Empty);
         }
 
-        public async Task StartFileReceiveSpeedCheck(int Interval,Unit unit, CancellationToken cts=default(CancellationToken))
-        {       
+        public async Task StartFileReceiveSpeedCheck(int Interval, Unit unit, CancellationToken cts = default(CancellationToken))
+        {
             while (!cts.IsCancellationRequested)
             {
 
                 long current = CurrentReceivedBytes;
-                    await Task.Delay(Interval);
+                await Task.Delay(Interval);
                 long AfterInterval = CurrentReceivedBytes;
 
-                ReceiveSpeed = (AfterInterval - current)/(Interval/1000);
+                ReceiveSpeed = (AfterInterval - current) / (Interval / 1000);
                 //Console.WriteLine(Speed);
                 switch (unit)
                 {
@@ -70,10 +63,10 @@ namespace EasySslStream.Connection.Full
                         break;
                 }
                 FireOnReceiveSpeedChecked();
-               // Console.WriteLine(stringSpeed);
+                // Console.WriteLine(stringSpeed);
             }
 
-            
+
         }
 
         internal static IFileReceiveEventAndStats CreateFileReceive()
@@ -88,8 +81,8 @@ namespace EasySslStream.Connection.Full
         // File Send events and stats
 
         /////////data chunk
-       
-        
+
+
         public long CurrentSendBytes { get; set; } = 0;
         public long TotalBytesToSend { get; set; } = 0;
 
@@ -111,7 +104,7 @@ namespace EasySslStream.Connection.Full
         }
         public bool AutoStartFileSendSpeedCheck { get; set; } = false;
         public int FileSendSpeedCheckInterval { get; set; } = 1000;
-        public Unit DefaultFileSendCheckUnit    { get; set; } = Unit.Bps;
+        public Unit DefaultFileSendCheckUnit { get; set; } = Unit.Bps;
 
 
         public float SendSpeed { get; set; } = 0;
@@ -119,7 +112,7 @@ namespace EasySslStream.Connection.Full
 
 
 
-        public async Task StartFileSendSpeedCheck(int interval,Unit unit, CancellationToken cts = default(CancellationToken))
+        public async Task StartFileSendSpeedCheck(int interval, Unit unit, CancellationToken cts = default(CancellationToken))
         {
             while (!cts.IsCancellationRequested)
             {
@@ -199,12 +192,12 @@ namespace EasySslStream.Connection.Full
         public int DirectorySendCheckInterval { get; set; } = 1000;
         public Unit DefaultDirectorySendUnit { get; set; } = Unit.Bps;
 
-        public async Task StartDirectorySendSpeedCheck(int Interval,Unit unit,CancellationToken cts = default(CancellationToken))
+        public async Task StartDirectorySendSpeedCheck(int Interval, Unit unit, CancellationToken cts = default(CancellationToken))
         {
-            
+
             while (!cts.IsCancellationRequested)
             {
-               
+
                 int current = CurrentSendFileCurrentBytes;
                 await Task.Delay(Interval);
                 int AfterInvterval = CurrentSendFileCurrentBytes;
@@ -224,7 +217,7 @@ namespace EasySslStream.Connection.Full
                         break;
                     case Unit.MBs:
                         DirectorySendSpeed = DirectorySendSpeed / 1024 / 1024;
-                       
+
                         stringDirectorySendSpeed = (DirectorySendSpeed > 0 ? DirectorySendSpeed.ToString() : 0) + " " + Unit.MBs.ToString();
                         break;
 
@@ -238,19 +231,19 @@ namespace EasySslStream.Connection.Full
 
 
         //////////////////////////////////////////////////////////////////////// GetDirectory
-         internal static IDirectoryReceiveEventAndStats CreateDirectoryReceiveEventAndStats()
-         {
+        internal static IDirectoryReceiveEventAndStats CreateDirectoryReceiveEventAndStats()
+        {
             return new ConnectionCommons();
-         }
+        }
 
 
 
         public int TotalFilesToReceive { get; set; } = 0;
-        public string CurrentReceivedFileName { get;  set; }
+        public string CurrentReceivedFileName { get; set; }
         public int CurrentReceiveFile { get; set; }
 
-        public int CurrentReceiveFileCurrentBytes { get;  set; } = 0;
-        public float CurrentReceiveFileTotalBytes { get;  set; } = 0;
+        public int CurrentReceiveFileCurrentBytes { get; set; } = 0;
+        public float CurrentReceiveFileTotalBytes { get; set; } = 0;
 
 
         public event EventHandler OnFileFromDirectoryReceiveProcessed;
@@ -264,7 +257,7 @@ namespace EasySslStream.Connection.Full
         public void RaiseOnDirectoryReceiveSpeedChecked()
         {
             OnDirectoryReceiveSpeedChecked?.Invoke(this, EventArgs.Empty);
-            
+
         }
 
         public float DirectoryReceiveSpeed { get; set; } = 0;
@@ -278,7 +271,7 @@ namespace EasySslStream.Connection.Full
         {
             while (!cts.IsCancellationRequested)
             {
-                
+
                 int current = CurrentReceiveFileCurrentBytes;
                 await Task.Delay(Interval);
                 int AfterInvterval = CurrentReceiveFileCurrentBytes;

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasySslStream.Connection.Full
+﻿namespace EasySslStream.Connection.Full
 {
     public interface IFileSendEventAndStats
     {
@@ -13,14 +7,14 @@ namespace EasySslStream.Connection.Full
         public event EventHandler OnDataChunkSent;
         internal void FireOnDataChunkSent();
 
-        
+
         ////////////////
-        
+
 
         public event EventHandler OnSendSpeedChecked;
 
         internal void FireOnSpeedChecked();
-      
+
 
         public bool AutoStartFileSendSpeedCheck { get; set; }
         public int FileSendSpeedCheckInterval { get; set; }
