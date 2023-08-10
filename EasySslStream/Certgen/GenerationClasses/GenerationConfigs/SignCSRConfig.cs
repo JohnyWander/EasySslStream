@@ -1,5 +1,4 @@
-﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
-using System.Text;
+﻿using System.Text;
 
 namespace EasySslStream
 {

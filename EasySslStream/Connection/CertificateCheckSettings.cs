@@ -7,8 +7,5 @@
     {
         public bool VerifyCertificateChain = true;
         public bool VerifyCertificateName = true;
-
-
-
     }
 }

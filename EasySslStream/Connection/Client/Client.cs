@@ -76,7 +76,7 @@ namespace EasySslStream.Connection.Full
         }
 
         /// <summary>
-        /// U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
+        /// U can choose encryption protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
         /// </summary>
         public SslProtocols SslProtocols;
 

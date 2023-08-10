@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using EasySslStream;
+﻿using EasySslStream;
 using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
@@ -57,7 +52,7 @@ namespace EasySslStreamTests.CertgenTests
             CorrectSingConfig.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Server);
         }
 
-        [Test,Order(1)]
+        [Test, Order(1)]
         public void TestSignWithcorrectConfig()
         {
             SignCSRConfig conf = new SignCSRConfig();
@@ -67,12 +62,12 @@ namespace EasySslStreamTests.CertgenTests
             Assert.That(File.Exists($"{SignCsrWorkspace}\\TestCertificate.crt"));
         }
 
-        [Test,Order(2)]
+        [Test, Order(2)]
         public void TestSignWithIncorrectConfig()
         {
             Assert.Multiple(() =>
             {
-                Assert.Throws<SignCsrException>(() => certgen.SignCSR(this.IncorrectSignConfig, "TestCSR.csr", "TestCA.crt", "TestCA.key", "TestCertificateFromIncorrect.crt", SignCsrWorkspace));                
+                Assert.Throws<SignCsrException>(() => certgen.SignCSR(this.IncorrectSignConfig, "TestCSR.csr", "TestCA.crt", "TestCA.key", "TestCertificateFromIncorrect.crt", SignCsrWorkspace));
                 IncorrectSignConfig.days = 365;
 
                 certgen.SignCSR(IncorrectSignConfig, "TestCSR.csr", "TestCA.crt", "TestCA.key", "TestCertificateFromIncorrect.crt", SignCsrWorkspace);
@@ -80,15 +75,15 @@ namespace EasySslStreamTests.CertgenTests
             });
         }
 
-        [Test,Order(3)]
+        [Test, Order(3)]
         public void TestConvertToPfx()
         {
-            certgen.ConvertX509ToPfx("TestCertificate.crt", "TestKEY.key", "TestPFX.pfx","", SignCsrWorkspace);
+            certgen.ConvertX509ToPfx("TestCertificate.crt", "TestKEY.key", "TestPFX.pfx", "", SignCsrWorkspace);
             Assert.That(File.Exists(SignCsrWorkspace + "\\TestPFX.pfx"));
         }
         // Async block
 
-        [Test,Order(4)]
+        [Test, Order(4)]
         public async Task TestSignAsyncWithCorrectConfig()
         {
             SignCSRConfig conf = new SignCSRConfig();
@@ -98,10 +93,10 @@ namespace EasySslStreamTests.CertgenTests
             Assert.That(File.Exists($"{SignCsrWorkspace}\\TestCertificateAsync.crt"));
         }
 
-        [Test,Order(5)]
+        [Test, Order(5)]
         public async Task TestSignAsyncWithIncorrectConfig()
         {
-            Assert.Multiple(async() =>
+            Assert.Multiple(async () =>
             {
                 Assert.Throws<SignCsrException>(() => certgen.SignCSR(this.IncorrectSignConfig, "TestCSR.csr", "TestCA.crt", "TestCA.key", "TestCertificateFromIncorrect.crt", SignCsrWorkspace));
                 IncorrectSignConfig.days = 365;
@@ -111,7 +106,7 @@ namespace EasySslStreamTests.CertgenTests
             });
         }
 
-        [Test,Order(6)]
+        [Test, Order(6)]
         public async Task TestConvertToPfxAsync()
         {
             await certgen.ConvertX509ToPfxAsync("TestCertificate.crt", "TestKEY.key", "TestPFXAsync.pfx", "", SignCsrWorkspace);

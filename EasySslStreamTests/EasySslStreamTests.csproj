@@ -21,4 +21,8 @@
     <ProjectReference Include="..\EasySslStream\EasySslStream.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ConnectionTests\" />
+  </ItemGroup>
+
 </Project>

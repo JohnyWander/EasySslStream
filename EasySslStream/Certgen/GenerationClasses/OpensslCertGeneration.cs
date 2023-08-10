@@ -1,16 +1,9 @@
 ﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream.Exceptions;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Dynamic;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 
 namespace EasySslStream.CertGenerationClasses
 {
@@ -444,15 +437,15 @@ namespace EasySslStream.CertGenerationClasses
                 File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\signconf.txt" : "signconf.txt");
             }
             return SignCompletion.Task;
-            
+
         }
 
 
-        
 
-        public void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string SaveDir="")
+
+        public void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string SaveDir = "")
         {
-           if (SaveDir == "")
+            if (SaveDir == "")
             {
                 SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
@@ -472,8 +465,8 @@ namespace EasySslStream.CertGenerationClasses
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 openssl.StartInfo.WorkingDirectory = SaveDir;
-                openssl.Start();                
-                openssl.WaitForExit();               
+                openssl.Start();
+                openssl.WaitForExit();
                 if (openssl.ExitCode != 0)
                 {
                     throw new PFXConvertException($"Converting certificate to pfx failed with openssl error : {openssl.StandardError.ReadToEnd()}");
@@ -502,7 +495,7 @@ namespace EasySslStream.CertGenerationClasses
             using (Process openssl = new Process())
             {
                 openssl.StartInfo.FileName = this._OpenSSLPath;
-                openssl.StartInfo.CreateNoWindow = true;                
+                openssl.StartInfo.CreateNoWindow = true;
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
@@ -520,13 +513,13 @@ namespace EasySslStream.CertGenerationClasses
                         convertcompletion.TrySetResult(null);
                     }
                 };
-                openssl.Start();              
-                openssl.WaitForExit();                        
+                openssl.Start();
+                openssl.WaitForExit();
                 return convertcompletion.Task;
             }
         }
 
-       
+
 
 
         #endregion
