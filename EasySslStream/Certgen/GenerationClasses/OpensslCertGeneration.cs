@@ -41,7 +41,7 @@ namespace EasySslStream.CertGenerationClasses
                 throw new Exception($"Provided path is not a valid OpenSSL path");
             }
         }
-        #region Finding openssl
+        #region Finding Related
         string TryToFindOpenSSL()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -107,8 +107,12 @@ namespace EasySslStream.CertGenerationClasses
             }
         }
 
+
         #endregion
         #region Generation Methods
+
+
+
 
         /// <summary>
         /// Asynchronously Creates x509 CA certificate, based on ca configuration provided.
@@ -415,7 +419,7 @@ namespace EasySslStream.CertGenerationClasses
             {
                 openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;
-                openssl.StartInfo.WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory;
+                openssl.StartInfo.WorkingDirectory = SaveDir;
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
@@ -426,11 +430,11 @@ namespace EasySslStream.CertGenerationClasses
                     if (openssl.ExitCode != 0)
                     {
                         string err = openssl.StandardError.ReadToEnd();
-                        SignCompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        SignCompletion.TrySetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
                     }
                     else
                     {
-                        SignCompletion.SetResult(null);
+                        SignCompletion.TrySetResult(null);
                     }
                 };
                 openssl.Start();
@@ -440,101 +444,89 @@ namespace EasySslStream.CertGenerationClasses
                 File.Delete(SaveDir != AppDomain.CurrentDomain.BaseDirectory ? $"{SaveDir}\\signconf.txt" : "signconf.txt");
             }
             return SignCompletion.Task;
-
+            
         }
 
 
-        /*
+        
 
-        public void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string OutputPath = "default")
+        public void ConvertX509ToPfx(string Certpath, string KeyPath, string Certname, string Password, string SaveDir="")
         {
-            if (OutputPath != "default")
+           if (SaveDir == "")
             {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
             }
-            if (!Certname.Contains(".pfx"))
+            else
             {
-                Certname += ".pfx";
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
             }
             string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout pass:{Password}";
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
-                openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
-                openssl.WaitForExit();
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+                openssl.StartInfo.WorkingDirectory = SaveDir;
+                openssl.Start();                
+                openssl.WaitForExit();               
                 if (openssl.ExitCode != 0)
                 {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
+                    throw new PFXConvertException($"Converting certificate to pfx failed with openssl error : {openssl.StandardError.ReadToEnd()}");
                 }
             }
         }
 
 
-        public Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Certname, string Password, string OutputPath="default")
+        public Task ConvertX509ToPfxAsync(string Certpath, string KeyPath, string Certname, string Password, string SaveDir = "")
         {
             TaskCompletionSource<object> convertcompletion = new TaskCompletionSource<object>();
-            if (OutputPath != "default")
-            {
-                try { Directory.SetCurrentDirectory(OutputPath); }
-                catch { Directory.CreateDirectory(OutputPath); Directory.SetCurrentDirectory(OutputPath); }
-            }
-           
-            if (!Certname.Contains(".pfx"))
-            {
-                Certname += ".pfx";
-            }
-            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout pass:{Password}";
 
+            if (SaveDir == "")
+            {
+                SaveDir = AppDomain.CurrentDomain.BaseDirectory;
+            }
+            else
+            {
+                if (!Directory.Exists(SaveDir))
+                {
+                    Directory.CreateDirectory(SaveDir);
+                }
+            }
+
+            string command = $"pkcs12 -export -out {Certname} -inkey {KeyPath} -in {Certpath} -passout pass:{Password}";
             using (Process openssl = new Process())
             {
-                openssl.StartInfo.FileName = DynamicConfiguration.OpenSSl_config.OpenSSL_PATH + "\\" + "openssl.exe";
+                openssl.StartInfo.FileName = this._OpenSSLPath;
                 openssl.StartInfo.CreateNoWindow = true;                
                 openssl.StartInfo.Arguments = command;
                 openssl.StartInfo.RedirectStandardOutput = true;
                 openssl.StartInfo.RedirectStandardError = true;
                 openssl.EnableRaisingEvents = true;
+                openssl.StartInfo.WorkingDirectory = SaveDir;
                 openssl.Exited += (sender, args) =>
                 {
                     if (openssl.ExitCode != 0)
                     {
                         string err = openssl.StandardError.ReadToEnd();
-                        convertcompletion.SetException(new Exceptions.CACertgenFailedException($"Generation Failed with error:{err} "));
+                        convertcompletion.TrySetException(new PFXConvertException($"Converting certificate to pfx failed with openssl error : {err}"));
                     }
                     else
                     {
-                        convertcompletion.SetResult(null);
+                        convertcompletion.TrySetResult(null);
                     }
                 };
-
-
-                openssl.Start();
-                if (OutputPath != "default")
-                {
-                    openssl.StartInfo.WorkingDirectory = OutputPath;
-                }
-                openssl.WaitForExit();
-                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-                if (openssl.ExitCode != 0)
-                {
-                    DynamicConfiguration.RaiseMessage?.Invoke(openssl.StandardError.ReadToEnd(), "Openssl Error");
-
-                }
+                openssl.Start();              
+                openssl.WaitForExit();                        
                 return convertcompletion.Task;
-
             }
         }
 
-       */
+       
 
 
         #endregion
@@ -631,11 +623,6 @@ subjectAltName = @alt_names
                 return;
             }
         }
-
-
-
-
-
         #endregion
 
     }
