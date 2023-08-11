@@ -174,156 +174,25 @@ namespace EasySslStream.Connection.Client
         /// <param name="ip"></param>
         /// <param name="port"></param>
         public void Connect(string ip, int port)
-        {
-            X509Certificate x = null;
+        {          
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
-
-
-              
-                try
+                stream.WriteTimeout = -1;
+                stream.ReadTimeout = -1;
+                if (this.SslProtocols == null) { stream.AuthenticateAsClient(ip); }
+                else
                 {
-                    stream.WriteTimeout = -1;
-                    stream.ReadTimeout = -1;
-                    if (this.SslProtocols == null) { stream.AuthenticateAsClient(ip); }
-                    else
-                    {
-
-                        SslClientAuthenticationOptions opt = new SslClientAuthenticationOptions();
-                        opt.TargetHost = ip;
-                        opt.EnabledSslProtocols = this.SslProtocols;
-                        opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
-                        stream.AuthenticateAsClient(opt);
-
-                    }
-
-                    Thread ListeningThread = new Thread(() =>
-                    {
-                        try
-                        {
-                            Task.Run(async () =>
-                            {
-                                while (cancelConnection == false)
-                                {
-                                    int steer = await ConnSteer();
-                                    switch (steer)
-                                    {
-                                        case 1:
-                                            privateBusy = true;
-                                            HandleReceivedText.Invoke(await GetText(TextReceiveEncoding));
-                                            privateBusy = false;
-                                            break;
-                                        case 2:
-                                            privateBusy = true;
-                                            await GetFile();
-                                            privateBusy = false;
-                                            break;
-                                        case 3:
-                                            privateBusy = true;
-                                            HandleReceivedBytes.Invoke(await GetRawBytes());
-                                            privateBusy = false;
-                                            break;
-                                        case 4:
-                                            privateBusy = true;
-                                            await GetDirectory();
-                                            privateBusy = false;
-                                            break;
-                                        case 5:
-                                            privateBusy = true;
-                                            await GetDirectoryV2();
-                                            privateBusy = false;
-                                            break;
-
-                                        case 99:
-                                            //  privateBusy = true;
-                                            Console.WriteLine("Server closed connection");
-                                            this.stream.Dispose();
-                                            this.client.Dispose();
-                                            cancelConnection = true;
-                                            // privateBusy = false;
-                                            break;
-                                    }
-                                }
-                            }).GetAwaiter().GetResult();
-                        }
-                        catch (System.ObjectDisposedException)
-                        {
-                            if (DynamicConfiguration.RaiseMessage is not null)
-                            { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Client message"); }
-                            throw new Exceptions.ConnectionException("Connection closed by client");
-                        }
-                        catch (System.IO.IOException e)
-                        {
-                            if (DynamicConfiguration.RaiseMessage is not null)
-                            { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Client message"); }
-                            throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
-                        }
-                        catch (System.NullReferenceException)
-                        {
-                            if (DynamicConfiguration.RaiseMessage is not null)
-                            { DynamicConfiguration.RaiseMessage("Disconnected from server", "Client Exception"); }
-                            throw new Exceptions.ConnectionException("Client disconnected from server");
-                        }
-                        catch (Exception e)
-                        {
-                            if (DynamicConfiguration.RaiseMessage is not null)
-                            { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
-                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
-
-                        }
-
-                    });
-                    ListeningThread.Start();
-
-
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            while (true)
-                            {
-                                await work.Reader.WaitToReadAsync();
-                                Action w = await work.Reader.ReadAsync();
-
-                                await Task.Delay(100);
-                                privateBusy = true;
-                                w.Invoke();
-                                privateBusy = false;
-                                w = null;
-                            }
-                        }
-                        catch (System.ObjectDisposedException)
-                        {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message"); }
-                            throw new Exceptions.ConnectionException("Connection closed by client");
-                        }
-                        catch (System.IO.IOException)
-                        {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message"); }
-                            throw new Exceptions.ConnectionException("Server closed");
-                        }
-                        catch (Exception e)
-                        {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
-                            throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
-
-                        }
-                    }).ConfigureAwait(false).GetAwaiter().GetResult();
-
-                    stream.Close();
-
+                    SslClientAuthenticationOptions opt = new SslClientAuthenticationOptions();
+                    opt.TargetHost = ip;
+                    opt.EnabledSslProtocols = this.SslProtocols;
+                    opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
+                    stream.AuthenticateAsClient(opt);
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
+                ListeningThreadStart();
+                StartJobWriterTask();
             });
-            cThread.Start();
         }
         /// <summary>
         /// Connects to the server that verifies client certificates
@@ -334,28 +203,136 @@ namespace EasySslStream.Connection.Client
         /// <param name="certPassword">Password to the cert, use empty string if there is no password</param>
         public void Connect(string ip, int port, string clientCertLocation, string certPassword)
         {
-
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
                 X509Certificate2 clientCert = new X509Certificate2(clientCertLocation, certPassword, X509KeyStorageFlags.PersistKeySet);
                 X509Certificate2Collection certs = new X509Certificate2Collection(clientCert);
-
                 SslClientAuthenticationOptions opt = new SslClientAuthenticationOptions();
-
                 opt.TargetHost = ip;
                 opt.ClientCertificates = certs;
                 opt.EnabledSslProtocols = this.SslProtocols;
                 opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
                 stream.AuthenticateAsClient(opt);
 
-
-
-
+                ListeningThreadStart();
+                StartJobWriterTask().Wait() ;
+                stream.Close();
             });
         }
 
+
+        private void ListeningThreadStart()
+        {
+            Thread ListeningThread = new Thread(() =>
+            {
+                try
+                {
+                    Task.Run(async () =>
+                    {
+                        while (cancelConnection == false)
+                        {
+                            int steer = await ConnSteer();
+                            switch (steer)
+                            {
+                                case 1:
+                                    privateBusy = true;
+                                    HandleReceivedText.Invoke(await GetText(TextReceiveEncoding));
+                                    privateBusy = false;
+                                    break;
+                                case 2:
+                                    privateBusy = true;
+                                    await GetFile();
+                                    privateBusy = false;
+                                    break;
+                                case 3:
+                                    privateBusy = true;
+                                    HandleReceivedBytes.Invoke(await GetRawBytes());
+                                    privateBusy = false;
+                                    break;
+                                case 4:
+                                    privateBusy = true;
+                                    await GetDirectory();
+                                    privateBusy = false;
+                                    break;
+                                case 5:
+                                    privateBusy = true;
+                                    await GetDirectoryV2();
+                                    privateBusy = false;
+                                    break;
+
+                                case 99:
+                                    //  privateBusy = true;
+                                    Console.WriteLine("Server closed connection");
+                                    this.stream.Dispose();
+                                    this.client.Dispose();
+                                    cancelConnection = true;
+                                    // privateBusy = false;
+                                    break;
+                            }
+                        }
+                    }).GetAwaiter().GetResult();
+                }
+                catch (System.ObjectDisposedException)
+                {                    
+                    throw new Exceptions.ConnectionException("Connection closed by client");
+                }
+                catch (System.IO.IOException e)
+                {
+                    throw new Exceptions.ConnectionException("Server closed or cannot be reached anymore" + e.Message);
+                }
+                catch (System.NullReferenceException)
+                {
+                    throw new Exceptions.ConnectionException("Client disconnected from server");
+                }
+                catch (Exception e)
+                {                
+                    throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
+                }
+            });
+            ListeningThread.Start();
+        }
+
+        private Task StartJobWriterTask()
+        {
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        await work.Reader.WaitToReadAsync();
+                        Action w = await work.Reader.ReadAsync();
+                        await Task.Delay(100);
+                        privateBusy = true;
+                        w.Invoke();
+                        privateBusy = false;
+                        w = null;
+                    }
+                }
+                catch (System.ObjectDisposedException)
+                {
+                    if (DynamicConfiguration.RaiseMessage != null)
+                    { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message"); }
+                    throw new Exceptions.ConnectionException("Connection closed by client");
+                }
+                catch (System.IO.IOException)
+                {
+                    if (DynamicConfiguration.RaiseMessage != null)
+                    { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message"); }
+                    throw new Exceptions.ConnectionException("Server closed");
+                }
+                catch (Exception e)
+                {
+                    if (DynamicConfiguration.RaiseMessage != null)
+                    { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
+                    throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
+
+                }
+            }).ConfigureAwait(false).GetAwaiter().GetResult();
+            return Task.CompletedTask;
+        }
         private async Task<int> ConnSteer()
         {
             byte[] buffer = new byte[64];
@@ -372,7 +349,7 @@ namespace EasySslStream.Connection.Client
 
         #endregion
 
-        #region Transfer methods
+        #region Send methods
 
         /// <summary>
         /// Send byte array representation of string to server
@@ -838,7 +815,6 @@ namespace EasySslStream.Connection.Client
         #endregion
 
         #region Receive Methods
-
         private async Task<string> GetText(Encoding enc)
         {
             byte[] buffer = new byte[64];
