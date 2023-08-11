@@ -11,7 +11,6 @@
     public static class DynamicConfiguration
     {
 
-
         /// <summary>
         /// Contains configuration 
         /// </summary>

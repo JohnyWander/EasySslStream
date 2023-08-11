@@ -110,7 +110,10 @@ namespace EasySslStream.CertGenerationClasses
         /// <summary>
         /// Asynchronously Creates x509 CA certificate, based on ca configuration provided.
         /// </summary>
-        /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+        /// <param name="conf">Configuration for certificate generation</param>
+        /// <param name="SaveDir">Path where files should be saved</param>
+        /// <param name="CertFileName">File name for output certificate</param>
+        /// <param name="KeyFileName">File name for output private key file</param>
         /// <returns></returns>
         public Task GenerateCaAsync(CaCertgenConfig conf, string SaveDir = "", string CertFileName = "CA.crt", string KeyFileName = "CA.key")
         {
@@ -155,7 +158,7 @@ namespace EasySslStream.CertGenerationClasses
                     }
                     else
                     {
-                        generation_completion.SetResult(null);
+                        generation_completion.SetResult(new object());
                     }
                 };
                 openssl.Start();
@@ -170,7 +173,10 @@ namespace EasySslStream.CertGenerationClasses
         /// <summary>
         /// Creates x509 CA certificate, based on ca configuration from DynamicConfiguration Class
         /// </summary>
-        /// <param name="OutputPath">Path where CA.crt, CA.key should appear</param>
+        /// <param name="conf">Configuration for certificate generation</param>
+        /// <param name="SaveDir">Path where files should be saved</param>
+        /// <param name="CertFileName">File name for output certificate</param>
+        /// <param name="KeyFileName">File name for output private key file</param>
         public void GenerateCA(CaCertgenConfig conf, string SaveDir = "", string CertFileName = "CA.crt", string KeyFileName = "CA.key")
         {
             VerifyConfig(conf);
@@ -223,7 +229,9 @@ namespace EasySslStream.CertGenerationClasses
         /// Generates csr based on settings from CSRConfiguration class
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
-        /// <param name="OutputPath">Output path</param>
+        /// <param name="SaveDir">Path where created csr and private key file should be saved</param>
+        /// <param name="CSRFileName">Output csr file name</param>
+        /// <param name="KeyFileName">Output private key file name</param>
         public void GenerateCSR(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CSR.csr", string KeyFileName = "CSR.key")
         {
             VerifyConfig(config);
@@ -266,7 +274,9 @@ namespace EasySslStream.CertGenerationClasses
         /// Asynchronously generates csr based on settings from CSRConfiguration class
         /// </summary>
         /// <param name="config">Instance of CSRConfiguration class that contains configuration</param>
-        /// <param name="OutputPath">Output path</param>
+        /// <param name="SaveDir">Path where created csr and private key file should be saved</param>
+        /// <param name="CSRFileName">Output csr file name</param>
+        /// <param name="KeyFileName">Output private key file name</param>
         /// <returns>Task object that indicates task completion</returns>
         public Task GenerateCSRAsync(CSRConfiguration config, string SaveDir = "", string CSRFileName = "CSRasync.csr", string KeyFileName = "CSRasync.key")
         {
@@ -309,7 +319,7 @@ namespace EasySslStream.CertGenerationClasses
                     }
                     else
                     {
-                        CSRgenCompletion.SetResult(null);
+                        CSRgenCompletion.SetResult(new object());
                     }
                 };
                 openssl.Start();
@@ -331,8 +341,8 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="CSRpath"></param>
         /// <param name="CAPath"></param>
         /// <param name="CAKeyPath"></param>
-        /// <param name="CertName"></param>
-        /// <param name="OutputPath"></param>
+        /// <param name="CertFileName"></param>
+        /// <param name="SaveDir"></param>
         public void SignCSR(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertFileName, string SaveDir = "")
         {
             if (SaveDir == "")
@@ -381,8 +391,8 @@ namespace EasySslStream.CertGenerationClasses
         /// <param name="CSRpath"></param>
         /// <param name="CAPath"></param>
         /// <param name="CAKeyPath"></param>
-        /// <param name="CertName"></param>
-        /// <param name="OutputPath"></param>
+        /// <param name="CertFileName"></param>
+        /// <param name="SaveDir"></param>
         /// <returns></returns>
         public Task SignCSRAsync(SignCSRConfig config, string CSRpath, string CAPath, string CAKeyPath, string CertFileName, string SaveDir = "")
         {
@@ -427,7 +437,7 @@ namespace EasySslStream.CertGenerationClasses
                     }
                     else
                     {
-                        SignCompletion.TrySetResult(null);
+                        SignCompletion.TrySetResult(new object());
                     }
                 };
                 openssl.Start();
@@ -510,7 +520,7 @@ namespace EasySslStream.CertGenerationClasses
                     }
                     else
                     {
-                        convertcompletion.TrySetResult(null);
+                        convertcompletion.TrySetResult(new object());
                     }
                 };
                 openssl.Start();

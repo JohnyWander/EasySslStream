@@ -6,10 +6,11 @@ using System.Text;
 using System.Threading.Channels;
 
 
-namespace EasySslStream.Connection.Full
+namespace EasySslStream.Connection.Client
 {
     public class Client
     {
+        #region Options
         /// <summary>
         /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
         /// </summary>
@@ -80,12 +81,18 @@ namespace EasySslStream.Connection.Full
         /// </summary>
         public SslProtocols SslProtocols;
 
+        #endregion
 
+        #region Connection Stats
 
         public IFileReceiveEventAndStats FileReceiveEventAndStats = ConnectionCommons.CreateFileReceive();
         public IFileSendEventAndStats FileSendEventAndStats = ConnectionCommons.CreateFileSend();
         public IDirectorySendEventAndStats DirectorySendEventAndStats = ConnectionCommons.CreateDirectorySendEventAndStats();
         public IDirectoryReceiveEventAndStats DirectoryReceiveEventAndStats = ConnectionCommons.CreateDirectoryReceiveEventAndStats();
+
+        #endregion
+
+        #region Connection handlers
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
@@ -115,10 +122,7 @@ namespace EasySslStream.Connection.Full
                     return true;
                 }
 
-                if (DynamicConfiguration.RaiseMessage is not null)
-                {
-                    DynamicConfiguration.RaiseMessage("???", "???");
-                }
+              
                 return false;
             }
         }
@@ -177,6 +181,8 @@ namespace EasySslStream.Connection.Full
                 client = new TcpClient(ip, port);
                 stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidateServerCertificate));
 
+
+              
                 try
                 {
                     stream.WriteTimeout = -1;
@@ -192,8 +198,6 @@ namespace EasySslStream.Connection.Full
                         stream.AuthenticateAsClient(opt);
 
                     }
-
-
 
                     Thread ListeningThread = new Thread(() =>
                     {
@@ -240,19 +244,9 @@ namespace EasySslStream.Connection.Full
                                             cancelConnection = true;
                                             // privateBusy = false;
                                             break;
-
-
-
-
                                     }
-
-
-
                                 }
-
-
                             }).GetAwaiter().GetResult();
-
                         }
                         catch (System.ObjectDisposedException)
                         {
@@ -330,10 +324,6 @@ namespace EasySslStream.Connection.Full
                 }
             });
             cThread.Start();
-
-
-
-
         }
         /// <summary>
         /// Connects to the server that verifies client certificates
@@ -344,7 +334,7 @@ namespace EasySslStream.Connection.Full
         /// <param name="certPassword">Password to the cert, use empty string if there is no password</param>
         public void Connect(string ip, int port, string clientCertLocation, string certPassword)
         {
-            X509Certificate x = null;
+
             Thread cThread = new Thread(() =>
             {
                 client = new TcpClient(ip, port);
@@ -358,38 +348,12 @@ namespace EasySslStream.Connection.Full
                 opt.ClientCertificates = certs;
                 opt.EnabledSslProtocols = this.SslProtocols;
                 opt.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
-
-                // stream.AuthenticateAsClient(ip, certs, false);
                 stream.AuthenticateAsClient(opt);
 
-                try
-                {
-                    stream.WriteTimeout = -1;
-                    stream.AuthenticateAsClient(ip);
-                    stream.ReadTimeout = -1;
 
-                    Task.Run(async () => // sending queue
-                    {
-                        while (true)
-                        {
-                            await work.Reader.WaitToReadAsync();
-                            Action w = await work.Reader.ReadAsync();
-                            await Task.Delay(100);
-                            privateBusy = true;
-                            w.Invoke();
-                            privateBusy = false;
-                            w = null;
-                        }
-                    }).ConfigureAwait(false).GetAwaiter().GetResult();
-                    stream.Close();
-                    stream.Dispose();
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                }
+
+
             });
-            cThread.Start();
         }
 
         private async Task<int> ConnSteer()
@@ -405,6 +369,10 @@ namespace EasySslStream.Connection.Full
 
             return steer;
         }
+
+        #endregion
+
+        #region Transfer methods
 
         /// <summary>
         /// Send byte array representation of string to server
@@ -480,7 +448,7 @@ namespace EasySslStream.Connection.Full
 
 
                 long bytesLeft = fs.Length;
-                long Readed = 0;
+                
 
 
                 long times = fs.Length / 512;
@@ -835,17 +803,41 @@ namespace EasySslStream.Connection.Full
             });
         }
 
+        /// <summary>
+        /// Sends raw bytes message 
+        /// </summary>
+        /// <param name="Message">bytes to send</param>
+        public void SendRawBytes(byte[] Message)
+        {
+            Task.Run(async () =>
+            {
+                Action SendSteer = () =>
+                {
+                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendRawBytes));
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendSteer);
+
+                Action SendLength = () =>
+                {
+                    stream.Write(BitConverter.GetBytes(Message.Length));
+                }; await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(SendLength);
+
+                Action Send = () =>
+                {
+                    stream.Write(Message);
+                };
+                await work.Writer.WaitToWriteAsync();
+                await work.Writer.WriteAsync(Send);
 
 
+            });
+        }
 
+        #endregion
 
-
-
-
-
-
-
-
+        #region Receive Methods
 
         private async Task<string> GetText(Encoding enc)
         {
@@ -971,8 +963,8 @@ namespace EasySslStream.Connection.Full
 
             }
 
-            //////////////////////////////
-            /// Directory name
+            //
+            // Directory name
             int directoryBytesCount = 0;
             byte[] DirectoryNameBuffer = new byte[1024];
             directoryBytesCount = stream.Read(DirectoryNameBuffer);
@@ -1086,8 +1078,8 @@ namespace EasySslStream.Connection.Full
 
 
 
-            //////////////////////////////
-            /// Directory name
+            //
+            // Directory name
             int directoryBytesCount = 0;
             byte[] DirectoryNameBuffer = new byte[1024];
             directoryBytesCount = stream.Read(DirectoryNameBuffer);
@@ -1239,36 +1231,8 @@ namespace EasySslStream.Connection.Full
 
             return MessageBytes;
         }
-        /// <summary>
-        /// Sends raw bytes message 
-        /// </summary>
-        /// <param name="Message">bytes to send</param>
-        public void SendRawBytes(byte[] Message)
-        {
-            Task.Run(async () =>
-            {
-                Action SendSteer = () =>
-                {
-                    stream.Write(BitConverter.GetBytes((int)SteerCodes.SendRawBytes));
-                };
-                await work.Writer.WaitToWriteAsync();
-                await work.Writer.WriteAsync(SendSteer);
 
-                Action SendLength = () =>
-                {
-                    stream.Write(BitConverter.GetBytes(Message.Length));
-                }; await work.Writer.WaitToWriteAsync();
-                await work.Writer.WriteAsync(SendLength);
-
-                Action Send = () =>
-                {
-                    stream.Write(Message);
-                };
-                await work.Writer.WaitToWriteAsync();
-                await work.Writer.WriteAsync(Send);
-
-
-            });
-        }
+        #endregion
+        
     }
 }

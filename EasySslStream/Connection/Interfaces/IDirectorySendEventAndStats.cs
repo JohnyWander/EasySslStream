@@ -1,4 +1,4 @@
-﻿namespace EasySslStream.Connection.Full
+﻿namespace EasySslStream.Connection.Client
 {
     public interface IDirectorySendEventAndStats
     {
