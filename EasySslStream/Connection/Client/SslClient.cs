@@ -186,16 +186,16 @@ namespace EasySslStream.Connection.Client
                 else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, this.SslProtocols, true); }
             }
 
-            
 
-            
 
+            StaertClientServer();
+            StartClientReceiver();
             
 
             
 
         }
-        private void StartServerSender()
+        private void StaertClientServer()
         {
             Thread ServerSender = new Thread(() =>
             {
@@ -236,10 +236,11 @@ namespace EasySslStream.Connection.Client
             });
             ServerSender.Start();
         }
-        private void StartServerReceiver()
+        private void StartClientReceiver()
         {
             Task.Run(async () =>
             {
+                bool cancelConnection = false;
                 try
                 {
                     while (cancelConnection == false)
