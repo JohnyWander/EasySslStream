@@ -215,21 +215,15 @@ namespace EasySslStream.Connection.Client
                         }
                     }
                     catch (System.ObjectDisposedException e)
-                    {
-                        if (DynamicConfiguration.RaiseMessage is not null)
-                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception"); }
+                    {                      
                         throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                     }
                     catch (System.IO.IOException e)
                     {
-                        if (DynamicConfiguration.RaiseMessage is not null)
-                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception"); }
                         throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
                     }
                     catch (Exception e)
                     {
-                        if (DynamicConfiguration.RaiseMessage is not null)
-                        { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception"); }
                         throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
                     }
                 }).ConfigureAwait(false).GetAwaiter().GetResult();
@@ -290,20 +284,14 @@ namespace EasySslStream.Connection.Client
                 }
                 catch (System.ObjectDisposedException e)
                 {
-                    if (DynamicConfiguration.RaiseMessage is not null)
-                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed: {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Server Closed: {e.Message}");
                 }
                 catch (System.IO.IOException e)
                 {
-                    if (DynamicConfiguration.RaiseMessage is not null)
-                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed or Client Disconnected:  {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Server Closed:  {e.Message}");
                 }
                 catch (Exception e)
                 {
-                    if (DynamicConfiguration.RaiseMessage is not null)
-                    { DynamicConfiguration.RaiseMessage.Invoke($"Server Closed, unknown reason: {e.Message}", "Server Exception"); }
                     throw new Exceptions.ServerException($"Unknown Server Excetion: {e.Message}\n {e.StackTrace}");
                 }
             }).GetAwaiter().GetResult();
@@ -405,7 +393,7 @@ namespace EasySslStream.Connection.Client
 
 
 
-            byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
+            byte[] ReceiveBuffer = new byte[srv.bufferSize];
 
             if (srv.ReceivedFilesLocation != "")
             {
@@ -529,7 +517,7 @@ namespace EasySslStream.Connection.Client
                 {
                     DirectoryReceiveEventAndStats.CurrentReceiveFile++;
                     sslstream_.Flush();
-                    byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] DataChunk = new byte[srv.bufferSize];
 
 
 
@@ -690,7 +678,7 @@ namespace EasySslStream.Connection.Client
                 long FileLength = Convert.ToInt64(InfoSplit[1]);
                 DirectoryReceiveEventAndStats.CurrentReceiveFile++;
 
-                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] DataChunk = new byte[srv.bufferSize];
 
                 if (InnerPath.Contains("\\"))
                 {
@@ -821,7 +809,7 @@ namespace EasySslStream.Connection.Client
 
 
                 SslStream str = sslstream_;
-                byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] chunk = new byte[srv.bufferSize];
 
                 // informs server that file will be sent
                 Action SendSteer = () =>
@@ -912,7 +900,7 @@ namespace EasySslStream.Connection.Client
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
 
-                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] datachunk = new byte[srv.bufferSize];
                 // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
@@ -949,7 +937,7 @@ namespace EasySslStream.Connection.Client
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
-                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] chunk = new byte[srv.bufferSize];
                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
                     DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
                     //Console.WriteLine(innerPath);
@@ -995,11 +983,7 @@ namespace EasySslStream.Connection.Client
                         }
                         catch (System.UnauthorizedAccessException e)
                         {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            {
-                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
-                            }
-
+                      
                             if (StopAndThrowOnFailedTransfer)
                             {
                                 throw new Exceptions.ServerException($"Acces denied to files in the folder {e.Message}\n{e.StackTrace}");
@@ -1102,7 +1086,7 @@ namespace EasySslStream.Connection.Client
 
 
 
-                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] datachunk = new byte[srv.bufferSize];
 
                 Action SendSteer = () =>
                 {
@@ -1133,7 +1117,7 @@ namespace EasySslStream.Connection.Client
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
-                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] chunk = new byte[srv.bufferSize];
                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
                     DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
                     //Console.WriteLine(innerPath);
@@ -1181,10 +1165,6 @@ namespace EasySslStream.Connection.Client
                         }
                         catch (System.UnauthorizedAccessException e)
                         {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            {
-                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
-                            }
 
                             if (StopAndThrowOnFailedTransfer)
                             {

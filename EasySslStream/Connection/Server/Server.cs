@@ -14,7 +14,17 @@ namespace EasySslStream.Connection.Client
     /// </summary>
     public class Server
     {
+
+        public Server(int bufferSize)
+        {
+            this.bufferSize = bufferSize; 
+        }
+
+
         #region Options
+
+        public int bufferSize;
+
         /// <summary>
         /// List that contains connected clients 
         /// </summary>

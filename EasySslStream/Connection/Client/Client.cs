@@ -10,6 +10,14 @@ namespace EasySslStream.Connection.Client
 {
     public class Client
     {
+        //TODO: fixed buffer size with enums?
+        public Client(int BufferSize)
+        {
+            this.bufferSize = BufferSize;
+        }
+
+        public int bufferSize;
+
         #region Options
         /// <summary>
         /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
@@ -311,23 +319,16 @@ namespace EasySslStream.Connection.Client
                     }
                 }
                 catch (System.ObjectDisposedException)
-                {
-                    if (DynamicConfiguration.RaiseMessage != null)
-                    { DynamicConfiguration.RaiseMessage.Invoke("Connection closed by client", "Server message"); }
+                {                    
                     throw new Exceptions.ConnectionException("Connection closed by client");
                 }
                 catch (System.IO.IOException)
                 {
-                    if (DynamicConfiguration.RaiseMessage != null)
-                    { DynamicConfiguration.RaiseMessage.Invoke("Server Closed", "Server message"); }
                     throw new Exceptions.ConnectionException("Server closed");
                 }
                 catch (Exception e)
                 {
-                    if (DynamicConfiguration.RaiseMessage != null)
-                    { DynamicConfiguration.RaiseMessage.Invoke($"Connection crashed, unknown reason: {e.Message}", "Server Exception"); }
                     throw new Exceptions.ConnectionException($"Unknown Server Excpetion:{e.GetType().Name} {e.Message}\n {e.StackTrace}");
-
                 }
             }).ConfigureAwait(false).GetAwaiter().GetResult();
             return Task.CompletedTask;
@@ -388,7 +389,7 @@ namespace EasySslStream.Connection.Client
                 }
 
                 SslStream str = stream;
-                byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] chunk = new byte[bufferSize];
 
                 // Sends information to server what type of message will be sent
                 Action SendSteer = () =>
@@ -461,7 +462,7 @@ namespace EasySslStream.Connection.Client
 
                 string[] Files = Directory.GetFiles(DirPath, "*.*", SearchOption.AllDirectories);
                 DirectorySendEventAndStats.TotalFilesToSend = Files.Length;
-                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] datachunk = new byte[bufferSize];
                 // informs client that directory will be sent
                 Action SendSteer = () =>
                 {
@@ -489,7 +490,7 @@ namespace EasySslStream.Connection.Client
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
-                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] chunk = new byte[bufferSize];
                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
                     DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);
 
@@ -526,10 +527,7 @@ namespace EasySslStream.Connection.Client
                         }
                         catch (System.UnauthorizedAccessException e)
                         {
-                            if (DynamicConfiguration.RaiseMessage != null)
-                            {
-                                DynamicConfiguration.RaiseMessage("Access denied to files in directory to transfer", "Directory transfer error");
-                            }
+                           
 
                             if (StopAndThrowOnFailedTransfer)
                             {
@@ -593,7 +591,7 @@ namespace EasySslStream.Connection.Client
                 string Base64Message = Convert.ToBase64String(FilenameEncoding.GetBytes(Message));
                 byte[] Base64Buffer = FilenameEncoding.GetBytes(Base64Message);
 
-                byte[] datachunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] datachunk = new byte[bufferSize];
 
                 Action SendSteer = () =>
                 {
@@ -620,7 +618,7 @@ namespace EasySslStream.Connection.Client
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
-                    byte[] chunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] chunk = new byte[bufferSize];
                     string innerPath = file.Split(Path.GetFileName(DirPath)).Last().Trim('\\').Trim(Convert.ToChar(0x00));
                     DirectorySendEventAndStats.CurrentSendFilename = Path.GetFileName(innerPath);;
                     Action SendInnerDirectory = () =>
@@ -788,7 +786,7 @@ namespace EasySslStream.Connection.Client
             }
 
             long bytesReceived = 0;
-            byte[] ReceiveBuffer = new byte[DynamicConfiguration.TransportBufferSize];
+            byte[] ReceiveBuffer = new byte[bufferSize];
 
             if (ReceivedFilesLocation != "")
             {
@@ -868,7 +866,7 @@ namespace EasySslStream.Connection.Client
                 long FileLength = Convert.ToInt64(InfoSplit[1]);
                 DirectoryReceiveEventAndStats.CurrentReceiveFile++;
 
-                byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+                byte[] DataChunk = new byte[bufferSize];
 
                 if (InnerPath.Contains("\\"))
                 {
@@ -952,7 +950,7 @@ namespace EasySslStream.Connection.Client
                 {
                     DirectoryReceiveEventAndStats.CurrentReceiveFile++;
                     stream.Flush();
-                    byte[] DataChunk = new byte[DynamicConfiguration.TransportBufferSize];
+                    byte[] DataChunk = new byte[bufferSize];
 
                     int IneerDirectoryBytesCount = -1;
                     byte[] InnerDirectoryNameBuffer = new byte[512];
