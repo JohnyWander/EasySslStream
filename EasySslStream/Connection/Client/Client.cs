@@ -110,8 +110,7 @@ namespace EasySslStream.Connection.Client
             }
             else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
             {
-                if (DynamicConfiguration.RaiseMessage is not null)
-                { DynamicConfiguration.RaiseMessage("CERT NOT AVAIABLE?!", "???"); };
+                //TODO: use more specific exception
                 return false;
             }
             else
