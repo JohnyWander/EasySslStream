@@ -10,6 +10,7 @@ using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream;
 using EasySslStream.Connection.Client;
+using System.Net;
 
 namespace EasySslStreamTests.ConnectionTests
 {
@@ -51,7 +52,7 @@ namespace EasySslStreamTests.ConnectionTests
                 serverCSRConf.CommonName = "Server.com";
                 serverCSRConf.alt_names.Add("*.Server.com");
             
-                certgen.GenerateCSR(serverCSRConf,Workspace+"\\"+ServerWorkspace,"Server.csr","Server.key");
+                certgen.GenerateCSR(serverCSRConf,Workspace+"\\"+ServerWorkspace,"Server.csr","Server.pfx");
 
                 SignCSRConfig signCSRConfig = new SignCSRConfig();
                 signCSRConfig.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Server);
@@ -61,10 +62,14 @@ namespace EasySslStreamTests.ConnectionTests
                     $"..\\CA.key",
                     "Server.crt",
                     $"{Workspace}\\{ServerWorkspace}"
-                    ); 
+                    );
+
+                certgen.ConvertX509ToPfx("Server.crt", "Server.key", "Server.pfx", "123", $"{Workspace}\\{ServerWorkspace}");
+
+                
             }
 
-            if (!File.Exists(Workspace + "\\" + ClientWorkspace + "\\" + "Client.crt"))
+            if (!File.Exists(Workspace + "\\" + ClientWorkspace + "\\" + "Client.pfx"))
             {
                 CSRConfiguration clientCSRConf = new CSRConfiguration();
                 clientCSRConf.KeyLength = Config.KeyLengths.RSA_4096;
@@ -84,6 +89,20 @@ namespace EasySslStreamTests.ConnectionTests
                    "Client.crt",
                    $"{Workspace}\\{ClientWorkspace}"
                  );
+
+                certgen.ConvertX509ToPfx("Client.crt", "Client.key", "Client.pfx", "123", $"{Workspace}\\{ClientWorkspace}");
+            }
+
+            if (!Directory.Exists($"{Workspace}\\{ServerWorkspace}\\TestTransferDir"))
+            {
+                Directory.CreateDirectory("TestTransferDir");
+                PreparationMethods.CreateRandomTestDirectory($"{Workspace}\\{ServerWorkspace}\\TestTransferDir",512000,128000000,5,10);
+            }
+
+            if (!Directory.Exists($"{Workspace}\\{ClientWorkspace}\\TestTransferDir"))
+            {
+                Directory.CreateDirectory("TestTransferDir");
+                PreparationMethods.CreateRandomTestDirectory($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", 512000, 128000000, 5, 10);
             }
 
 
@@ -93,8 +112,8 @@ namespace EasySslStreamTests.ConnectionTests
         [SetUp]
         public void Setup()
         {
-            client = new Client();
-            server = new Server();
+            client = new Client(8192);
+            server = new Server(8192);
 
         }
 
@@ -103,8 +122,11 @@ namespace EasySslStreamTests.ConnectionTests
         public void Test()
         {
 
+            server.StartServer(IPAddress.Any,5000,$"{Workspace}\\{ServerWorkspace}\\Server.pfx","123",false);
+            
+
+
+
         }
-
-
     }
 }
