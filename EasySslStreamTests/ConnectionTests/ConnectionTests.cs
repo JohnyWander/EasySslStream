@@ -44,7 +44,7 @@ namespace EasySslStreamTests.ConnectionTests
 
             certgen.GenerateCA(caconf, Workspace);
 
-            if (!File.Exists(Workspace + "\\" + ServerWorkspace + "\\" + "Server.crt"))
+            if (!File.Exists(Workspace + "\\" + ServerWorkspace + "\\" + "Server.pfx"))
             {
 
                 CSRConfiguration serverCSRConf = new CSRConfiguration();
@@ -54,7 +54,7 @@ namespace EasySslStreamTests.ConnectionTests
                 serverCSRConf.CommonName = "Server.com";
                 serverCSRConf.alt_names.Add("*.Server.com");
             
-                certgen.GenerateCSR(serverCSRConf,Workspace+"\\"+ServerWorkspace,"Server.csr","Server.pfx");
+                certgen.GenerateCSR(serverCSRConf,Workspace+"\\"+ServerWorkspace,"Server.csr","Server.key");
 
                 SignCSRConfig signCSRConfig = new SignCSRConfig();
                 signCSRConfig.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Server);
@@ -117,27 +117,31 @@ namespace EasySslStreamTests.ConnectionTests
             client = new Client(8192);
             server = new Server(8192);
 
-        }
-
-
-        [Test,RequiresThread]
-        public async Task Test()
-        {
-            await Task.Run(() =>
-              {
-                  server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
-              });
+            
+            server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
+           
+            
         }
 
 
         [Test]
-        public void Test2()
+        public async Task Test()
         {
-          
+            client.Connect("127.0.0.1", 5000);
+            //  server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
+            string res = "";
+            server.HandleReceivedText = (string s) =>
+            {
+                res = s;
+            };
+
+            client.WriteText(Encoding.UTF8.GetBytes("xxx"));
 
 
 
-
+            Assert.That(res == "xxx");
         }
+
+
     }
 }
