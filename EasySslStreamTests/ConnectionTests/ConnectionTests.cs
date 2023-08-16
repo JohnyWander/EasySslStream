@@ -11,6 +11,8 @@ using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream;
 using EasySslStream.Connection.Client;
 using System.Net;
+using NUnit.Framework;
+using System.Diagnostics;
 
 namespace EasySslStreamTests.ConnectionTests
 {
@@ -118,12 +120,21 @@ namespace EasySslStreamTests.ConnectionTests
         }
 
 
-        [Test]
-        public void Test()
+        [Test,RequiresThread]
+        public async Task Test()
         {
+            await Task.Run(() =>
+              {
+                  server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
+              });
+        }
 
-            server.StartServer(IPAddress.Any,5000,$"{Workspace}\\{ServerWorkspace}\\Server.pfx","123",false);
-            
+
+        [Test]
+        public void Test2()
+        {
+          
+
 
 
 

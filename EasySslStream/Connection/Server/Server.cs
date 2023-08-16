@@ -199,7 +199,9 @@ namespace EasySslStream.Connection.Client
                 }
                 connected++;
             });
-            listenerThread.Start();
+            listenerThread.Start();         
+            
+            
         }
 
         /// <summary>
@@ -227,6 +229,7 @@ namespace EasySslStream.Connection.Client
                 connected++;
             });
             listenerThrewad.Start();
+            
         }
         #endregion
 
