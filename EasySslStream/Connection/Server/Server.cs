@@ -9,6 +9,8 @@ using System.Threading.Channels;
 
 namespace EasySslStream.Connection.Client
 {
+    public delegate void VoidEventDelegate();
+
     /// <summary>
     /// Server class that can handle multiple clients
     /// </summary>
@@ -18,13 +20,19 @@ namespace EasySslStream.Connection.Client
         public Server(int bufferSize)
         {
             this.bufferSize = bufferSize; 
+            
         }
 
+        #region Events
+
+        public event VoidEventDelegate ServerClosed;
+
+        #endregion
 
         #region Options
 
         public int bufferSize;
-
+        public SslProtocols SslProtocols;
         /// <summary>
         /// List that contains connected clients 
         /// </summary>
@@ -191,13 +199,16 @@ namespace EasySslStream.Connection.Client
             Thread listenerThread = new Thread(() =>
             {
                 listener.Start();
-                int connected = 0;
+                
                 while (listener.Server.IsBound)
                 {
                     TcpClient client = listener.AcceptTcpClient();
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);                    
                 }
-                connected++;
+
+               ServerClosed.Invoke();
+
+
             });
             listenerThread.Start();         
             
@@ -226,7 +237,8 @@ namespace EasySslStream.Connection.Client
                     TcpClient client = listener.AcceptTcpClient();
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
                 }
-                connected++;
+                
+                ServerClosed.Invoke();
             });
             listenerThrewad.Start();
             

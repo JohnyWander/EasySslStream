@@ -23,6 +23,8 @@ namespace EasySslStreamTests.ConnectionTests
         string ServerWorkspace = "Server";
         string ClientWorkspace = "Client";
 
+        TaskCompletionSource<object> TestEnder;
+
         X509Certificate2 TestClientCertificate;
         X509Certificate2 TestServerCertificate;
 
@@ -115,33 +117,44 @@ namespace EasySslStreamTests.ConnectionTests
         public void Setup()
         {
             client = new Client(8192);
+            client.VerifyCertificateChain = false;
+            client.VerifyCertificateName = false;
             server = new Server(8192);
 
+            this.TestEnder = new TaskCompletionSource<object>();
             
             server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
-           
+          
             
         }
 
 
         [Test]
-        public async Task Test()
+        public async Task SendStringMessageTest()
         {
-            client.Connect("127.0.0.1", 5000);
-            //  server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
-            string res = "";
-            server.HandleReceivedText = (string s) =>
+            Task ServerEndMonitor = Task.Run(async () =>
             {
-                res = s;
+               await this.TestEnder.Task;
+            });
+
+            string Received="";
+            server.HandleReceivedText = (string r) =>
+            {
+                Received = r;
+                this.TestEnder.SetResult(null);
             };
 
-            client.WriteText(Encoding.UTF8.GetBytes("xxx"));
 
 
+            client.Connect("127.0.0.1", 5000);
+            client.WriteText(Encoding.UTF8.GetBytes("Test Message"));
 
-            Assert.That(res == "xxx");
+            
+          
+
+            await ServerEndMonitor;
+
+            Assert.That(Received == "Test", $"Got {Received}");
         }
-
-
     }
 }

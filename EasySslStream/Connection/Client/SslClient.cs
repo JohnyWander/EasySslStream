@@ -55,7 +55,7 @@ namespace EasySslStream.Connection.Client
         /// <summary>
         /// U can choose encrypiton protocols like SslProtocols = SslProtocols.TLS11|SslProtocols , leave "null" for default configuration
         /// </summary>
-        public SslProtocols SslProtocols;
+        
 
         #endregion
 
@@ -176,14 +176,14 @@ namespace EasySslStream.Connection.Client
             if (VerifyClients == false)
             {
                 sslstream_ = new SslStream(client.GetStream(), false);
-                if (this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true); }
-                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, this.SslProtocols, true); }
+                if (srv.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: false, srv.SslProtocols, true); }
             }
             else
             {
                 sslstream_ = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(ValidadeClientCert));
-                if (this.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true); }
-                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, this.SslProtocols, true); }
+                if (srv.SslProtocols == null) { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, true); }
+                else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, srv.SslProtocols, true); }
             }
 
 

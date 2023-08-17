@@ -200,6 +200,7 @@ namespace EasySslStream.Connection.Client
                 ListeningThreadStart();
                 StartJobWriterTask();
             });
+            cThread.Start();
         }
         /// <summary>
         /// Connects to the server that verifies client certificates
@@ -227,6 +228,7 @@ namespace EasySslStream.Connection.Client
                 StartJobWriterTask().Wait() ;
                 stream.Close();
             });
+            cThread.Start();
         }
 
 
