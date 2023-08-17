@@ -128,13 +128,25 @@ namespace EasySslStreamTests.ConnectionTests
             
         }
 
+        
+        
+
+
 
         [Test]
         public async Task SendStringMessageTest()
         {
-            Task ServerEndMonitor = Task.Run(async () =>
+            Task locker = Task.Run(async () =>
             {
-               await this.TestEnder.Task;
+                Task.Run(async () =>
+                {
+                    await Task.Delay(1000);
+                    if (!TestEnder.Task.IsCompleted)
+                    {
+                        TestEnder.SetException(new Exception("Operation time out"));
+                    }
+                });
+                await this.TestEnder.Task;
             });
 
             string Received="";
@@ -144,17 +156,12 @@ namespace EasySslStreamTests.ConnectionTests
                 this.TestEnder.SetResult(null);
             };
 
-
-
             client.Connect("127.0.0.1", 5000);
             client.WriteText(Encoding.UTF8.GetBytes("Test Message"));
+                  
+            await locker;
 
-            
-          
-
-            await ServerEndMonitor;
-
-            Assert.That(Received == "Test", $"Got {Received}");
+            Assert.That(Received == "Test Message", $"Got {Received}");
         }
     }
 }
