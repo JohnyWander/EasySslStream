@@ -122,7 +122,6 @@ namespace EasySslStreamTests.ConnectionTests
             server = new Server(8192);
 
             this.TestEnder = new TaskCompletionSource<object>();
-            
             server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
           
             
@@ -132,23 +131,23 @@ namespace EasySslStreamTests.ConnectionTests
         
 
 
+        async Task Locker()
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                if (!TestEnder.Task.IsCompleted)
+                {
+                    TestEnder.SetException(new Exception("Operation time out"));
+                }
+            });
+            await this.TestEnder.Task;
+        }
 
         [Test]
         public async Task SendStringMessageTest()
         {
-            Task locker = Task.Run(async () =>
-            {
-                Task.Run(async () =>
-                {
-                    await Task.Delay(1000);
-                    if (!TestEnder.Task.IsCompleted)
-                    {
-                        TestEnder.SetException(new Exception("Operation time out"));
-                    }
-                });
-                await this.TestEnder.Task;
-            });
-
+            Task locker = Task.Run(() => Locker());          
             string Received="";
             server.HandleReceivedText = (string r) =>
             {
@@ -160,8 +159,16 @@ namespace EasySslStreamTests.ConnectionTests
             client.WriteText(Encoding.UTF8.GetBytes("Test Message"));
                   
             await locker;
-
             Assert.That(Received == "Test Message", $"Got {Received}");
         }
+
+        [Test]
+        public async Task SendByteArrayMessageTest()
+        {
+            Task locker= Task.Run(() => Locker());
+            byte[] Received = null;
+
+        }
+
     }
 }
