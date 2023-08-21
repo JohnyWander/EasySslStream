@@ -24,6 +24,7 @@ namespace EasySslStreamTests.ConnectionTests
         string ClientWorkspace = "Client";
 
         TaskCompletionSource<object> TestEnder;
+        TaskCompletionSource<object> ClientWaiter;
 
         X509Certificate2 TestClientCertificate;
         X509Certificate2 TestServerCertificate;
@@ -122,13 +123,18 @@ namespace EasySslStreamTests.ConnectionTests
             server = new Server(8192);
 
             this.TestEnder = new TaskCompletionSource<object>();
+            this.ClientWaiter = new TaskCompletionSource<object>();
             server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
-          
+            server.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(null);
+            };
+            
             
         }
 
-        
-        
+
+        #region Helpers
 
 
         async Task Locker()
@@ -144,18 +150,43 @@ namespace EasySslStreamTests.ConnectionTests
             await this.TestEnder.Task;
         }
 
+        async Task ClientAwaiter()
+        {
+            Task.Run(async () =>
+            {
+                await Task.Delay(1000);
+                if(!ClientWaiter.Task.IsCompleted)
+                {
+                    ClientWaiter.SetException(new Exception("Waiting for client timed out"));
+                }
+            });
+            await ClientWaiter.Task;
+        }
+
+        [TearDown]
+        public void Teardown()
+        {
+            server.StopServer();
+        }
+
+        #endregion
         [Test]
         public async Task SendStringMessageTest()
         {
-            Task locker = Task.Run(() => Locker());          
-            string Received="";
-            server.HandleReceivedText = (string r) =>
+            Task locker = Task.Run(() => Locker());
+            Task Clientawaiter = Task.Run(() => ClientAwaiter());
+            
+            client.Connect("127.0.0.1", 5000);
+            await Clientawaiter;
+
+            string Received = "";
+            server.ConnectedClients[0].HandleReceivedText = (string r) =>
             {
                 Received = r;
                 this.TestEnder.SetResult(null);
             };
 
-            client.Connect("127.0.0.1", 5000);
+
             client.WriteText(Encoding.UTF8.GetBytes("Test Message"));
                   
             await locker;
@@ -165,8 +196,32 @@ namespace EasySslStreamTests.ConnectionTests
         [Test]
         public async Task SendByteArrayMessageTest()
         {
-            Task locker= Task.Run(() => Locker());
             byte[] Received = null;
+            byte[] BytesToSend = new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05, 0x99, 0x98 };
+
+            Task locker= Task.Run(() => Locker());
+            Task Clientawaiter = Task.Run(() => ClientAwaiter());
+         
+            client.Connect("127.0.0.1", 5000);
+            await Clientawaiter;
+            
+            
+            server.ConnectedClients[0].HandleReceivedBytes = (byte[] bytes) =>
+            {
+                Received = bytes;
+                this.TestEnder.SetResult(null);
+            };
+
+            client.SendRawBytes(BytesToSend);
+
+            await locker;
+            Assert.That(Enumerable.SequenceEqual(Received, BytesToSend));
+        }
+
+        [Test]
+        
+        public async Task SendFileTest()
+        {
 
         }
 

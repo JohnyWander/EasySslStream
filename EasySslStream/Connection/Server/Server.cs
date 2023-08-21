@@ -9,7 +9,7 @@ using System.Threading.Channels;
 
 namespace EasySslStream.Connection.Client
 {
-    public delegate void VoidEventDelegate();
+    public delegate void ServerEvent();
 
     /// <summary>
     /// Server class that can handle multiple clients
@@ -25,7 +25,15 @@ namespace EasySslStream.Connection.Client
 
         #region Events
 
-        public event VoidEventDelegate ServerClosed;
+        public event ServerEvent ServerClosed;
+        public event ServerEvent ClientConnected;
+       
+
+        internal void RaiseClientConnected()
+        {
+            this.ClientConnected?.Invoke();
+        }
+ 
 
         #endregion
 
@@ -72,27 +80,9 @@ namespace EasySslStream.Connection.Client
         /// </summary>
         public CertificateCheckSettings CertificateCheckSettings = new CertificateCheckSettings();
 
-        /// <summary>
-        /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
-        /// </summary>
-        public Action<string> HandleReceivedText = (string text) =>
-        {
-            Console.WriteLine(text);
-        };
 
-        /// <summary>
-        /// Action Delegate for handling bytes received from client, by default it prints int representation of them in console
-        /// </summary>
-        public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
-        {
-            foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
-            //return bytes
-        };
 
-        /// <summary>
-        /// Location for the received file from clients
-        /// </summary>
-        public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
+        
         #endregion
 
         #region Server related
@@ -202,8 +192,9 @@ namespace EasySslStream.Connection.Client
                 
                 while (listener.Server.IsBound)
                 {
-                    TcpClient client = listener.AcceptTcpClient();
-                    SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);                    
+                    TcpClient client = listener.AcceptTcpClient();                   
+                    SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
+                    
                 }
 
                ServerClosed.Invoke();
@@ -235,7 +226,9 @@ namespace EasySslStream.Connection.Client
                 while (listener.Server.IsBound)
                 {
                     TcpClient client = listener.AcceptTcpClient();
+                    
                     SSLClient connection = new SSLClient(client, serverCert, VerifyClients, this);
+                    this.ClientConnected?.Invoke();
                 }
                 
                 ServerClosed.Invoke();

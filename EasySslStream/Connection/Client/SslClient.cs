@@ -32,6 +32,10 @@ namespace EasySslStream.Connection.Client
         #endregion
 
         #region Settable fields
+        /// <summary>
+        /// Location for the received file from clients
+        /// </summary>
+        public string ReceivedFilesLocation = AppDomain.CurrentDomain.BaseDirectory;
 
         internal bool Busy = false;
 
@@ -124,6 +128,30 @@ namespace EasySslStream.Connection.Client
         public IDirectoryReceiveEventAndStats DirectoryReceiveEventAndStats = ConnectionCommons.CreateDirectoryReceiveEventAndStats();
         #endregion
 
+        #region ConnectionEvents
+
+        public event ServerEvent ReceivedFile;
+        public event ServerEvent ReceivedDirectory;
+
+
+        /// <summary>
+        /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
+        /// </summary>
+        public Action<string> HandleReceivedText = (string text) =>
+        {
+            Console.WriteLine(text);
+        };
+
+        /// <summary>
+        /// Action Delegate for handling bytes received from client, by default it prints int representation of them in console
+        /// </summary>
+        public Action<byte[]> HandleReceivedBytes = (byte[] bytes) =>
+        {
+            foreach (byte b in bytes) { Console.Write(Convert.ToInt32(b) + " "); }
+            //return bytes
+        };
+
+        #endregion
 
         private bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
@@ -169,6 +197,7 @@ namespace EasySslStream.Connection.Client
             srv = srvinstance;
             bool cancelConnection = false;
 
+
             srv.ConnectedClients.Add(this);
             srv.ConnectedClientsByNumber.TryAdd(srv.ConnectedClients.Count, this);
             srv.ConnectedClientsByEndPoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
@@ -186,14 +215,10 @@ namespace EasySslStream.Connection.Client
                 else { sslstream_.AuthenticateAsServer(serverCert, clientCertificateRequired: true, srv.SslProtocols, true); }
             }
 
-
+            srv.RaiseClientConnected();
 
             StaertClientServer();
-            StartClientReceiver();
-            
-
-            
-
+            StartClientReceiver();                     
         }
         private void StaertClientServer()
         {
@@ -245,7 +270,7 @@ namespace EasySslStream.Connection.Client
                         {
                             case 1:
                                 Busy = true; privateBusy = true;
-                                srv.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
+                                this.HandleReceivedText.Invoke(await GetText(srv.TextReceiveEncoding));
                                 Busy = false; privateBusy = false;
                                 break;
                             case 2:
@@ -255,8 +280,7 @@ namespace EasySslStream.Connection.Client
                                 break;
                             case 3:
                                 Busy = true; privateBusy = true;
-
-                                srv.HandleReceivedBytes.Invoke(await GetRawBytes());
+                                this.HandleReceivedBytes.Invoke(await GetRawBytes());
                                 Busy = false; privateBusy = false;
                                 break;
 
@@ -372,7 +396,7 @@ namespace EasySslStream.Connection.Client
 
 
 
-            string[] FilesInDirectory = Directory.GetFiles(srv.ReceivedFilesLocation);
+            string[] FilesInDirectory = Directory.GetFiles(this.ReceivedFilesLocation);
 
             bool correct = false;
             int number_of_occurence = 1;
@@ -395,9 +419,9 @@ namespace EasySslStream.Connection.Client
 
             byte[] ReceiveBuffer = new byte[srv.bufferSize];
 
-            if (srv.ReceivedFilesLocation != "")
+            if (this.ReceivedFilesLocation != "")
             {
-                Directory.SetCurrentDirectory(srv.ReceivedFilesLocation);
+                Directory.SetCurrentDirectory(this.ReceivedFilesLocation);
             }
 
             FileStream fs = new FileStream(filename.Trim(), FileMode.Create);
@@ -483,18 +507,18 @@ namespace EasySslStream.Connection.Client
 
             string WorkDir = "";
 
-            if (srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
+            if (this.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
             {
                 WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
                 Directory.CreateDirectory(WorkDir + DirectoryName);
             }
-            else if (srv.ReceivedFilesLocation == "")
+            else if (this.ReceivedFilesLocation == "")
             {
                 WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
             }
             else
             {
-                WorkDir = srv.ReceivedFilesLocation + "\\";
+                WorkDir = this.ReceivedFilesLocation + "\\";
             }
             //////////////////////////////
             /// File count
@@ -653,18 +677,18 @@ namespace EasySslStream.Connection.Client
 
             string WorkDir = "";
 
-            if (this.srv.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
+            if (this.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
             {
                 WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
                 Directory.CreateDirectory(WorkDir + DirectoryName);
             }
-            else if (this.srv.ReceivedFilesLocation == "")
+            else if (this.ReceivedFilesLocation == "")
             {
                 WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
             }
             else
             {
-                WorkDir = this.srv.ReceivedFilesLocation + "\\";
+                WorkDir = this.ReceivedFilesLocation + "\\";
             }
 
 
