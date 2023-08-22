@@ -130,9 +130,11 @@ namespace EasySslStream.Connection.Client
 
         #region ConnectionEvents
 
-        public event ServerEvent ReceivedFile;
+        //public event ServerEvent ReceivedFile;
         public event ServerEvent ReceivedDirectory;
 
+
+        public Action ReceivedFile;
 
         /// <summary>
         /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
@@ -276,6 +278,7 @@ namespace EasySslStream.Connection.Client
                             case 2:
                                 Busy = true; privateBusy = true;
                                 await GetFile(srv);
+                                this.ReceivedFile.Invoke();
                                 Busy = false; privateBusy = false;
                                 break;
                             case 3:

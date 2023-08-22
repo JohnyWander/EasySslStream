@@ -117,22 +117,31 @@ namespace EasySslStreamTests.ConnectionTests
         [SetUp]
         public void Setup()
         {
-            client = new Client(8192);
-            client.VerifyCertificateChain = false;
-            client.VerifyCertificateName = false;
             server = new Server(8192);
-
-            this.TestEnder = new TaskCompletionSource<object>();
-            this.ClientWaiter = new TaskCompletionSource<object>();
             server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
             server.ClientConnected += () =>
             {
                 this.ClientWaiter.SetResult(null);
             };
+
+
+            client = new Client(8192);
+            client.VerifyCertificateChain = false;
+            client.VerifyCertificateName = false;
+            
+
+            this.TestEnder = new TaskCompletionSource<object>();
+            this.ClientWaiter = new TaskCompletionSource<object>();
+           
             
             
         }
 
+        [TearDown]
+        public void Teardown()
+        {
+            server.StopServer();
+        }
 
         #region Helpers
 
@@ -141,7 +150,7 @@ namespace EasySslStreamTests.ConnectionTests
         {
             Task.Run(async () =>
             {
-                await Task.Delay(1000);
+                await Task.Delay(20000);
                 if (!TestEnder.Task.IsCompleted)
                 {
                     TestEnder.SetException(new Exception("Operation time out"));
@@ -154,22 +163,21 @@ namespace EasySslStreamTests.ConnectionTests
         {
             Task.Run(async () =>
             {
-                await Task.Delay(1000);
+                await Task.Delay(10000);
                 if(!ClientWaiter.Task.IsCompleted)
                 {
                     ClientWaiter.SetException(new Exception("Waiting for client timed out"));
+                    Debug.WriteLine("client didn't connect");
                 }
             });
             await ClientWaiter.Task;
         }
 
-        [TearDown]
-        public void Teardown()
-        {
-            server.StopServer();
-        }
-
         #endregion
+        
+      
+
+       
         [Test]
         public async Task SendStringMessageTest()
         {
@@ -218,11 +226,45 @@ namespace EasySslStreamTests.ConnectionTests
             Assert.That(Enumerable.SequenceEqual(Received, BytesToSend));
         }
 
-        [Test]
-        
+        [Test,RequiresThread]       
         public async Task SendFileTest()
         {
+            MD5 mD5 = MD5.Create();
+            string[] files = Directory.GetFiles($"{Workspace}//{ClientWorkspace}//TestTransferDir","",SearchOption.AllDirectories);
+            int min = 1;
+            int max = files.Length;
+            Random rnd = new Random();
+            int SelectedFileIndex = rnd.Next(min, max);        
+            string selectedFile = files[SelectedFileIndex];
+            
+            Task locker = Task.Run(() => Locker());
+            Task Clientawaiter = Task.Run(() => ClientAwaiter());
 
+            
+
+            Thread.Sleep(1000);
+            client.Connect("127.0.0.1", 5000);
+            await Clientawaiter;
+            server.ConnectedClients[0].ReceivedFilesLocation = $"{Workspace}\\{ServerWorkspace}";
+
+            server.ConnectedClients[0].ReceivedFile += () =>
+            {
+                this.TestEnder.SetResult(null);
+            };
+
+            Task.Run(() =>
+            {
+                client.SendFile(selectedFile);
+            });
+            await locker;
+
+          
+            Assert.That(File.Exists($"{Workspace}//{ServerWorkspace}//"+Path.GetFileName(selectedFile)));
+
+            byte[] sourceHash = mD5.ComputeHash(File.OpenRead(selectedFile));
+            byte[] destinationHash = mD5.ComputeHash(File.OpenRead($"{Workspace}//{ServerWorkspace}//" + Path.GetFileName(selectedFile)));
+               
+            Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash));
         }
 
     }

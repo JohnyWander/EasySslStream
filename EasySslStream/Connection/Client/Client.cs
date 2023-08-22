@@ -415,11 +415,11 @@ namespace EasySslStream.Connection.Client
                 Action SendFileLength = () =>
                 {
                     stream.Write(BitConverter.GetBytes(fs.Length));
-                }; 
+                };
                 await work.Writer.WaitToWriteAsync();
                 await work.Writer.WriteAsync(SendFileLength);
 
-                long bytesLeft = fs.Length;              
+                long bytesLeft = fs.Length;
                 long times = fs.Length / 512;
                 await Task.Delay(2000);
 
@@ -428,14 +428,14 @@ namespace EasySslStream.Connection.Client
                 while (Received != fs.Length)
                 {
                     Received += await fs.ReadAsync(chunk, 0, chunk.Length);
-                    await str.WriteAsync(chunk);
+                    await stream.WriteAsync(chunk);
                     FileSendEventAndStats.CurrentSendBytes = Received;
                 }
 
                 await fs.DisposeAsync();
 
                 CancelFSC.Cancel();
-            }).ConfigureAwait(false).GetAwaiter().GetResult();
+            }).Wait();
         }
 
         /// <summary>
