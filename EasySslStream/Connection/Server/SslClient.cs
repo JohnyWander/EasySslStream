@@ -132,9 +132,7 @@ namespace EasySslStream.Connection.Client
 
         //public event ServerEvent ReceivedFile;
         public event ServerEvent ReceivedDirectory;
-
-
-        public Action ReceivedFile;
+        public event ServerEvent ReceivedFile;
 
         /// <summary>
         /// Action Delegate for handling text data received from client, by default it prints message by Console.WriteLine()
@@ -283,13 +281,14 @@ namespace EasySslStream.Connection.Client
                                 break;
                             case 3:
                                 Busy = true; privateBusy = true;
-                                this.HandleReceivedBytes.Invoke(await GetRawBytes());
+                                this.HandleReceivedBytes?.Invoke(await GetRawBytes());
                                 Busy = false; privateBusy = false;
                                 break;
 
                             case 4:
                                 Busy = true; privateBusy = true;
                                 await GetDirectory();
+                                this.ReceivedDirectory?.Invoke();
                                 Busy = false; privateBusy = false;
                                 break;
 
@@ -678,21 +677,9 @@ namespace EasySslStream.Connection.Client
 
 
 
-            string WorkDir = "";
+            string WorkDir = this.ReceivedFilesLocation+"\\";
 
-            if (this.ReceivedFilesLocation == AppDomain.CurrentDomain.BaseDirectory)
-            {
-                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
-                Directory.CreateDirectory(WorkDir + DirectoryName);
-            }
-            else if (this.ReceivedFilesLocation == "")
-            {
-                WorkDir = AppDomain.CurrentDomain.BaseDirectory + "\\";
-            }
-            else
-            {
-                WorkDir = this.ReceivedFilesLocation + "\\";
-            }
+           
 
 
 
@@ -707,10 +694,9 @@ namespace EasySslStream.Connection.Client
 
                 byte[] DataChunk = new byte[srv.bufferSize];
 
-                if (InnerPath.Contains("\\"))
-                {
+                
                     Directory.CreateDirectory(WorkDir + DirectoryName + "\\" + Path.GetDirectoryName(InnerPath));
-                }
+                
 
                 // Console.WriteLine(WorkDir);
                 //Console.WriteLine(DirectoryName);

@@ -110,6 +110,10 @@ namespace EasySslStreamTests.ConnectionTests
                 PreparationMethods.CreateRandomTestDirectory($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", 512000, 128000000, 5, 10);
             }
 
+            if (!Directory.Exists($"{Workspace}\\{ServerWorkspace}\\ReceivedDirectory"))
+            {
+                Directory.CreateDirectory($"{Workspace}\\{ServerWorkspace}\\ReceivedDirectory");
+            }
 
         }
 
@@ -146,11 +150,11 @@ namespace EasySslStreamTests.ConnectionTests
         #region Helpers
 
 
-        async Task Locker()
+        async Task Locker(int customDelay = 20000)
         {
             Task.Run(async () =>
             {
-                await Task.Delay(20000);
+                await Task.Delay(customDelay);
                 if (!TestEnder.Task.IsCompleted)
                 {
                     TestEnder.SetException(new Exception("Operation time out"));
@@ -226,7 +230,7 @@ namespace EasySslStreamTests.ConnectionTests
             Assert.That(Enumerable.SequenceEqual(Received, BytesToSend));
         }
 
-        [Test,RequiresThread]       
+        [Test]       
         public async Task SendFileTest()
         {
             MD5 mD5 = MD5.Create();
@@ -238,11 +242,7 @@ namespace EasySslStreamTests.ConnectionTests
             string selectedFile = files[SelectedFileIndex];
             
             Task locker = Task.Run(() => Locker());
-            Task Clientawaiter = Task.Run(() => ClientAwaiter());
-
-            
-
-            Thread.Sleep(1000);
+            Task Clientawaiter = Task.Run(() => ClientAwaiter());                       
             client.Connect("127.0.0.1", 5000);
             await Clientawaiter;
             server.ConnectedClients[0].ReceivedFilesLocation = $"{Workspace}\\{ServerWorkspace}";
@@ -257,7 +257,6 @@ namespace EasySslStreamTests.ConnectionTests
                 client.SendFile(selectedFile);
             });
             await locker;
-
           
             Assert.That(File.Exists($"{Workspace}//{ServerWorkspace}//"+Path.GetFileName(selectedFile)));
 
@@ -265,6 +264,47 @@ namespace EasySslStreamTests.ConnectionTests
             byte[] destinationHash = mD5.ComputeHash(File.OpenRead($"{Workspace}//{ServerWorkspace}//" + Path.GetFileName(selectedFile)));
                
             Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash));
+        }
+
+        [Test]
+        public async Task SendDirectoryTest()
+        {
+            MD5 md5 = MD5.Create();
+
+            Task locker = Task.Run(() => Locker(100000));
+            Task Clientawaiter = Task.Run(() => ClientAwaiter());
+
+            client.Connect("127.0.0.1", 5000);
+            await Clientawaiter;
+
+            server.ConnectedClients[0].ReceivedFilesLocation = $"{Workspace}\\{ServerWorkspace}\\ReceivedDirectory";
+            server.ConnectedClients[0].ReceivedDirectory += () =>
+            {
+                this.TestEnder.SetResult(null);
+            };
+
+            Task.Run(() =>
+            {
+                client.SendDirectoryV2($"{Workspace}\\{ClientWorkspace}\\TestTransferDir");
+            });
+            
+            await locker;
+
+            Assert.Multiple(() =>
+            {
+                string[] SourceFiles = Directory.GetFileSystemEntries($"{Workspace}\\{ClientWorkspace}\\TestTranferDir");
+                string[] DestinationFiles
+
+
+
+
+
+
+
+
+            });
+
+
         }
 
     }

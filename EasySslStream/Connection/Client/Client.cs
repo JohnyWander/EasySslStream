@@ -617,6 +617,9 @@ namespace EasySslStream.Connection.Client
                 await work.Writer.WriteAsync(SendFileInfos);
 
                 bool LoopCancel = false;
+
+                
+
                 foreach (string file in Files)
                 {
                     DirectorySendEventAndStats.CurrentSendFile++;
