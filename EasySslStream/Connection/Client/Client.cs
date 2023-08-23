@@ -555,6 +555,8 @@ namespace EasySslStream.Connection.Client
         }
 
 
+      
+
         public void SendDirectoryV2(string DirPath, bool StopAndThrowOnFailedTransfer = true, int FailSafeSendInterval = 20)
         {
             Task.Run(async () =>

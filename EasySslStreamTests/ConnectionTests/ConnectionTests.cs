@@ -121,7 +121,7 @@ namespace EasySslStreamTests.ConnectionTests
         [SetUp]
         public void Setup()
         {
-            server = new Server(8192);
+            server = new Server(4096);
             server.StartServer(IPAddress.Any, 5000, $"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123", false);
             server.ClientConnected += () =>
             {
@@ -129,7 +129,7 @@ namespace EasySslStreamTests.ConnectionTests
             };
 
 
-            client = new Client(8192);
+            client = new Client(4096);
             client.VerifyCertificateChain = false;
             client.VerifyCertificateName = false;
             
@@ -290,10 +290,10 @@ namespace EasySslStreamTests.ConnectionTests
             
             await locker;
 
-            Assert.Multiple(() =>
-            {
-                string[] SourceFiles = Directory.GetFileSystemEntries($"{Workspace}\\{ClientWorkspace}\\TestTranferDir");
-                string[] DestinationFiles
+            //Assert.Multiple(() =>
+           // {
+           //     string[] SourceFiles = Directory.GetFileSystemEntries($"{Workspace}\\{ClientWorkspace}\\TestTranferDir");
+               // string[] DestinationFiles = Directory.GetFileSystemEntries()
 
 
 
@@ -302,7 +302,7 @@ namespace EasySslStreamTests.ConnectionTests
 
 
 
-            });
+          //  });
 
 
         }
