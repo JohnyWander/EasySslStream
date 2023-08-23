@@ -44,15 +44,13 @@ namespace EasySslStream.ConnectionV2.Server
             this.RunningServerListener = Task.Run(async () =>
             {
                 this._tcpListener.Start();
+                int id = 0;
                 while (_tcpListener.Server.IsBound)
                 {
-                    TcpClient client = await _tcpListener.AcceptTcpClientAsync();
+                    TcpClient client = await _tcpListener.AcceptTcpClientAsync();                    
+                    ConnectedClient connection = new ConnectedClient(id,client, this._serverCertificate,this) ;
                     ClientConnected.Invoke();
-                    ConnectedClient connection = new ConnectedClient(client, this._serverCertificate,this) ;
-
-                    
-
-
+                    id++;
                 }
 
             });
@@ -75,7 +73,7 @@ namespace EasySslStream.ConnectionV2.Server
 
         #region ConnectedClients
 
-        
+        public IDictionary<int,ConnectedClient> ConnectedClientsById = new Dictionary<int, ConnectedClient>();
         public IDictionary<IPEndPoint,ConnectedClient> ConnectedClientsByEndpoint = new Dictionary<IPEndPoint, ConnectedClient>();
 
 

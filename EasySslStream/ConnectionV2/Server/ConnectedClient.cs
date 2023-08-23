@@ -12,18 +12,33 @@ namespace EasySslStream.ConnectionV2.Server
 {
     public class ConnectedClient
     {
+        public int ConnectionID;
         TcpClient _client;
         SslStream _stream;
 
-        public ConnectedClient(TcpClient client, X509Certificate2 serverCert, Server srvCallback)
+        public ConnectedClient(int ID,TcpClient client, X509Certificate2 serverCert, Server srvCallback)
         {
-            srvCallback.ConnectedClientsByEndpoint.Add((IPEndPoint)client.Client.RemoteEndPoint, this);
+            ConnectionID = ID;
+            srvCallback.ConnectedClientsByEndpoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
+            srvCallback.ConnectedClientsById.TryAdd(ID, this);
+
+            this._stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(srvCallback._config.ValidadeClientCert));
+            
+            SslServerAuthenticationOptions options = new SslServerAuthenticationOptions();
+            options.ServerCertificate = serverCert;
+            options.EnabledSslProtocols = srvCallback._config.enabledSSLProtocols;
+            options.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
 
             if (srvCallback._config.authOptions.VerifyClientCertificates)
             {
-                this
+                options.ClientCertificateRequired = true;
             }
-
+            else
+            {
+                options.ClientCertificateRequired = false;
+            }
+            this._stream.AuthenticateAsServer(options);
+            
         }
     }
 }

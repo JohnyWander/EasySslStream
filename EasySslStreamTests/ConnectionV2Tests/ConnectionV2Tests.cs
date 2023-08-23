@@ -9,6 +9,7 @@ using EasySslStream.ConnectionV2.Server.Configuration;
 using EasySslStream.ConnectionV2.Client;
 using EasySslStream.ConnectionV2.Client.Configuration;
 using System.Diagnostics;
+using NuGet.Frameworks;
 
 namespace EasySslStreamTests.ConnectionV2Tests
 {
@@ -99,12 +100,21 @@ namespace EasySslStreamTests.ConnectionV2Tests
             {
                 Debug.WriteLine("CONNECTED");
                 this.ClientWaiter.SetResult(true);
+               // srv.StopServer();
             };
 
-
-
             await clientWaiter;
-            Assert.That(false);
+
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(()=>)
+
+
+            });
+
+           // await srv.RunningServerListener;
+           // Assert.Throws(async () => await srv.RunningServerListener);
             
         }
 
