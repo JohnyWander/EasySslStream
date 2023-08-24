@@ -19,9 +19,11 @@ namespace EasySslStream.ConnectionV2.Server
         private X509Certificate2 _serverCertificate;
         private TcpListener _tcpListener;
 
-        
-        public Task RunningServerListener { get; private set; }
+
+        public Task RunningServerListener;
         internal readonly ServerConfiguration _config;
+
+        
 
 
 
@@ -30,6 +32,7 @@ namespace EasySslStream.ConnectionV2.Server
         public Server(IPEndPoint serverEndpoint,ServerConfiguration config)
         {
             this._serverEndpoint = serverEndpoint;
+            this._config = config;
         }
 
         public Server(string hostOnIP, int port,ServerConfiguration config) : this(new IPEndPoint(IPAddress.Parse(hostOnIP), port), config) { }
@@ -47,9 +50,9 @@ namespace EasySslStream.ConnectionV2.Server
                 int id = 0;
                 while (_tcpListener.Server.IsBound)
                 {
-                    TcpClient client = await _tcpListener.AcceptTcpClientAsync();                    
-                    ConnectedClient connection = new ConnectedClient(id,client, this._serverCertificate,this) ;
-                    ClientConnected.Invoke();
+                    TcpClient client = await _tcpListener.AcceptTcpClientAsync();
+                    ConnectedClient connection = new ConnectedClient(id, client, this._serverCertificate, this);
+                    ClientConnected?.Invoke();
                     id++;
                 }
 

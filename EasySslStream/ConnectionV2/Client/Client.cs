@@ -17,7 +17,7 @@ namespace EasySslStream.ConnectionV2.Client
 
         public readonly IPEndPoint connectToEndpoint;
         public TcpClient client { private set; get; }
-        private SslStream sslStream;
+        public SslStream sslStream;
 
         private readonly ClientConfiguration _config;
         public Client(IPEndPoint connectTo,ClientConfiguration config)

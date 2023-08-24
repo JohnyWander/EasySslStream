@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasySslStream.ConnectionV2.Server.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,13 +17,55 @@ namespace EasySslStream.ConnectionV2.Server
         TcpClient _client;
         SslStream _stream;
 
+        public SslStream sslStream
+        {
+            get { return _stream; }
+            private set { }
+        }
+        ServerConfiguration _servConf;
+
+        private bool ValidateClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+            {
+                return true;
+
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && _servConf.authOptions.VerifyDomainName == false)
+            {
+                return true;
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && _servConf.authOptions.VerifyCertificateChain == false)
+            {
+                return true;
+            }
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNotAvailable)
+            {
+                Console.WriteLine("CERT NOV AVAIABLE????");
+                return false;
+            }
+            else
+            {
+                return false;
+            }
+
+        }
+
         public ConnectedClient(int ID,TcpClient client, X509Certificate2 serverCert, Server srvCallback)
         {
             ConnectionID = ID;
+            this._servConf = srvCallback._config;
             srvCallback.ConnectedClientsByEndpoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
             srvCallback.ConnectedClientsById.TryAdd(ID, this);
 
-            this._stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(srvCallback._config.ValidadeClientCert));
+            if (this._servConf.authOptions.VerifyClientCertificates)
+            {
+                this._stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(srvCallback._config.ValidadeClientCert));
+            }
+            else
+            {
+                this._stream = new SslStream(client.GetStream(), false);
+            }
             
             SslServerAuthenticationOptions options = new SslServerAuthenticationOptions();
             options.ServerCertificate = serverCert;
@@ -38,7 +81,16 @@ namespace EasySslStream.ConnectionV2.Server
                 options.ClientCertificateRequired = false;
             }
             this._stream.AuthenticateAsServer(options);
-            
+
+
+            Thread x = new Thread(() =>
+            {
+                while (true)
+                {
+                    Thread.Sleep(1000);
+                }
+            });
+            x.Start();
         }
     }
 }

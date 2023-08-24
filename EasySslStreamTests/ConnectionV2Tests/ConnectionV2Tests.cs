@@ -10,6 +10,8 @@ using EasySslStream.ConnectionV2.Client;
 using EasySslStream.ConnectionV2.Client.Configuration;
 using System.Diagnostics;
 using NuGet.Frameworks;
+using System.Net.Security;
+using System.Security.Authentication;
 
 namespace EasySslStreamTests.ConnectionV2Tests
 {
@@ -77,44 +79,89 @@ namespace EasySslStreamTests.ConnectionV2Tests
             conf.authOptions.VerifyCertificateChain = false;
             conf.authOptions.VerifyClientCertificates = false;
             srv = new Server(new IPEndPoint(IPAddress.Any, 5000),conf);
+           
             ClientConfiguration clientconf = new ClientConfiguration();
-            clientconf.serverVerifiesClient = false;
-            
+            clientconf.serverVerifiesClient = false;            
             clientconf.verifyCertificateChain = false;
-            clientconf.verifyDomainName = false;
-
-
-            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+            clientconf.verifyDomainName = false;           
             client = new Client("127.0.0.1", 5000, clientconf);
         }
 
         [Test]
         public async Task ConnectTest()
         {
+            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
             client.Connect();
-
             srv.ClientConnected += () =>
             {
                 Debug.WriteLine("CONNECTED");
                 this.ClientWaiter.SetResult(true);
-               // srv.StopServer();
+                srv.StopServer();
+
+            };
+            await clientWaiter;
+            Assert.Multiple(() =>
+            {
+                Assert.That(srv.ConnectedClientsByEndpoint.Count != 0);
+                Assert.That(srv.ConnectedClientsById.Count != 0);               
+            });            
+            await srv.RunningServerListener;
+            // Assert.Throws(async () => await srv.RunningServerListener);
+            Assert.That(srv.RunningServerListener.IsCompleted);                 
+        }
+
+        [Test]
+        [TestCase(SslProtocols.Tls)]
+        [TestCase(SslProtocols.Tls11)]
+        [TestCase(SslProtocols.Tls12)]
+        [TestCase(SslProtocols.Tls13)]
+        public async Task ProtocolNegotiationTest(SslProtocols protocol)
+        {
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+
+            ServerConfiguration sconf = new ServerConfiguration();
+            sconf.authOptions.VerifyClientCertificates = false;
+            sconf.enabledSSLProtocols = protocol;
+            
+
+            ClientConfiguration cconf = new ClientConfiguration();
+            cconf.enabledSSLProtocols = protocol;
+            cconf.verifyCertificateChain = false;
+            cconf.verifyDomainName = false;
+            
+            Server server = new Server(new IPEndPoint(IPAddress.Any, 5000),sconf);
+            Client cl = new Client("127.0.0.1",5000,cconf);
+
+
+            server.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
             };
 
+            server.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+            
+            cl.Connect();
             await clientWaiter;
 
+            SslStream ServerStream = server.ConnectedClientsById[0].sslStream;
+            SslStream ClientStream = cl.sslStream;
 
             Assert.Multiple(() =>
             {
-                Assert.That(()=>)
-
-
+                Assert.That(ServerStream.SslProtocol == protocol);
+                Assert.That(ClientStream.SslProtocol == protocol);
+                Assert.That(ServerStream.SslProtocol == ClientStream.SslProtocol);
             });
 
-           // await srv.RunningServerListener;
-           // Assert.Throws(async () => await srv.RunningServerListener);
+
+            Debug.WriteLine(ServerStream.SslProtocol.ToString());
+            server.StopServer();
+            ServerStream.Dispose();
+            ClientStream.Dispose();
             
         }
 
