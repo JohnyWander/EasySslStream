@@ -1,4 +1,5 @@
-﻿using EasySslStream.ConnectionV2.Server.Configuration;
+﻿using EasySslStream.ConnectionV2.Communication;
+using EasySslStream.ConnectionV2.Server.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +12,14 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.ConnectionV2.Server
 {
+    
     public class ConnectedClient
     {
         public int ConnectionID;
         TcpClient _client;
         SslStream _stream;
+
+        public ConnectionHandler ConnectionHandler;
 
         public SslStream sslStream
         {
@@ -82,15 +86,13 @@ namespace EasySslStream.ConnectionV2.Server
             }
             this._stream.AuthenticateAsServer(options);
 
-
-            Thread x = new Thread(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(1000);
-                }
-            });
-            x.Start();
+            this.ConnectionHandler = new ConnectionHandler(this._stream);
+            
+            
+            
         }
+
+
+       
     }
 }

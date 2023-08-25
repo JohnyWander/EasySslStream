@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.ConnectionV2.Client.Configuration;
+using EasySslStream.ConnectionV2.Communication;
+
 namespace EasySslStream.ConnectionV2.Client
 {
     public class Client
@@ -18,6 +20,8 @@ namespace EasySslStream.ConnectionV2.Client
         public readonly IPEndPoint connectToEndpoint;
         public TcpClient client { private set; get; }
         public SslStream sslStream;
+
+        private ConnectionHandler _connectionHandler;
 
         private readonly ClientConfiguration _config;
         public Client(IPEndPoint connectTo,ClientConfiguration config)
@@ -55,15 +59,20 @@ namespace EasySslStream.ConnectionV2.Client
 
                 this.sslStream.AuthenticateAsClient(options);
 
-                while (true)
+                Thread handlerThread = new Thread(() =>
                 {
-                    Task.Delay(100).Wait();
-                }
 
+                    this._connectionHandler = new ConnectionHandler(this.sslStream);
+
+                });
+                handlerThread.Start();
             });
         }
 
-
+        public void SendBytes(byte[] bytes)
+        {
+            this._connectionHandler.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendBytes, bytes));
+        }
 
 
     }

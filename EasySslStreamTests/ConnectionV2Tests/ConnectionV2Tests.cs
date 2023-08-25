@@ -117,7 +117,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
         [TestCase(SslProtocols.Tls)]
         [TestCase(SslProtocols.Tls11)]
         [TestCase(SslProtocols.Tls12)]
-        [TestCase(SslProtocols.Tls13)]
+        //[TestCase(SslProtocols.Tls13)] // appears to not be supported
         public async Task ProtocolNegotiationTest(SslProtocols protocol)
         {
             Task locker = Task.Run(() => Locker());
@@ -165,7 +165,38 @@ namespace EasySslStreamTests.ConnectionV2Tests
             
         }
 
+        [Test]
+        public async Task ByteTransferTest()
+        {
+            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
 
+            client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);           
+            };
+
+
+            await clientWaiter;
+
+            await Task.Delay(2000);
+
+            var handler = srv.ConnectedClientsById[0].ConnectionHandler;
+            handler.HandleReceivedBytes += (byte[] received) =>
+            {
+                Debug.WriteLine("RECEIVED:");
+                foreach (byte b in received)
+                {
+                    Debug.WriteLine(b.ToString());
+                };
+            };
+
+            client.SendBytes(new byte[] { 0x00, 0x01, 0x02 });
+
+            await locker;
+        }
 
     }
 }
