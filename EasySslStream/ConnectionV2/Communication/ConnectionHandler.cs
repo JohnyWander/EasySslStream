@@ -33,7 +33,7 @@ namespace EasySslStream.ConnectionV2.Communication
         
         
 
-        internal ConnectionHandler(SslStream stream) 
+        internal ConnectionHandler(SslStream stream,TaskCompletionSource handlerStartedCallback = null) 
         {
             Thread handlerThread = new Thread(() =>
             {
@@ -43,9 +43,15 @@ namespace EasySslStream.ConnectionV2.Communication
                 Listener = Task.Run(() => ListenerTask(cancelHandler.Token));
                 Writer = Task.Run(() => WriterTask(cancelHandler.Token));
 
+                if (handlerStartedCallback != null)
+                {
+                    handlerStartedCallback.TrySetResult();
+                }
+
                 Task.WaitAll(Listener, Writer);
             });
             handlerThread.Start();
+            
         }
 
         private async Task ListenerTask(CancellationToken cancel)
@@ -63,7 +69,7 @@ namespace EasySslStream.ConnectionV2.Communication
                         byte[] buffer = new byte[4096];
                         int received =await base.ReadBytes(buffer);
 
-                        this.HandleReceivedBytes(buffer.Take(received).ToArray());
+                        this.HandleReceivedBytes?.Invoke((buffer.Take(received).ToArray()));
                         
 
                     break;
@@ -90,7 +96,14 @@ namespace EasySslStream.ConnectionV2.Communication
 
         }
 
+        #region Send Methods
 
+        public void SendBytes(byte[] bytes)
+        {
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendBytes, bytes));
+        }
+
+        #endregion
 
         #region Events
 

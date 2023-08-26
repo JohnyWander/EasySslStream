@@ -28,6 +28,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
         Server srv;
         Client client;
 
+        Random rnd = new Random();
 
         async Task Locker(int customDelay = 20000)
         {
@@ -79,12 +80,24 @@ namespace EasySslStreamTests.ConnectionV2Tests
             conf.authOptions.VerifyCertificateChain = false;
             conf.authOptions.VerifyClientCertificates = false;
             srv = new Server(new IPEndPoint(IPAddress.Any, 5000),conf);
-           
+            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+
             ClientConfiguration clientconf = new ClientConfiguration();
             clientconf.serverVerifiesClient = false;            
             clientconf.verifyCertificateChain = false;
             clientconf.verifyDomainName = false;           
             client = new Client("127.0.0.1", 5000, clientconf);
+        }
+
+
+        [TearDown]
+        public void teardown()
+        {
+            srv.StopServer();
+            client.Disconnect();
+
+            srv = null;
+            client = null;
         }
 
         [Test]
@@ -140,6 +153,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
             server.ClientConnected += () =>
             {
                 this.ClientWaiter.SetResult(true);
+                
             };
 
             server.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
@@ -166,37 +180,86 @@ namespace EasySslStreamTests.ConnectionV2Tests
         }
 
         [Test]
-        public async Task ByteTransferTest()
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(1024)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task ByteTransferClientToServerTest(int BytesToSend)
         {
-            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+            
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
-            client.Connect();
+            Task Connection = client.Connect();
             srv.ClientConnected += () =>
             {
                 this.ClientWaiter.SetResult(true);           
             };
-
-
             await clientWaiter;
+            await Connection;
+            byte[] testBytes = new byte[BytesToSend];
+            byte[] ReceivedBytes = null;
+            rnd.NextBytes(testBytes);
 
-            await Task.Delay(2000);
-
+            
             var handler = srv.ConnectedClientsById[0].ConnectionHandler;
             handler.HandleReceivedBytes += (byte[] received) =>
             {
-                Debug.WriteLine("RECEIVED:");
-                foreach (byte b in received)
-                {
-                    Debug.WriteLine(b.ToString());
-                };
+                ReceivedBytes = received;
+                TestEnder.SetResult(true);
+
+              
             };
 
-            client.SendBytes(new byte[] { 0x00, 0x01, 0x02 });
-
+            
+            client.ConnectionHandler.SendBytes(testBytes);           
             await locker;
+
+            Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
         }
+
+        [Test]
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(1024)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task ByteTransferServerToClient(int BytesToSend)
+        {
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+
+            Task Connection = client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
+            };
+            await clientWaiter;
+
+            byte[] testBytes = new byte[BytesToSend];
+            byte[] ReceivedBytes = null;
+            rnd.NextBytes(testBytes);
+
+            await Connection;
+
+            var handler = srv.ConnectedClientsById[0].ConnectionHandler;
+
+            
+            client.ConnectionHandler.HandleReceivedBytes += (byte[] received) =>
+            {
+                ReceivedBytes = received;
+                TestEnder.SetResult(true);
+            };
+
+            
+            handler.SendBytes(testBytes);
+            await locker;
+            Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
+        }
+
+
+
 
     }
 }

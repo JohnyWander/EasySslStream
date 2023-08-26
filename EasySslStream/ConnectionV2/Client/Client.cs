@@ -21,7 +21,7 @@ namespace EasySslStream.ConnectionV2.Client
         public TcpClient client { private set; get; }
         public SslStream sslStream;
 
-        private ConnectionHandler _connectionHandler;
+        public ConnectionHandler ConnectionHandler;
 
         private readonly ClientConfiguration _config;
         public Client(IPEndPoint connectTo,ClientConfiguration config)
@@ -34,8 +34,9 @@ namespace EasySslStream.ConnectionV2.Client
 
         public Client(string connectToIP, int port,ClientConfiguration config) : this(new IPEndPoint(IPAddress.Parse(connectToIP), port),config) { }
 
-        public void Connect()
-        {
+        public Task Connect()
+        {           
+            TaskCompletionSource connectionCompletion = new TaskCompletionSource();
             this.RunningClient = Task.Run(() =>
             {
                 this.client = new TcpClient(connectToEndpoint.Address.ToString(),connectToEndpoint.Port);
@@ -57,22 +58,22 @@ namespace EasySslStream.ConnectionV2.Client
                     options.ClientCertificates = certstore;
                 }
 
-                this.sslStream.AuthenticateAsClient(options);
+                this.sslStream.AuthenticateAsClient(options);                             
 
-                Thread handlerThread = new Thread(() =>
-                {
-
-                    this._connectionHandler = new ConnectionHandler(this.sslStream);
-
-                });
-                handlerThread.Start();
+                this.ConnectionHandler = new ConnectionHandler(this.sslStream,connectionCompletion);
+                
             });
+
+            return connectionCompletion.Task;
         }
 
-        public void SendBytes(byte[] bytes)
+        public void Disconnect()
         {
-            this._connectionHandler.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendBytes, bytes));
+            this.sslStream.Dispose();
+            this.client.Dispose();
         }
+
+        
 
 
     }

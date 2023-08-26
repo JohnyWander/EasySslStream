@@ -57,6 +57,8 @@ namespace EasySslStream.ConnectionV2.Server
 
         public ConnectedClient(int ID,TcpClient client, X509Certificate2 serverCert, Server srvCallback)
         {
+            
+
             ConnectionID = ID;
             this._servConf = srvCallback._config;
             srvCallback.ConnectedClientsByEndpoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
@@ -92,7 +94,6 @@ namespace EasySslStream.ConnectionV2.Server
             
         }
 
-
-       
+     
     }
 }
