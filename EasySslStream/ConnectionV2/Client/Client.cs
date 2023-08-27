@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.ConnectionV2.Client.Configuration;
 using EasySslStream.ConnectionV2.Communication;
+using EasySslStream.ConnectionV2.Server.Configuration.SubConfigTypes;
 
 namespace EasySslStream.ConnectionV2.Client
 {
@@ -60,7 +61,7 @@ namespace EasySslStream.ConnectionV2.Client
 
                 this.sslStream.AuthenticateAsClient(options);                             
 
-                this.ConnectionHandler = new ConnectionHandler(this.sslStream,connectionCompletion);
+                this.ConnectionHandler = new ConnectionHandler(this.sslStream,this._config.BufferSize,connectionCompletion);
                 
             });
 

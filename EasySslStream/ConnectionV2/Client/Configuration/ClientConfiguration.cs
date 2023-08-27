@@ -12,6 +12,7 @@ namespace EasySslStream.ConnectionV2.Client.Configuration
 {
     public class ClientConfiguration
     {
+        public int BufferSize = 4096;
         public bool verifyDomainName = false;
         public bool verifyCertificateChain = false;
         

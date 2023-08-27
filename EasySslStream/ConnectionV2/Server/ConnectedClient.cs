@@ -88,7 +88,7 @@ namespace EasySslStream.ConnectionV2.Server
             }
             this._stream.AuthenticateAsServer(options);
 
-            this.ConnectionHandler = new ConnectionHandler(this._stream);
+            this.ConnectionHandler = new ConnectionHandler(this._stream,this._servConf.connectionOptions.bufferSize);
             
             
             
