@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Security;
 using System.Text;
@@ -48,13 +49,52 @@ namespace EasySslStream.ConnectionV2.Communication
 
         internal async Task SendTextAsync(TextTransferWork work, SteerCodes code)
         {
-            
+            EncodingEnum encodingEnum = ResolveEncodingEnum(work.encoding);
+            string message = work.stringToSend;
+
+            int steercode = (int)code;
+            byte[] steerBytes = BitConverter.GetBytes(steercode);
+
+            int encodingCode = (int)encodingEnum;
+            byte[] encodingBytes = BitConverter.GetBytes(encodingCode);
+
+
+            Debug.WriteLine($"Encoding is {encodingEnum.ToString()}");
+            Debug.WriteLine($"text to send is {message}");
+            await stream.WriteAsync(steerBytes);
+            await stream.WriteAsync(encodingBytes);
+            await Task.Delay(10);                       
+            await stream.WriteAsync(work.encoding.GetBytes(message));
         }
+
+        internal async Task<string> GetTextAsync(int bufferSize)
+        {
+
+            byte[] EncodingBytes = new byte[16];
+            int received = await stream.ReadAsync(EncodingBytes);
+
+           
+
+            int encodingCode = BitConverter.ToInt32(EncodingBytes.Take(received).ToArray());
+            Encoding encoding = ResolveEncodingFromEnum((EncodingEnum)encodingCode);
+
+            Debug.WriteLine($"encodingCode is: {encodingCode}");
+            Debug.WriteLine($"encoding is {encoding.EncodingName}");
+
+            byte[] textReadBuffer = new byte[bufferSize];
+            int textBytesReceived = await stream.ReadAsync(textReadBuffer);
+
+            Debug.WriteLine($"Got {textBytesReceived} text bytes");
+            //string receivedText = encoding.
+            return encoding.GetString(textReadBuffer.Take(textBytesReceived).ToArray());
+
+        }
+
 
         #endregion
 
         #region helpers
-        EncodingEnum resolveEncodingEnum(Encoding enc)
+        EncodingEnum ResolveEncodingEnum(Encoding enc)
         {
             if(enc == Encoding.UTF8)
             {
@@ -77,6 +117,33 @@ namespace EasySslStream.ConnectionV2.Communication
             else
             {
                 return EncodingEnum.Custom;
+            }
+        }
+
+        Encoding ResolveEncodingFromEnum(EncodingEnum enc)
+        {
+            if(enc == EncodingEnum.UTF8)
+            {
+                return Encoding.UTF8;
+            }else if(enc == EncodingEnum.UTF32)
+            {
+                return Encoding.UTF32;
+            }else if(enc == EncodingEnum.UTF7)
+            {
+                return Encoding.UTF7;
+            }else if(enc == EncodingEnum.Unicode)
+            {
+                return Encoding.Unicode;
+            }else if(enc == EncodingEnum.ASCII)
+            {
+                return Encoding.ASCII;
+            }else if(enc == EncodingEnum.Custom)
+            {
+                throw new NotImplementedException();
+            }
+            else
+            {
+                throw new InvalidOperationException();
             }
         }
 

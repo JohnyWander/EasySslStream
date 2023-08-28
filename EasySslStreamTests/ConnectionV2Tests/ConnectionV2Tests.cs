@@ -12,12 +12,17 @@ using System.Diagnostics;
 using NuGet.Frameworks;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Runtime.CompilerServices;
 
 namespace EasySslStreamTests.ConnectionV2Tests
 {
     [TestFixture]
     internal class ConnectionV2Tests : PreparationBase
     {
+        Encoding utf8 = Encoding.UTF8;
+        Encoding utf32 = Encoding.UTF8;
+
+
         string Workspace = "ConnectionWorkspace";
         string ServerWorkspace = "Server";
         string ClientWorkspace = "Client";
@@ -256,6 +261,84 @@ namespace EasySslStreamTests.ConnectionV2Tests
             handler.SendBytes(testBytes);
             await locker;
             Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
+        }
+
+        [Test]
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(128)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task TransferStringClientToServerTest(int StringLength)
+        {
+            
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+
+            Task Connection = client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
+            };
+            await clientWaiter;
+            await Connection;
+
+            string received = null;
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedText += (string _received) =>
+            {
+                received = _received;
+                TestEnder.SetResult(true);               
+            };
+
+            byte[] randomBytes = new byte[StringLength];
+            rnd.NextBytes(randomBytes);
+            string randomstring = Encoding.UTF8.GetString(randomBytes);
+
+            client.ConnectionHandler.SendText(randomstring, Encoding.UTF8);
+            
+            await locker;
+            Debug.WriteLine(received);
+            Assert.That(received == randomstring);
+
+        }
+
+        [Test]
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(128)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task TransferStringServerToClientTest(int StringLength)
+        {
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+
+            Task Connection = client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
+            };
+            await clientWaiter;
+            await Connection;
+
+            string received = null;
+
+            client.ConnectionHandler.HandleReceivedText += (string _received) =>
+            {
+                received = _received;
+                TestEnder.SetResult(true);
+            };
+
+            byte[] randomBytes = new byte[StringLength];
+            rnd.NextBytes(randomBytes);
+            string randomstring = Encoding.UTF8.GetString(randomBytes);
+
+            srv.ConnectedClientsById[0].ConnectionHandler.SendText(randomstring, Encoding.UTF8);
+
+            await locker;
+            Debug.WriteLine(received);
+            Assert.That(received == randomstring);
+
         }
 
 

@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
+using System.Diagnostics;
 
 namespace EasySslStream.ConnectionV2.Communication
 {
@@ -20,11 +21,12 @@ namespace EasySslStream.ConnectionV2.Communication
 
 
     public delegate void HandleReceivedBytes(byte[] bytes);
+    public delegate void HandleReceivedText(string text);
 
     public class ConnectionHandler : TransformMethods
     {
         private SslStream WorkingStream;
-        private ConnectedClient _ClientCallback;
+        //private ConnectedClient _ClientCallback;
 
         private Task Listener;
         private Task Writer;
@@ -74,13 +76,15 @@ namespace EasySslStream.ConnectionV2.Communication
                 {
                     case SteerCodes.SendBytes:
                         byte[] buffer = new byte[this._transferBufferSize];
-                        int received =await base.ReadBytes(buffer);                      
-                        this.HandleReceivedBytes?.Invoke((buffer.Take(received).ToArray()));                       
+                        int receivedBytes =await base.ReadBytes(buffer);                      
+                        this.HandleReceivedBytes?.Invoke((buffer.Take(receivedBytes).ToArray()));                       
                     break;
 
                     case SteerCodes.SendText:
 
-
+                        
+                        string receivedString = await base.GetTextAsync(this._transferBufferSize);
+                        this.HandleReceivedText?.Invoke(receivedString);
 
                     break;
                
@@ -106,6 +110,7 @@ namespace EasySslStream.ConnectionV2.Communication
 
                     case SteerCodes.SendText:
                         await base.SendTextAsync((TextTransferWork)work, steer);
+                        
                         break;
                 }
 
@@ -122,13 +127,14 @@ namespace EasySslStream.ConnectionV2.Communication
         public void SendText(string Text, Encoding encoding)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));
+            
         }
         #endregion
 
         #region Events
 
         public event HandleReceivedBytes HandleReceivedBytes;
-
+        public event HandleReceivedText HandleReceivedText;
         #endregion
     }
 }

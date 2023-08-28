@@ -11,7 +11,7 @@ namespace EasySslStreamTests.ConnectionTests
     {
          static string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
          static Random rnd = new Random();
-        static string GetRandomstring(int length)
+        public static string GetRandomstring(int length)
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length)
