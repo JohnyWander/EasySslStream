@@ -10,13 +10,15 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
 using System.Diagnostics;
+using EasySslStream.Connection.Client;
 
 namespace EasySslStream.ConnectionV2.Communication
 {
     enum SteerCodes
     {
         SendBytes =1,
-        SendText = 2
+        SendText = 2,
+        SendFile = 3
     }
 
 
@@ -39,8 +41,10 @@ namespace EasySslStream.ConnectionV2.Communication
 
 
         int _transferBufferSize;
-        
-        
+
+        public string DirectorySavePath = AppDomain.CurrentDomain.BaseDirectory;
+        public string FileSavePath = AppDomain.CurrentDomain.BaseDirectory;
+
 
         internal ConnectionHandler(SslStream stream,int BufferSize,TaskCompletionSource handlerStartedCallback = null) 
         {
@@ -126,8 +130,12 @@ namespace EasySslStream.ConnectionV2.Communication
 
         public void SendText(string Text, Encoding encoding)
         {
-            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));
-            
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));            
+        }
+
+        public void SendFile(string path)
+        {
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
         #endregion
 

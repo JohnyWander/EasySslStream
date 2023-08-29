@@ -15,6 +15,10 @@ namespace EasySslStream.ConnectionV2.Server.Configuration
         public ConnectionConfig connectionOptions;
         public CertfificateVerificationConfig authOptions;
         public SslProtocols enabledSSLProtocols = SslProtocols.None;
+
+        public int BufferSize = 8192;
+        
+
         public ServerConfiguration()
         {
             connectionOptions = new ConnectionConfig();

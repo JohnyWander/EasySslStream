@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Security;
 using System.Text;
@@ -23,7 +24,7 @@ namespace EasySslStream.ConnectionV2.Communication
         }
 
         protected internal SslStream stream;
-
+        protected internal int _bufferSize;
 
         #region bytes
         internal async Task WriteBytesAsync(byte[] bytes,SteerCodes code)
@@ -51,7 +52,7 @@ namespace EasySslStream.ConnectionV2.Communication
         {
             EncodingEnum encodingEnum = ResolveEncodingEnum(work.encoding);
             string message = work.stringToSend;
-
+            
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
 
@@ -87,6 +88,26 @@ namespace EasySslStream.ConnectionV2.Communication
             Debug.WriteLine($"Got {textBytesReceived} text bytes");
             //string receivedText = encoding.
             return encoding.GetString(textReadBuffer.Take(textBytesReceived).ToArray());
+
+        }
+        #endregion
+
+        #region Files
+
+        internal async Task SendFileAsync(string path,SteerCodes code)
+        {
+            int steercode = (int)code;
+            byte[] steerBytes = BitConverter.GetBytes(steercode);
+            await stream.WriteAsync(steerBytes);
+
+            string fileName = Path.GetFileName(path);
+            byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
+            await stream.WriteAsync(fileNameBytes);
+
+            FileStream fileStream = new FileStream(path, FileMode.Open,FileAccess.Read);
+            fileStream.Re
+
+
 
         }
 

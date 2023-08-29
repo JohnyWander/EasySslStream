@@ -12,11 +12,11 @@ namespace EasySslStream.ConnectionV2.Server.Configuration.SubConfigTypes
         
 
 
-        public int bufferSize { get; set; }
+        
         public SslProtocols enabledProtocols { get; set; }
         public ConnectionConfig()
         {
-            bufferSize = 4096;            
+                      
         }
     }
 }

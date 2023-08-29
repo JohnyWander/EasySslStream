@@ -7,12 +7,13 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Security.Authentication;
+using EasySslStream.Connection.Client;
 
 namespace EasySslStream.ConnectionV2.Client.Configuration
 {
     public class ClientConfiguration
     {
-        public int BufferSize = 4096;
+        public int BufferSize = 8192;
         public bool verifyDomainName = false;
         public bool verifyCertificateChain = false;
         
@@ -27,6 +28,7 @@ namespace EasySslStream.ConnectionV2.Client.Configuration
 
         }
 
+      
 
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {

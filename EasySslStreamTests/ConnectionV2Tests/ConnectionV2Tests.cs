@@ -79,7 +79,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
             
 
             ServerConfiguration conf = new ServerConfiguration();
-            conf.connectionOptions.bufferSize = 8192;
+            conf.BufferSize = 8192;
 
             conf.authOptions.VerifyDomainName = false;
             conf.authOptions.VerifyCertificateChain = false;
@@ -312,7 +312,6 @@ namespace EasySslStreamTests.ConnectionV2Tests
         {
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
-
             Task Connection = client.Connect();
             srv.ClientConnected += () =>
             {
@@ -338,7 +337,6 @@ namespace EasySslStreamTests.ConnectionV2Tests
             await locker;
             Debug.WriteLine(received);
             Assert.That(received == randomstring);
-
         }
 
 
