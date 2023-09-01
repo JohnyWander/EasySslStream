@@ -24,6 +24,7 @@ namespace EasySslStream.ConnectionV2.Communication
 
     public delegate void HandleReceivedBytes(byte[] bytes);
     public delegate void HandleReceivedText(string text);
+    public delegate void HandleReceivedFile(string path);
 
     public class ConnectionHandler : TransformMethods
     {
@@ -53,6 +54,7 @@ namespace EasySslStream.ConnectionV2.Communication
             {
                 base.stream = stream;
                 this.WorkingStream = stream;
+                base._bufferSize = BufferSize;
                 WriterChannel = Channel.CreateUnbounded<KeyValuePair<SteerCodes, object>>();
                 Listener = Task.Run(() => ListenerTask(cancelHandler.Token));
                 Writer = Task.Run(() => WriterTask(cancelHandler.Token));
@@ -84,12 +86,15 @@ namespace EasySslStream.ConnectionV2.Communication
                         this.HandleReceivedBytes?.Invoke((buffer.Take(receivedBytes).ToArray()));                       
                     break;
 
-                    case SteerCodes.SendText:
-
-                        
+                    case SteerCodes.SendText:                        
                         string receivedString = await base.GetTextAsync(this._transferBufferSize);
                         this.HandleReceivedText?.Invoke(receivedString);
+                    break;
 
+                    case SteerCodes.SendFile:
+
+                        string receivedFilePath = await base.GetFileAsync(this.FileSavePath);
+                        this.HandleReceivedFile?.Invoke(receivedFilePath);
                     break;
                
                 
@@ -116,6 +121,11 @@ namespace EasySslStream.ConnectionV2.Communication
                         await base.SendTextAsync((TextTransferWork)work, steer);
                         
                         break;
+
+                    case SteerCodes.SendFile:
+                        await base.SendFileAsync((string)work, steer);
+
+                        break;
                 }
 
             }
@@ -137,12 +147,16 @@ namespace EasySslStream.ConnectionV2.Communication
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
+
+        
+
         #endregion
 
         #region Events
 
         public event HandleReceivedBytes HandleReceivedBytes;
         public event HandleReceivedText HandleReceivedText;
+        public event HandleReceivedFile HandleReceivedFile;
         #endregion
     }
 }

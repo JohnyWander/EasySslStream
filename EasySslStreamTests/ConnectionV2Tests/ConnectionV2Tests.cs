@@ -339,7 +339,34 @@ namespace EasySslStreamTests.ConnectionV2Tests
             Assert.That(received == randomstring);
         }
 
+        [Test]
+        public async Task TransferFileClientToServer()
+        {
+            Task locker = Task.Run(() => Locker());
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+            Task Connection = client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
+            };
+            await clientWaiter;
+            await Connection;
 
+            string[] files = Directory.EnumerateFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir","*",SearchOption.AllDirectories).ToArray();
+            string PickedFile = files[rnd.Next(0,files.Length)];
+
+            srv.ConnectedClientsById[0].ConnectionHandler.FileSavePath = $"{Workspace}\\{ServerWorkspace}";
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedFile += (string path) =>
+            {
+                TestEnder.SetResult(true);
+            };
+
+            client.ConnectionHandler.SendFile(PickedFile);
+
+            await locker;
+            
+
+        }
 
 
     }

@@ -97,20 +97,65 @@ namespace EasySslStream.ConnectionV2.Communication
         internal async Task SendFileAsync(string path,SteerCodes code)
         {
             int steercode = (int)code;
-            byte[] steerBytes = BitConverter.GetBytes(steercode);
+            byte[] steerBytes = BitConverter.GetBytes(steercode);            
             await stream.WriteAsync(steerBytes);
+            
 
             string fileName = Path.GetFileName(path);
             byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
             await stream.WriteAsync(fileNameBytes);
 
             FileStream fileStream = new FileStream(path, FileMode.Open,FileAccess.Read);
-            fileStream.Re
+            
+            byte[] lenghtBytes = BitConverter.GetBytes(fileStream.Length);
+            await stream.WriteAsync(lenghtBytes);
+            
+            byte[] DataChunk = new byte[this._bufferSize];
+            
+            long Sended = 0;
+            
 
+            while(Sended != fileStream.Length)
+            {
+                Sended += await fileStream.ReadAsync(DataChunk,0,DataChunk.Length);
+                await stream.WriteAsync(DataChunk);
+               
+            }
 
-
+            await fileStream.DisposeAsync();
         }
 
+        internal async Task<string> GetFileAsync(string SaveDir)
+        {
+            
+            byte[] FilenameBytes = new byte[256];
+            int receivedCount = await stream.ReadAsync(FilenameBytes);
+            string Filename = Encoding.UTF8.GetString(FilenameBytes.Take(receivedCount).ToArray());
+
+            
+            byte[] FileLengthBuffer = new byte[16];
+            int LengthBytesReceived = await stream.ReadAsync(FileLengthBuffer);
+            long ExpectedFileLentgh = BitConverter.ToInt64(FileLengthBuffer);
+
+            
+            FileStream saveStream = new FileStream(Path.Combine(SaveDir, Filename),FileMode.Create,FileAccess.Write);
+            long FileBytesReceived = 0;
+            byte[] buffer = new byte[this._bufferSize];
+
+
+
+           
+            while(FileBytesReceived <= ExpectedFileLentgh)
+            {               
+                FileBytesReceived += await stream.ReadAsync(buffer);                                        
+                await saveStream.WriteAsync(buffer);
+            }
+
+            saveStream.SetLength(FileBytesReceived);
+            await saveStream.DisposeAsync();
+
+            return Filename;
+        }
 
         #endregion
 
