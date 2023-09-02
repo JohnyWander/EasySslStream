@@ -166,6 +166,9 @@ namespace EasySslStream.ConnectionV2.Communication
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
             await stream.WriteAsync(steerBytes);
+
+            
+            
         }
 
         internal async Task GetDirectoryAsync()
@@ -179,6 +182,19 @@ namespace EasySslStream.ConnectionV2.Communication
 
 
         #region helpers
+
+        string SerializeDirectoryTransferInfo(string path)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            FileInfo
+
+
+
+
+
+
+        }
         EncodingEnum ResolveEncodingEnum(Encoding enc)
         {
             if(enc == Encoding.UTF8)
