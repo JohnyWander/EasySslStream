@@ -13,6 +13,8 @@ using NuGet.Frameworks;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Runtime.Intrinsics.Arm;
 
 namespace EasySslStreamTests.ConnectionV2Tests
 {
@@ -364,6 +366,20 @@ namespace EasySslStreamTests.ConnectionV2Tests
             client.ConnectionHandler.SendFile(PickedFile);
 
             await locker;
+
+            SHA256 sha = SHA256.Create();
+
+            FileStream source = new FileStream(PickedFile,FileMode.Open,FileAccess.Read);
+            FileStream Destination = new FileStream($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}", FileMode.Open, FileAccess.Read);
+            byte[] sourceHash = sha.ComputeHash(source);
+            byte[] destinationHash = sha.ComputeHash(Destination);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(File.Exists($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}"),"Destination file does not exist");
+                Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash),"Hashes do not match");
+
+            });
             
 
         }

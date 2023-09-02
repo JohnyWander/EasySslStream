@@ -7,7 +7,7 @@ using System.Net.Security;
 using System.Text;
 using System.Threading.Tasks;
 using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
-
+using System.IO.Compression;
 namespace EasySslStream.ConnectionV2.Communication
 {
     public abstract class TransformMethods
@@ -151,13 +151,30 @@ namespace EasySslStream.ConnectionV2.Communication
                 await saveStream.WriteAsync(buffer);
             }
 
-            saveStream.SetLength(FileBytesReceived);
+            saveStream.SetLength(ExpectedFileLentgh);
             await saveStream.DisposeAsync();
 
             return Filename;
         }
 
         #endregion
+
+        #region Directories
+
+        internal async Task SendDirectory(string path,SteerCodes code)
+        {
+            
+        }
+
+        internal async Task GetDirectoryAsync()
+        {
+
+        }
+
+
+
+        #endregion
+
 
         #region helpers
         EncodingEnum ResolveEncodingEnum(Encoding enc)

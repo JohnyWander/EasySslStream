@@ -18,13 +18,15 @@ namespace EasySslStream.ConnectionV2.Communication
     {
         SendBytes =1,
         SendText = 2,
-        SendFile = 3
+        SendFile = 3,
+        SendDirectory =4
     }
 
 
     public delegate void HandleReceivedBytes(byte[] bytes);
     public delegate void HandleReceivedText(string text);
     public delegate void HandleReceivedFile(string path);
+    public delegate void HandleReceivedDirectory(string path);
 
     public class ConnectionHandler : TransformMethods
     {
@@ -147,6 +149,8 @@ namespace EasySslStream.ConnectionV2.Communication
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
+        
+        public void
 
         
 
@@ -157,6 +161,7 @@ namespace EasySslStream.ConnectionV2.Communication
         public event HandleReceivedBytes HandleReceivedBytes;
         public event HandleReceivedText HandleReceivedText;
         public event HandleReceivedFile HandleReceivedFile;
+        public event HandleReceivedDirectory HandleReceivedDirectory;
         #endregion
     }
 }
