@@ -150,7 +150,10 @@ namespace EasySslStream.ConnectionV2.Communication
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
         
-        public void
+        public void SendDirectory(string path)
+        {
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendDirectory, path));
+        }
 
         
 

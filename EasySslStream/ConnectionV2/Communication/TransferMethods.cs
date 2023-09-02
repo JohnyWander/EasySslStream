@@ -163,7 +163,9 @@ namespace EasySslStream.ConnectionV2.Communication
 
         internal async Task SendDirectory(string path,SteerCodes code)
         {
-            
+            int steercode = (int)code;
+            byte[] steerBytes = BitConverter.GetBytes(steercode);
+            await stream.WriteAsync(steerBytes);
         }
 
         internal async Task GetDirectoryAsync()
