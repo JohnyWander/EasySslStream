@@ -98,6 +98,11 @@ namespace EasySslStream.ConnectionV2.Communication
                         string receivedFilePath = await base.GetFileAsync(this.FileSavePath);
                         this.HandleReceivedFile?.Invoke(receivedFilePath);
                     break;
+
+                    case SteerCodes.SendDirectory:
+
+                        string receivedDirectoryPath = await base.GetDirectoryAsync(this.DirectorySavePath);
+                        break;
                
                 
                 }
@@ -127,6 +132,10 @@ namespace EasySslStream.ConnectionV2.Communication
                     case SteerCodes.SendFile:
                         await base.SendFileAsync((string)work, steer);
 
+                        break;
+
+                    case SteerCodes.SendDirectory:
+                        await base.SendDirectory((string)work, steer);
                         break;
                 }
 

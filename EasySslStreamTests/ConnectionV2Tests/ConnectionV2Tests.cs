@@ -384,6 +384,34 @@ namespace EasySslStreamTests.ConnectionV2Tests
 
         }
 
+        [Test]
+        public async Task DirectoryTransferClientToServerTest()
+        {
+            Task locker = Task.Run(() => Locker(120000));
+            Task clientWaiter = Task.Run(() => ClientAwaiter());
+            Task Connection = client.Connect();
+            srv.ClientConnected += () =>
+            {
+                this.ClientWaiter.SetResult(true);
+            };
+            await clientWaiter;
+            await Connection;
+
+            string Directory = $"{Workspace}\\{ClientWorkspace}\\TestTransferDir";
+
+            srv.ConnectedClientsById[0].ConnectionHandler.DirectorySavePath = $"{Workspace}\\{ServerWorkspace}\\Received";
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedDirectory += (string path) =>
+            {
+                TestEnder.SetResult(true);
+            };
+
+
+            client.ConnectionHandler.SendDirectory(Directory);
+
+            await locker;
+        }
+
+
 
     }
 }
