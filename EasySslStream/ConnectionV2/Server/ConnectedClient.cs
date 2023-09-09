@@ -1,19 +1,13 @@
-﻿using EasySslStream.Connection.Client;
-using EasySslStream.ConnectionV2.Communication;
+﻿using EasySslStream.ConnectionV2.Communication;
 using EasySslStream.ConnectionV2.Server.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasySslStream.ConnectionV2.Server
 {
-    
+
     public class ConnectedClient
     {
         public int ConnectionID;
@@ -56,9 +50,9 @@ namespace EasySslStream.ConnectionV2.Server
 
         }
 
-        public ConnectedClient(int ID,TcpClient client, X509Certificate2 serverCert, Server srvCallback)
+        public ConnectedClient(int ID, TcpClient client, X509Certificate2 serverCert, Server srvCallback)
         {
-            
+
 
             ConnectionID = ID;
             this._servConf = srvCallback._config;
@@ -73,7 +67,7 @@ namespace EasySslStream.ConnectionV2.Server
             {
                 this._stream = new SslStream(client.GetStream(), false);
             }
-            
+
             SslServerAuthenticationOptions options = new SslServerAuthenticationOptions();
             options.ServerCertificate = serverCert;
             options.EnabledSslProtocols = srvCallback._config.enabledSSLProtocols;
@@ -89,12 +83,12 @@ namespace EasySslStream.ConnectionV2.Server
             }
             this._stream.AuthenticateAsServer(options);
 
-            this.ConnectionHandler = new ConnectionHandler(this._stream,this._servConf.BufferSize);
-            
-            
-            
+            this.ConnectionHandler = new ConnectionHandler(this._stream, this._servConf.BufferSize);
+
+
+
         }
 
-     
+
     }
 }

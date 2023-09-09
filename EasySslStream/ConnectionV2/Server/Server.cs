@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using EasySslStream.ConnectionV2.Server.Configuration;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using EasySslStream.ConnectionV2.Server.Configuration;
 
 namespace EasySslStream.ConnectionV2.Server
 {
@@ -23,25 +18,25 @@ namespace EasySslStream.ConnectionV2.Server
         public Task RunningServerListener;
         internal readonly ServerConfiguration _config;
 
-        
+
 
 
 
 
         #region Constructors
-        public Server(IPEndPoint serverEndpoint,ServerConfiguration config)
+        public Server(IPEndPoint serverEndpoint, ServerConfiguration config)
         {
             this._serverEndpoint = serverEndpoint;
             this._config = config;
         }
 
-        public Server(string hostOnIP, int port,ServerConfiguration config) : this(new IPEndPoint(IPAddress.Parse(hostOnIP), port), config) { }
+        public Server(string hostOnIP, int port, ServerConfiguration config) : this(new IPEndPoint(IPAddress.Parse(hostOnIP), port), config) { }
         #endregion
 
-        
-        public void StartServer(string pathToPfxCertificate,string certPassword)
+
+        public void StartServer(string pathToPfxCertificate, string certPassword)
         {
-            this._serverCertificate = new X509Certificate2(pathToPfxCertificate,certPassword,X509KeyStorageFlags.PersistKeySet);
+            this._serverCertificate = new X509Certificate2(pathToPfxCertificate, certPassword, X509KeyStorageFlags.PersistKeySet);
             this._tcpListener = new TcpListener(this._serverEndpoint);
 
             this.RunningServerListener = Task.Run(async () =>
@@ -64,7 +59,7 @@ namespace EasySslStream.ConnectionV2.Server
 
         public void StopServer()
         {
-            this._tcpListener.Stop();           
+            this._tcpListener.Stop();
         }
 
         #region Events
@@ -76,8 +71,8 @@ namespace EasySslStream.ConnectionV2.Server
 
         #region ConnectedClients
 
-        public IDictionary<int,ConnectedClient> ConnectedClientsById = new Dictionary<int, ConnectedClient>();
-        public IDictionary<IPEndPoint,ConnectedClient> ConnectedClientsByEndpoint = new Dictionary<IPEndPoint, ConnectedClient>();
+        public IDictionary<int, ConnectedClient> ConnectedClientsById = new Dictionary<int, ConnectedClient>();
+        public IDictionary<IPEndPoint, ConnectedClient> ConnectedClientsByEndpoint = new Dictionary<IPEndPoint, ConnectedClient>();
 
 
         #endregion

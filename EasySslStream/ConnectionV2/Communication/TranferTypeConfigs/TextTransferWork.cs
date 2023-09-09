@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace EasySslStream.ConnectionV2.Communication.TranferTypeConfigs
 {
@@ -11,7 +7,7 @@ namespace EasySslStream.ConnectionV2.Communication.TranferTypeConfigs
         public Encoding encoding;
         public string stringToSend;
 
-        public TextTransferWork(Encoding encoding,string message)
+        public TextTransferWork(Encoding encoding, string message)
         {
             this.encoding = encoding; this.stringToSend = message;
         }

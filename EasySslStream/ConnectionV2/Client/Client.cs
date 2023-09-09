@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using EasySslStream.ConnectionV2.Client.Configuration;
+using EasySslStream.ConnectionV2.Communication;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
-using EasySslStream.ConnectionV2.Client.Configuration;
-using EasySslStream.ConnectionV2.Communication;
-using EasySslStream.ConnectionV2.Server.Configuration.SubConfigTypes;
 
 namespace EasySslStream.ConnectionV2.Client
 {
@@ -25,7 +18,7 @@ namespace EasySslStream.ConnectionV2.Client
         public ConnectionHandler ConnectionHandler;
 
         private readonly ClientConfiguration _config;
-        public Client(IPEndPoint connectTo,ClientConfiguration config)
+        public Client(IPEndPoint connectTo, ClientConfiguration config)
         {
             this.connectToEndpoint = connectTo;
             _config = config;
@@ -33,15 +26,15 @@ namespace EasySslStream.ConnectionV2.Client
 
         }
 
-        public Client(string connectToIP, int port,ClientConfiguration config) : this(new IPEndPoint(IPAddress.Parse(connectToIP), port),config) { }
+        public Client(string connectToIP, int port, ClientConfiguration config) : this(new IPEndPoint(IPAddress.Parse(connectToIP), port), config) { }
 
         public Task Connect()
-        {           
+        {
             TaskCompletionSource connectionCompletion = new TaskCompletionSource();
             this.RunningClient = Task.Run(() =>
             {
-                this.client = new TcpClient(connectToEndpoint.Address.ToString(),connectToEndpoint.Port);
-                
+                this.client = new TcpClient(connectToEndpoint.Address.ToString(), connectToEndpoint.Port);
+
                 this.sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(_config.ValidateServerCertificate));
                 this.sslStream.WriteTimeout = -1;
                 this.sslStream.ReadTimeout = -1;
@@ -59,10 +52,9 @@ namespace EasySslStream.ConnectionV2.Client
                     options.ClientCertificates = certstore;
                 }
 
-                this.sslStream.AuthenticateAsClient(options);                             
+                this.sslStream.AuthenticateAsClient(options);
+                this.ConnectionHandler = new ConnectionHandler(this.sslStream, this._config.BufferSize, connectionCompletion);
 
-                this.ConnectionHandler = new ConnectionHandler(this.sslStream,this._config.BufferSize,connectionCompletion);
-                
             });
 
             return connectionCompletion.Task;
@@ -74,7 +66,7 @@ namespace EasySslStream.ConnectionV2.Client
             this.client.Dispose();
         }
 
-        
+
 
 
     }

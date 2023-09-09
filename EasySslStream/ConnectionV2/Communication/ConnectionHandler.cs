@@ -1,25 +1,16 @@
-﻿using EasySslStream.ConnectionV2.Server;
-using EasySslStream.ConnectionV2.Server.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Mime;
+﻿using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
 using System.Net.Security;
 using System.Text;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
-using System.Diagnostics;
-using EasySslStream.Connection.Client;
 
 namespace EasySslStream.ConnectionV2.Communication
 {
-    enum SteerCodes
+    internal enum SteerCodes
     {
-        SendBytes =1,
+        SendBytes = 1,
         SendText = 2,
         SendFile = 3,
-        SendDirectory =4
+        SendDirectory = 4
     }
 
 
@@ -28,7 +19,7 @@ namespace EasySslStream.ConnectionV2.Communication
     public delegate void HandleReceivedFile(string path);
     public delegate void HandleReceivedDirectory(string path);
 
-    public class ConnectionHandler : TransformMethods
+    public class ConnectionHandler : TransferMethods
     {
         private SslStream WorkingStream;
         //private ConnectedClient _ClientCallback;
@@ -37,7 +28,7 @@ namespace EasySslStream.ConnectionV2.Communication
         private Task Writer;
 
         CancellationTokenSource cancelHandler = new CancellationTokenSource();
-        internal Channel<KeyValuePair<SteerCodes,object>> WriterChannel;
+        internal Channel<KeyValuePair<SteerCodes, object>> WriterChannel;
 
         // Buffers
         byte[] steerbuffer = new byte[16];
@@ -49,7 +40,7 @@ namespace EasySslStream.ConnectionV2.Communication
         public string FileSavePath = AppDomain.CurrentDomain.BaseDirectory;
 
 
-        internal ConnectionHandler(SslStream stream,int BufferSize,TaskCompletionSource handlerStartedCallback = null) 
+        internal ConnectionHandler(SslStream stream, int BufferSize, TaskCompletionSource handlerStartedCallback = null)
         {
             _transferBufferSize = BufferSize;
             Thread handlerThread = new Thread(() =>
@@ -69,7 +60,7 @@ namespace EasySslStream.ConnectionV2.Communication
                 Task.WaitAll(Listener, Writer);
             });
             handlerThread.Start();
-            
+
         }
 
         private async Task ListenerTask(CancellationToken cancel)
@@ -84,34 +75,36 @@ namespace EasySslStream.ConnectionV2.Communication
                 {
                     case SteerCodes.SendBytes:
                         byte[] buffer = new byte[this._transferBufferSize];
-                        int receivedBytes =await base.ReadBytes(buffer);                      
-                        this.HandleReceivedBytes?.Invoke((buffer.Take(receivedBytes).ToArray()));                       
-                    break;
+                        int receivedBytes = await base.ReadBytes(buffer);
+                        this.HandleReceivedBytes?.Invoke((buffer.Take(receivedBytes).ToArray()));
+                        break;
 
-                    case SteerCodes.SendText:                        
+                    case SteerCodes.SendText:
                         string receivedString = await base.GetTextAsync(this._transferBufferSize);
                         this.HandleReceivedText?.Invoke(receivedString);
-                    break;
+                        break;
 
                     case SteerCodes.SendFile:
 
                         string receivedFilePath = await base.GetFileAsync(this.FileSavePath);
                         this.HandleReceivedFile?.Invoke(receivedFilePath);
-                    break;
+                        break;
 
                     case SteerCodes.SendDirectory:
 
                         string receivedDirectoryPath = await base.GetDirectoryAsync(this.DirectorySavePath);
+                        this.HandleReceivedDirectory?.Invoke(receivedDirectoryPath);
                         break;
-               
-                
+
+
                 }
             }
         }
 
         private async Task WriterTask(CancellationToken cancel)
         {
-            while (!cancel.IsCancellationRequested) {
+            while (!cancel.IsCancellationRequested)
+            {
                 await WriterChannel.Reader.WaitToReadAsync(cancel);
                 var workpair = await WriterChannel.Reader.ReadAsync(cancel);
                 SteerCodes steer = workpair.Key;
@@ -121,12 +114,12 @@ namespace EasySslStream.ConnectionV2.Communication
                 switch (steer)
                 {
                     case SteerCodes.SendBytes:
-                      await base.WriteBytesAsync((byte[])work, steer);
+                        await base.WriteBytesAsync((byte[])work, steer);
                         break;
 
                     case SteerCodes.SendText:
                         await base.SendTextAsync((TextTransferWork)work, steer);
-                        
+
                         break;
 
                     case SteerCodes.SendFile:
@@ -151,20 +144,20 @@ namespace EasySslStream.ConnectionV2.Communication
 
         public void SendText(string Text, Encoding encoding)
         {
-            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));            
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));
         }
 
         public void SendFile(string path)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
-        
+
         public void SendDirectory(string path)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendDirectory, path));
         }
 
-        
+
 
         #endregion
 

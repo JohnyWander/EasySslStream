@@ -1,12 +1,7 @@
-﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
-using EasySslStream.CertGenerationClasses.GenerationConfigs;
+﻿using EasySslStream;
+using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses;
-using EasySslStream;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStreamTests.ConnectionTests;
 
 namespace EasySslStreamTests.ConnectionV2Tests
@@ -14,7 +9,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
     internal class PreparationBase
     {
 
-        public void CreateCertificates(string Workspace, string ServerWorkspace,string ClientWorkspace)
+        public void CreateCertificates(string Workspace, string ServerWorkspace, string ClientWorkspace)
         {
             OpensslCertGeneration certgen = new OpensslCertGeneration();
 
@@ -78,9 +73,9 @@ namespace EasySslStreamTests.ConnectionV2Tests
                 certgen.ConvertX509ToPfx("Client.crt", "Client.key", "Client.pfx", "123", $"{Workspace}\\{ClientWorkspace}");
             }
         }
-        
 
-        public void CreateFolder(string Workspace,string ServerWorkspace,string ClientWorkspace)
+
+        public void CreateFolder(string Workspace, string ServerWorkspace, string ClientWorkspace)
         {
             if (!Directory.Exists($"{Workspace}\\{ServerWorkspace}\\TestTransferDir"))
             {

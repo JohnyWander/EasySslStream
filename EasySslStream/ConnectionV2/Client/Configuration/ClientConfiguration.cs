@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Net.Security;
+﻿using System.Net.Security;
 using System.Security.Authentication;
-using EasySslStream.Connection.Client;
+using System.Security.Cryptography.X509Certificates;
+
 
 namespace EasySslStream.ConnectionV2.Client.Configuration
 {
@@ -16,7 +10,7 @@ namespace EasySslStream.ConnectionV2.Client.Configuration
         public int BufferSize = 8192;
         public bool verifyDomainName = false;
         public bool verifyCertificateChain = false;
-        
+
 
         public bool serverVerifiesClient;
         public string pathToClientPfxCertificate;
@@ -28,7 +22,7 @@ namespace EasySslStream.ConnectionV2.Client.Configuration
 
         }
 
-      
+
 
         internal bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {

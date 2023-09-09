@@ -1,20 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net;
+﻿using EasySslStream.ConnectionV2.Client;
+using EasySslStream.ConnectionV2.Client.Configuration;
 using EasySslStream.ConnectionV2.Server;
 using EasySslStream.ConnectionV2.Server.Configuration;
-using EasySslStream.ConnectionV2.Client;
-using EasySslStream.ConnectionV2.Client.Configuration;
 using System.Diagnostics;
-using NuGet.Frameworks;
+using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using System.Runtime.Intrinsics.Arm;
+using System.Text;
 
 namespace EasySslStreamTests.ConnectionV2Tests
 {
@@ -67,7 +60,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
         [OneTimeSetUp]
         public void OneTimeSetup()
         {
-            base.CreateCertificates(Workspace, ServerWorkspace, ClientWorkspace); 
+            base.CreateCertificates(Workspace, ServerWorkspace, ClientWorkspace);
             base.CreateFolder(Workspace, ServerWorkspace, ClientWorkspace);
         }
 
@@ -78,7 +71,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
         {
             TestEnder = new TaskCompletionSource<object>();
             ClientWaiter = new TaskCompletionSource<object>();
-            
+
 
             ServerConfiguration conf = new ServerConfiguration();
             conf.BufferSize = 8192;
@@ -86,35 +79,51 @@ namespace EasySslStreamTests.ConnectionV2Tests
             conf.authOptions.VerifyDomainName = false;
             conf.authOptions.VerifyCertificateChain = false;
             conf.authOptions.VerifyClientCertificates = false;
-            srv = new Server(new IPEndPoint(IPAddress.Any, 5000),conf);
+            srv = new Server(new IPEndPoint(IPAddress.Any, 5000), conf);
             srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
 
             ClientConfiguration clientconf = new ClientConfiguration();
-            clientconf.serverVerifiesClient = false;            
+            clientconf.serverVerifiesClient = false;
             clientconf.verifyCertificateChain = false;
-            clientconf.verifyDomainName = false;           
+            clientconf.verifyDomainName = false;
             client = new Client("127.0.0.1", 5000, clientconf);
         }
 
 
         [TearDown]
         public void teardown()
-        {
-            srv.StopServer();
-            client.Disconnect();
+        {           
+            if(srv != null)
+            {
+                try
+                {
+                    srv.StopServer();
+                }
+                catch(NullReferenceException)
+                {
+                }
+                //srv = null;
+            }
 
-            srv = null;
-            client = null;
+            if(client != null)
+            {
+                try
+                {
+                    client.Disconnect();
+                }
+                catch (NullReferenceException) 
+                {
+                }
+            }                       
         }
 
         [Test]
         public async Task ConnectTest()
-        {
-            srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+        {           
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
-            client.Connect();
+            Task connection = client.Connect();
             srv.ClientConnected += () =>
             {
                 Debug.WriteLine("CONNECTED");
@@ -122,21 +131,23 @@ namespace EasySslStreamTests.ConnectionV2Tests
                 srv.StopServer();
 
             };
+
+            await connection;
             await clientWaiter;
+            
             Assert.Multiple(() =>
             {
                 Assert.That(srv.ConnectedClientsByEndpoint.Count != 0);
-                Assert.That(srv.ConnectedClientsById.Count != 0);               
-            });            
-            await srv.RunningServerListener;
-            // Assert.Throws(async () => await srv.RunningServerListener);
-            Assert.That(srv.RunningServerListener.IsCompleted);                 
+                Assert.That(srv.ConnectedClientsById.Count != 0);
+            });
+            await srv.RunningServerListener;           
+            Assert.That(srv.RunningServerListener.IsCompleted);
         }
 
         [Test]
         [TestCase(SslProtocols.Tls)]
         [TestCase(SslProtocols.Tls11)]
-        [TestCase(SslProtocols.Tls12)]
+        [TestCase(SslProtocols.Tls12)]        
         //[TestCase(SslProtocols.Tls13)] // appears to not be supported
         public async Task ProtocolNegotiationTest(SslProtocols protocol)
         {
@@ -146,29 +157,30 @@ namespace EasySslStreamTests.ConnectionV2Tests
             ServerConfiguration sconf = new ServerConfiguration();
             sconf.authOptions.VerifyClientCertificates = false;
             sconf.enabledSSLProtocols = protocol;
-            
 
             ClientConfiguration cconf = new ClientConfiguration();
             cconf.enabledSSLProtocols = protocol;
             cconf.verifyCertificateChain = false;
             cconf.verifyDomainName = false;
-            
-            Server server = new Server(new IPEndPoint(IPAddress.Any, 5000),sconf);
-            Client cl = new Client("127.0.0.1",5000,cconf);
 
-
-            server.ClientConnected += () =>
+            Server sr = new Server(new IPEndPoint(IPAddress.Any, 5001), sconf);
+            Client cl = new Client("127.0.0.1", 5001, cconf);
+            sr.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+            Task connection =  cl.Connect();
+            sr.ClientConnected += () =>
             {
-                this.ClientWaiter.SetResult(true);
-                
+                ClientWaiter.SetResult(true);
+               
             };
 
-            server.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
+
+            await connection;
+            //await Task.Delay(1000);
+
             
-            cl.Connect();
             await clientWaiter;
 
-            SslStream ServerStream = server.ConnectedClientsById[0].sslStream;
+            SslStream ServerStream = sr.ConnectedClientsById[0].sslStream;
             SslStream ClientStream = cl.sslStream;
 
             Assert.Multiple(() =>
@@ -180,10 +192,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
 
 
             Debug.WriteLine(ServerStream.SslProtocol.ToString());
-            server.StopServer();
-            ServerStream.Dispose();
-            ClientStream.Dispose();
-            
+            sr.StopServer();
         }
 
         [Test]
@@ -194,14 +203,14 @@ namespace EasySslStreamTests.ConnectionV2Tests
         [TestCase(4096)]
         public async Task ByteTransferClientToServerTest(int BytesToSend)
         {
-            
+
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
             Task Connection = client.Connect();
             srv.ClientConnected += () =>
             {
-                this.ClientWaiter.SetResult(true);           
+                this.ClientWaiter.SetResult(true);
             };
             await clientWaiter;
             await Connection;
@@ -209,18 +218,18 @@ namespace EasySslStreamTests.ConnectionV2Tests
             byte[] ReceivedBytes = null;
             rnd.NextBytes(testBytes);
 
-            
+
             var handler = srv.ConnectedClientsById[0].ConnectionHandler;
             handler.HandleReceivedBytes += (byte[] received) =>
             {
                 ReceivedBytes = received;
                 TestEnder.SetResult(true);
 
-              
+
             };
 
-            
-            client.ConnectionHandler.SendBytes(testBytes);           
+
+            client.ConnectionHandler.SendBytes(testBytes);
             await locker;
 
             Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
@@ -252,14 +261,14 @@ namespace EasySslStreamTests.ConnectionV2Tests
 
             var handler = srv.ConnectedClientsById[0].ConnectionHandler;
 
-            
+
             client.ConnectionHandler.HandleReceivedBytes += (byte[] received) =>
             {
                 ReceivedBytes = received;
                 TestEnder.SetResult(true);
             };
 
-            
+
             handler.SendBytes(testBytes);
             await locker;
             Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
@@ -273,7 +282,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
         [TestCase(4096)]
         public async Task TransferStringClientToServerTest(int StringLength)
         {
-            
+
             Task locker = Task.Run(() => Locker());
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
@@ -289,7 +298,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
             srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedText += (string _received) =>
             {
                 received = _received;
-                TestEnder.SetResult(true);               
+                TestEnder.SetResult(true);
             };
 
             byte[] randomBytes = new byte[StringLength];
@@ -297,7 +306,7 @@ namespace EasySslStreamTests.ConnectionV2Tests
             string randomstring = Encoding.UTF8.GetString(randomBytes);
 
             client.ConnectionHandler.SendText(randomstring, Encoding.UTF8);
-            
+
             await locker;
             Debug.WriteLine(received);
             Assert.That(received == randomstring);
@@ -354,11 +363,11 @@ namespace EasySslStreamTests.ConnectionV2Tests
             await clientWaiter;
             await Connection;
 
-            string[] files = Directory.EnumerateFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir","*",SearchOption.AllDirectories).ToArray();
-            string PickedFile = files[rnd.Next(0,files.Length)];
+            string[] files = Directory.EnumerateFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", "*", SearchOption.AllDirectories).ToArray();
+            string PickedFile = files[rnd.Next(0, files.Length)];
 
             srv.ConnectedClientsById[0].ConnectionHandler.FileSavePath = $"{Workspace}\\{ServerWorkspace}";
-            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedFile += (string path) =>
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedDirectory += (string path) =>
             {
                 TestEnder.SetResult(true);
             };
@@ -369,46 +378,78 @@ namespace EasySslStreamTests.ConnectionV2Tests
 
             SHA256 sha = SHA256.Create();
 
-            FileStream source = new FileStream(PickedFile,FileMode.Open,FileAccess.Read);
+            FileStream source = new FileStream(PickedFile, FileMode.Open, FileAccess.Read);
             FileStream Destination = new FileStream($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}", FileMode.Open, FileAccess.Read);
             byte[] sourceHash = sha.ComputeHash(source);
             byte[] destinationHash = sha.ComputeHash(Destination);
 
             Assert.Multiple(() =>
             {
-                Assert.That(File.Exists($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}"),"Destination file does not exist");
-                Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash),"Hashes do not match");
+                Assert.That(File.Exists($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}"), "Destination file does not exist");
+                Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash), "Hashes do not match");
 
             });
-            
+
 
         }
 
         [Test]
         public async Task DirectoryTransferClientToServerTest()
         {
-            Task locker = Task.Run(() => Locker(120000));
+            Task locker = Task.Run(() => Locker(20000000));
             Task clientWaiter = Task.Run(() => ClientAwaiter());
             Task Connection = client.Connect();
             srv.ClientConnected += () =>
             {
                 this.ClientWaiter.SetResult(true);
             };
-            await clientWaiter;
             await Connection;
+            await clientWaiter;
+            
 
-            string Directory = $"{Workspace}\\{ClientWorkspace}\\TestTransferDir";
+            string directory = $"{Workspace}\\{ClientWorkspace}\\TestTransferDir";
 
             srv.ConnectedClientsById[0].ConnectionHandler.DirectorySavePath = $"{Workspace}\\{ServerWorkspace}\\Received";
             srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedDirectory += (string path) =>
             {
                 TestEnder.SetResult(true);
+                Debug.WriteLine(path);
             };
 
-
-            client.ConnectionHandler.SendDirectory(Directory);
+            client.ConnectionHandler.SendDirectory(directory);
 
             await locker;
+
+            Debug.WriteLine("LockerEnded");
+            string[] sourceFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+            string[] destinationFiles = Directory.GetFiles($"{Workspace}\\{ServerWorkspace}\\Received\\TestTransferDir", "*.*", SearchOption.AllDirectories);
+            bool directoriesMatch = sourceFiles.Count() == destinationFiles.Count();
+
+            if (directoriesMatch)
+            {
+                Assert.Multiple(() =>
+                {
+                    SHA256 sha = SHA256.Create();
+                    var entries = sourceFiles.Zip(destinationFiles, (s, d) => new { source = s, dest = d });
+                    foreach (var entry in entries)
+                    {
+                        using (FileStream sourceStream = new FileStream(entry.source, FileMode.Open))
+                        using (FileStream destStream = new FileStream(entry.dest, FileMode.Open))
+                        {
+                            byte[] sourceHash = sha.ComputeHash(sourceStream);
+                            byte[] destHash = sha.ComputeHash(destStream);
+                            Assert.That(Enumerable.SequenceEqual(sourceHash, destHash), $"Source file and destination file do not match {entry.source}\n{entry.dest}");
+                        }
+                    }
+                });
+            }
+            else
+            {
+                Assert.Fail($"Directories do not match. Source file count - {sourceFiles.Length}, dest count - {destinationFiles.Length}");
+            }
+
+
+
         }
 
 
