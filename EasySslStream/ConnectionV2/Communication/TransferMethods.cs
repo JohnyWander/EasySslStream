@@ -109,7 +109,7 @@ namespace EasySslStream.ConnectionV2.Communication
             int LengthBytesReceived = await stream.ReadAsync(FileLengthBuffer);
             long ExpectedFileLentgh = BitConverter.ToInt64(FileLengthBuffer);
 
-            FileStream saveStream = new FileStream(Path.Combine(SaveDir, Filename), FileMode.Create, FileAccess.Write);
+            FileStream saveStream = new FileStream(Path.Combine(SaveDir, Filename), FileMode.OpenOrCreate, FileAccess.Write);
             long FileBytesReceived = 0;
             byte[] buffer = new byte[this._bufferSize];
 

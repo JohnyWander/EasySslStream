@@ -360,14 +360,16 @@ namespace EasySslStreamTests.ConnectionV2Tests
             {
                 this.ClientWaiter.SetResult(true);
             };
+            
             await clientWaiter;
             await Connection;
 
-            string[] files = Directory.EnumerateFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", "*", SearchOption.AllDirectories).ToArray();
+
+            string[] files = Directory.GetFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", "*", SearchOption.AllDirectories).ToArray();
             string PickedFile = files[rnd.Next(0, files.Length)];
 
             srv.ConnectedClientsById[0].ConnectionHandler.FileSavePath = $"{Workspace}\\{ServerWorkspace}";
-            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedDirectory += (string path) =>
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedFile += (string path) =>
             {
                 TestEnder.SetResult(true);
             };

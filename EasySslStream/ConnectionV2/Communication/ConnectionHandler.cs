@@ -21,6 +21,8 @@ namespace EasySslStream.ConnectionV2.Communication
 
     public class ConnectionHandler : TransferMethods
     {
+        private List<TaskCompletionSource<object>> AsyncHandlersList = new List<TaskCompletionSource<object>>();
+
         private SslStream WorkingStream;
         //private ConnectedClient _ClientCallback;
 
@@ -33,10 +35,17 @@ namespace EasySslStream.ConnectionV2.Communication
         // Buffers
         byte[] steerbuffer = new byte[16];
 
-
+        
         int _transferBufferSize;
 
+        /// <summary>
+        /// Path to save received directory/ies
+        /// </summary>
         public string DirectorySavePath = AppDomain.CurrentDomain.BaseDirectory;
+
+        /// <summary>
+        /// Path to save received files
+        /// </summary>
         public string FileSavePath = AppDomain.CurrentDomain.BaseDirectory;
 
 
@@ -116,42 +125,56 @@ namespace EasySslStream.ConnectionV2.Communication
                     case SteerCodes.SendBytes:
                         await base.WriteBytesAsync((byte[])work, steer);
                         break;
-
                     case SteerCodes.SendText:
                         await base.SendTextAsync((TextTransferWork)work, steer);
-
                         break;
 
                     case SteerCodes.SendFile:
                         await base.SendFileAsync((string)work, steer);
-
                         break;
 
                     case SteerCodes.SendDirectory:
                         await base.SendDirectory((string)work, steer);
                         break;
                 }
-
             }
         }
+        
 
         #region Send Methods
 
+        /// <summary>
+        /// Queues sending bytes operation
+        /// </summary>
+        /// <param name="bytes">Bytes to send</param>
         public void SendBytes(byte[] bytes)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendBytes, bytes));
         }
 
+        /// <summary>
+        /// Queues sending string operation
+        /// </summary>
+        /// <param name="Text">Message to send</param>
+        /// <param name="encoding">message encoding</param>
         public void SendText(string Text, Encoding encoding)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));
         }
 
+        /// <summary>
+        /// Queues sending file operation
+        /// </summary>
+        /// <param name="path">Path to file to send</param>
         public void SendFile(string path)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
         }
 
+        /// <summary>
+        /// Queues sening directory operation
+        /// </summary>
+        /// <param name="path">Path to directory to send</param>
         public void SendDirectory(string path)
         {
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendDirectory, path));
@@ -162,10 +185,24 @@ namespace EasySslStream.ConnectionV2.Communication
         #endregion
 
         #region Events
-
+        /// <summary>
+        /// Fired when connection handler receives bytes
+        /// </summary>
         public event HandleReceivedBytes HandleReceivedBytes;
+
+        /// <summary>
+        /// Fired when connection handler receives text message
+        /// </summary>
         public event HandleReceivedText HandleReceivedText;
+
+        /// <summary>
+        /// Fired when connection handler receives file
+        /// </summary>
         public event HandleReceivedFile HandleReceivedFile;
+
+        /// <summary>
+        /// Fired when connection handler receives directory
+        /// </summary>
         public event HandleReceivedDirectory HandleReceivedDirectory;
         #endregion
     }
