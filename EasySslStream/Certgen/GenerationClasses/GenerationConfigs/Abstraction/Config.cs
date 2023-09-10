@@ -1,10 +1,8 @@
-﻿using System;
-using EasySslStream.Exceptions;
+﻿using EasySslStream.Exceptions;
 
-
-namespace EasySslStream
+namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
 {
-    public class CaCertgenConfig
+    public abstract class Config
     {
         public enum HashAlgorithms
         {
@@ -27,18 +25,44 @@ namespace EasySslStream
 
 
         public HashAlgorithms? HashAlgorithm;
-        public KeyLengths? KeyLength;
-        public Encodings Encoding = Encodings.Default;
 
+        public string KeyLengthAsNumber;
+        private KeyLengths? _KeyLength;
+        public KeyLengths? KeyLength
+        {
+            get
+            {
+                return _KeyLength;
+            }
+            set
+            {
+                _KeyLength = value;
+                KeyLengthAsNumber = _KeyLength.ToString().Split("_")[1];
+            }
+        }
+
+        internal string EncodingAsString;
+        private Encodings _Encoding;
+        public Encodings Encoding
+        {
+            get { return _Encoding; }
+            set
+            {
+                _Encoding = value;
+                EncodingAsString = $"-{_Encoding.ToString()}";
+            }
+
+        }
 
         public int Days { internal get; set; } = 365;// ex. 356
+
 
         internal string? CountryCodeString;
         public string? CountryCode
         {
-            internal get
+            get
             {
-                if (CountryCode is not null)
+                if (CountryCodeString is not null)
                 {
                     return CountryCodeString;
                 }
@@ -58,14 +82,18 @@ namespace EasySslStream
         }
         public string? CountryState { internal get; set; }
         public string? Location { internal get; set; }
-        public string? Organisation { internal get; set; }
+        public string? Organization { internal get; set; }
         public string? CommonName { internal get; set; }
 
-        private bool VerifyCountryCode(string CountryCode, out int length)
+        public string? State { internal get; set; }
+        public string? City { internal get; set; }
+        public List<string> alt_names { get; set; } = new List<string>();
+        private protected bool VerifyCountryCode(string CountryCode, out int length)
         {
             length = CountryCode.Length;
             return CountryCode.Length == 2 ? true : false;
         }
-    }
 
+
+    }
 }
