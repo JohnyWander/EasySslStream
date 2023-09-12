@@ -23,6 +23,7 @@ namespace EasySslStream.ConnectionV2.Communication
         #region bytes
         internal async Task WriteBytesAsync(byte[] bytes, SteerCodes code)
         {
+            
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
             await stream.WriteAsync(steerBytes);

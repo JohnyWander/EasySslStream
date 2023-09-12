@@ -26,4 +26,8 @@
     <None Remove="TESTS\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.20.69" />
+  </ItemGroup>
+
 </Project>
