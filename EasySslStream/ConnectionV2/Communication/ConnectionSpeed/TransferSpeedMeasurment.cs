@@ -12,14 +12,12 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
         Task MeasureTaskHandler;
 
 
-        internal int CurrenBufferPosition         
+        public int CurrentBufferPosition         
         {
             private get { return _currentRead; }
             set
             {
-                _previousRead = _currentRead;
-                _currentRead = value;
-                
+                _currentRead = value;               
             }
         }
 
@@ -39,8 +37,9 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
         {
             while(!cts.IsCancellationRequested)
             {
-                await Task.Delay(_checkDelay);               
-                this.TransferSpeedInbytesPerSecond = (_currentRead - _previousRead) / (_checkDelay * 1000);                
+                _previousRead = _currentRead;
+                await Task.Delay(_checkDelay);
+                TransferSpeedInbytesPerSecond = (_currentRead - _previousRead) / (_checkDelay * 1000);
             }
         }
 
