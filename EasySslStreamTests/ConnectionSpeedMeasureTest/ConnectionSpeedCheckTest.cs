@@ -9,18 +9,26 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
 {
     internal class ConnectionSpeedCheckTest
     {
-        
+        CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
+        [SetUp]
+        public void Setup()
         {
-
+            cancellationTokenSource = new CancellationTokenSource();
         }
 
         [Test]
         public void ConnectionSpeedTest()
         {
 
+            TransferSpeedMeasurment tmeasure = new TransferSpeedMeasurment(cancellationTokenSource.Token);
+
+
+            while (!cancellationTokenSource.IsCancellationRequested)
+            {
+
+
+            }
         }
             
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
 {
-    internal class TransferSpeedMeasurment : ITransferSpeed
+    public class TransferSpeedMeasurment : ITransferSpeed
     {
         Task MeasureTaskHandler;
 
