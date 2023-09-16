@@ -1,4 +1,5 @@
-﻿using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
+﻿using EasySslStream.ConnectionV2.Communication.ConnectionSpeed;
+using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
 using System.Diagnostics;
 using System.Net.Security;
 using System.Text;
@@ -16,6 +17,9 @@ namespace EasySslStream.ConnectionV2.Communication
             ASCII = 105,
             Custom = 999
         }
+
+        protected TransferSpeedMeasurment SendSpeed;
+        protected TransferSpeedMeasurment ReceiveSpeed;
 
         protected internal SslStream stream;
         protected internal int _bufferSize;
@@ -92,10 +96,12 @@ namespace EasySslStream.ConnectionV2.Communication
             byte[] DataChunk = new byte[this._bufferSize];
 
             long Sended = 0;
+            this.SendSpeed.CurrentBufferPosition = 0;
             while (Sended != fileStream.Length)
             {
-                Sended += await fileStream.ReadAsync(DataChunk, 0, DataChunk.Length);
+                Sended += await fileStream.ReadAsync(DataChunk, 0, DataChunk.Length);                
                 await stream.WriteAsync(DataChunk);
+                this.SendSpeed.CurrentBufferPosition = Sended;
             }
             await fileStream.DisposeAsync();
         }
@@ -114,10 +120,12 @@ namespace EasySslStream.ConnectionV2.Communication
             long FileBytesReceived = 0;
             byte[] buffer = new byte[this._bufferSize];
 
+            this.ReceiveSpeed.CurrentBufferPosition = 0;
             while (FileBytesReceived <= ExpectedFileLentgh)
             {
                 FileBytesReceived += await stream.ReadAsync(buffer);
                 await saveStream.WriteAsync(buffer);
+                this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
             }
 
             saveStream.SetLength(ExpectedFileLentgh);
@@ -153,10 +161,12 @@ namespace EasySslStream.ConnectionV2.Communication
                 {
                     FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read);
                     long Sended = 0;
+                    this.SendSpeed.CurrentBufferPosition = 0;
                     while (Sended != f.Length)
                     {
                         Sended += await f.ReadAsync(DataChunk, 0, DataChunk.Length);
                         await stream.WriteAsync(DataChunk, 0, DataChunk.Length);
+                        this.SendSpeed.CurrentBufferPosition = Sended;
                     }
                     await stream.FlushAsync();
                     f.Close();
@@ -213,10 +223,12 @@ namespace EasySslStream.ConnectionV2.Communication
                     FileStream saveStream = new FileStream($"{WorkingDirectory}\\{Dirpath}\\{Filename}", FileMode.OpenOrCreate, FileAccess.Write);
 
                     byte[] buffer = new byte[this._bufferSize];
+                    this.ReceiveSpeed.CurrentBufferPosition = 0;
                     while (FileBytesReceived <= FileSize)
                     {
                         FileBytesReceived += await stream.ReadAsync(buffer);
                         await saveStream.WriteAsync(buffer);
+                        this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
                         if (saveStream.Length >= FileSize)
                         {
                             break;

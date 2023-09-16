@@ -1,4 +1,5 @@
-﻿using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
+﻿using EasySslStream.ConnectionV2.Communication.ConnectionSpeed;
+using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
 using System.Net.Security;
 using System.Text;
 using System.Threading.Channels;
@@ -22,9 +23,9 @@ namespace EasySslStream.ConnectionV2.Communication
     public class ConnectionHandler : TransferMethods
     {
         private List<TaskCompletionSource<object>> AsyncHandlersList = new List<TaskCompletionSource<object>>();
-
         private SslStream WorkingStream;
-        //private ConnectedClient _ClientCallback;
+        
+
 
         private Task Listener;
         private Task Writer;
@@ -48,9 +49,22 @@ namespace EasySslStream.ConnectionV2.Communication
         /// </summary>
         public string FileSavePath = AppDomain.CurrentDomain.BaseDirectory;
 
-
+        public TransferSpeedMeasurment Sendspeed;
+        public TransferSpeedMeasurment ReceiveSpeed;
+        internal CancellationTokenSource cts;
+       
+        
+            
+        
         internal ConnectionHandler(SslStream stream, int BufferSize, TaskCompletionSource handlerStartedCallback = null)
         {
+            cts = new CancellationTokenSource();
+            this.SendSpeed = new TransferSpeedMeasurment(cts.Token);
+            this.ReceiveSpeed = new TransferSpeedMeasurment(cts.Token);
+
+            base.SendSpeed = this.SendSpeed;
+            base.ReceiveSpeed = this.ReceiveSpeed;
+
             _transferBufferSize = BufferSize;
             Thread handlerThread = new Thread(() =>
             {

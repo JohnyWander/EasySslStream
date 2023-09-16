@@ -9,10 +9,10 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
 {
     public class TransferSpeedMeasurment : ITransferSpeed
     {
-        Task MeasureTaskHandler;
+        public Task MeasureTaskHandler;
 
 
-        public int CurrentBufferPosition         
+        public long CurrentBufferPosition         
         {
             private get { return _currentRead; }
             set
@@ -21,25 +21,33 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
             }
         }
 
-        private int _currentRead = 0;
-        private int _previousRead = 0;
+        private long _currentRead = 0;
+        private long _previousRead = 0;
         private int _checkDelay = 0;
 
-        public long TransferSpeedInbytesPerSecond { get; set; }
+        private float DividableCheckDelay;
+
+        public float TransferSpeedInbytesPerSecond { get; set; }
 
         public TransferSpeedMeasurment(CancellationToken cts, int delay=500)
         {            
             _checkDelay = delay;
             MeasureTaskHandler = Task.Run(() => MeasureTask(cts));
+            DividableCheckDelay = delay;
         }
 
         async Task MeasureTask(CancellationToken cts)
         {
             while(!cts.IsCancellationRequested)
             {
+               
                 _previousRead = _currentRead;
                 await Task.Delay(_checkDelay);
-                TransferSpeedInbytesPerSecond = (_currentRead - _previousRead) / (_checkDelay * 1000);
+                TransferSpeedInbytesPerSecond = (_currentRead - _previousRead) / (DividableCheckDelay / 1000);
+                if(TransferSpeedInbytesPerSecond < 0)
+                {
+                    TransferSpeedInbytesPerSecond = 0;
+                }
             }
         }
 
