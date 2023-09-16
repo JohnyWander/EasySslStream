@@ -12,19 +12,20 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
     internal class ConnectionSpeedCheckTest
     {
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+        ConnectionV2Tests.ConnectionV2Tests connectionCallback = new ConnectionV2Tests.ConnectionV2Tests();
 
         [SetUp]
         public void Setup()
         {
             cancellationTokenSource = new CancellationTokenSource();
+            
         }
 
         [Test]
         public async Task ConnectionSpeedTest()
         {
-
             TransferSpeedMeasurment tmeasure = new TransferSpeedMeasurment(cancellationTokenSource.Token);
-
+            List<double> reads = new List<double>();
             Task.Run(() =>
             {
                 Random rnd = new Random();
@@ -36,30 +37,25 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
                         buffpos += rnd.Next(100000 * 8, 500000 * 8);
                         tmeasure.CurrentBufferPosition = buffpos;
                         Task.Delay(100).Wait();
-                    }
-
-                   
-
+                    }                  
                 }
-
                 cancellationTokenSource.Cancel();
-
-
             });
-
 
             while (!cancellationTokenSource.IsCancellationRequested)
             {
-                Debug.WriteLine(tmeasure.TransferSpeedInbytesPerSecond);
-                Thread.Sleep(100);
-                
+                reads.Add(tmeasure.TransferSpeedInbytesPerSecond);
+                Thread.Sleep(100);                
             }
-
-
             await tmeasure.MeasureTaskHandler;
+
+            double average = reads.Sum() / reads.Count;
+
+            Assert.That(average > 0);
         }
             
 
+        
 
 
     }

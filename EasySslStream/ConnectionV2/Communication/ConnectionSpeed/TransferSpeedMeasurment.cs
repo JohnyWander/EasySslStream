@@ -25,9 +25,9 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
         private long _previousRead = 0;
         private int _checkDelay = 0;
 
-        private float DividableCheckDelay;
+        private double DividableCheckDelay;
 
-        public float TransferSpeedInbytesPerSecond { get; set; }
+        public double TransferSpeedInbytesPerSecond { get; set; }
 
         public TransferSpeedMeasurment(CancellationToken cts, int delay=500)
         {            
@@ -51,6 +51,27 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
             }
         }
 
+        public double KBs(int round = 2)
+        {
+            return Math.Round(this.TransferSpeedInbytesPerSecond / 1000,round);
+        }
+
+        public string KBsString(int round = 2)
+        {
+            double rounded = KBs(round);
+            return $"{rounded} KB/s";
+        }
+
+        public double MBs(int round = 2)
+        {
+            return Math.Round(this.TransferSpeedInbytesPerSecond / 1000000,round);
+        }
+
+        public string MBsString(int round = 2)
+        {
+            double rounded = MBs(round);
+            return $"{rounded} MB/s";
+        }
 
     }
 }
