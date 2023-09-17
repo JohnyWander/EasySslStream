@@ -449,10 +449,157 @@ namespace EasySslStreamTests.ConnectionV2Tests
             {
                 Assert.Fail($"Directories do not match. Source file count - {sourceFiles.Length}, dest count - {destinationFiles.Length}");
             }
+        }
+
+
+        #region Async Send methods
+        [Test]
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(1024)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task SendBytesAsyncClientToServerTest(int lentgh)
+        {
+            Task Connection = client.Connect();
+            Task locker = Task.Run(() => Locker());
+            byte[] testBytes = new byte[lentgh] ;
+            byte[] ReceivedBytes = null;
+            rnd.NextBytes(testBytes);
+            await Connection;
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedBytes += (byte[] r) =>
+            {
+                ReceivedBytes = r;
+                TestEnder.SetResult(true);
+            };
+            await client.ConnectionHandler.SendBytesAsync(testBytes);
+            await locker;
+            Assert.That(Enumerable.SequenceEqual(testBytes, ReceivedBytes));
+        }
+
+
+        [Test]
+        [TestCase(32)]
+        [TestCase(64)]
+        [TestCase(128)]
+        [TestCase(2048)]
+        [TestCase(4096)]
+        public async Task SendTextAsyncClientToServer(int StringLength)
+        {
+            Task Connection = client.Connect();
+            Task locker = Task.Run(() => Locker());
+
+            byte[] randomBytes = new byte[StringLength];
+            rnd.NextBytes(randomBytes);
+            string randomstring = Encoding.UTF8.GetString(randomBytes);
+
+            await Connection;
+
+            string received = null;
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedText += (string output) =>
+            {
+                received = output;
+                TestEnder.SetResult(true);
+            };
+
+            await client.ConnectionHandler.SendTextAsync(randomstring, Encoding.UTF8);
+            await locker;
+
+            Assert.That(randomstring == received); 
+        }
+
+        [Test]
+        public async Task FileTransferAsyncClientToServer()
+        {
+            Task locker = Task.Run(() => Locker());
+            Task Connection = client.Connect();
+
+            string[] files = Directory.GetFiles($"{Workspace}\\{ClientWorkspace}\\TestTransferDir", "*", SearchOption.AllDirectories).ToArray();
+            string PickedFile = files[rnd.Next(0, files.Length)];
+
+            await Connection;
+
+            srv.ConnectedClientsById[0].ConnectionHandler.FileSavePath = $"{Workspace}\\{ServerWorkspace}";
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedFile += (string path) =>
+            {
+                TestEnder.SetResult(true);
+            };
+
+            await client.ConnectionHandler.SendFileAsync(PickedFile);
+
+            await locker;
+
+            SHA256 sha = SHA256.Create();
+
+            FileStream source = new FileStream(PickedFile, FileMode.Open, FileAccess.Read);
+            FileStream Destination = new FileStream($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}", FileMode.Open, FileAccess.Read);
+            byte[] sourceHash = sha.ComputeHash(source);
+            byte[] destinationHash = sha.ComputeHash(Destination);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(File.Exists($"{Workspace}\\{ServerWorkspace}\\{Path.GetFileName(PickedFile)}"), "Destination file does not exist");
+                Assert.That(Enumerable.SequenceEqual(sourceHash, destinationHash), "Hashes do not match");
+            });
+        }
+
+        #endregion
+
+
+        [Test]        
+        public async Task DiretoryTransferAsyncClientToServer()
+        {
+            Task locker = Task.Run(() => Locker(20000000));
+            Task Connection = client.Connect();
+
+
+            string directory = $"{Workspace}\\{ClientWorkspace}\\TestTransferDir";
+
+            await Connection;
+
+            srv.ConnectedClientsById[0].ConnectionHandler.DirectorySavePath = $"{Workspace}\\{ServerWorkspace}\\Received";
+            srv.ConnectedClientsById[0].ConnectionHandler.HandleReceivedDirectory += (string path) =>
+            {
+                TestEnder.SetResult(true);
+                
+            };
+
+            await client.ConnectionHandler.SendDirectoryAsync(directory);
+            await locker;
+
+            string[] sourceFiles = Directory.GetFiles(directory, "*.*", SearchOption.AllDirectories);
+            string[] destinationFiles = Directory.GetFiles($"{Workspace}\\{ServerWorkspace}\\Received\\TestTransferDir", "*.*", SearchOption.AllDirectories);
+            bool directoriesMatch = sourceFiles.Count() == destinationFiles.Count();
+
+            if (directoriesMatch)
+            {
+                Assert.Multiple(() =>
+                {
+                    SHA256 sha = SHA256.Create();
+                    var entries = sourceFiles.Zip(destinationFiles, (s, d) => new { source = s, dest = d });
+                    foreach (var entry in entries)
+                    {
+                        using (FileStream sourceStream = new FileStream(entry.source, FileMode.Open))
+                        using (FileStream destStream = new FileStream(entry.dest, FileMode.Open))
+                        {
+                            byte[] sourceHash = sha.ComputeHash(sourceStream);
+                            byte[] destHash = sha.ComputeHash(destStream);
+                            Assert.That(Enumerable.SequenceEqual(sourceHash, destHash), $"Source file and destination file do not match {entry.source}\n{entry.dest}");
+                        }
+                    }
+                });
+            }
+            else
+            {
+                Assert.Fail($"Directories do not match. Source file count - {sourceFiles.Length}, dest count - {destinationFiles.Length}");
+            }
+
 
 
 
         }
+
+
 
 
 

@@ -22,10 +22,10 @@ namespace EasySslStream.ConnectionV2.Communication
 
     public class ConnectionHandler : TransferMethods
     {
-        private List<TaskCompletionSource<object>> AsyncHandlersList = new List<TaskCompletionSource<object>>();
+        
         private SslStream WorkingStream;
         
-
+        private Queue<TaskCompletionSource<object>> AsyncOpsQueue = new Queue<TaskCompletionSource<object>>();
 
         private Task Listener;
         private Task Writer;
@@ -133,11 +133,15 @@ namespace EasySslStream.ConnectionV2.Communication
                 SteerCodes steer = workpair.Key;
                 object work = workpair.Value;
 
+                TaskCompletionSource<object> asyncCompletionHandler = null;
+                bool asyncWork = AsyncOpsQueue.TryDequeue(out asyncCompletionHandler);
 
                 switch (steer)
                 {
                     case SteerCodes.SendBytes:
                         await base.WriteBytesAsync((byte[])work, steer);
+                        
+
                         break;
                     case SteerCodes.SendText:
                         await base.SendTextAsync((TextTransferWork)work, steer);
@@ -151,6 +155,8 @@ namespace EasySslStream.ConnectionV2.Communication
                         await base.SendDirectory((string)work, steer);
                         break;
                 }
+
+                if (asyncWork) { asyncCompletionHandler.SetResult(true); }
             }
         }
         
@@ -186,7 +192,7 @@ namespace EasySslStream.ConnectionV2.Communication
         }
 
         /// <summary>
-        /// Queues sening directory operation
+        /// Queues sending directory operation
         /// </summary>
         /// <param name="path">Path to directory to send</param>
         public void SendDirectory(string path)
@@ -194,6 +200,62 @@ namespace EasySslStream.ConnectionV2.Communication
             this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendDirectory, path));
         }
 
+        /// <summary>
+        /// Queues Send byte work and exposes task to await transfer completion
+        /// </summary>
+        /// <param name="bytes">Bytes to send</param>
+        /// <returns></returns>
+        public async Task SendBytesAsync(byte[] bytes)
+        {
+            TaskCompletionSource<object> sendbytesCompletion = new TaskCompletionSource<object>();
+            AsyncOpsQueue.Enqueue(sendbytesCompletion);
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendBytes, bytes));
+
+            await sendbytesCompletion.Task;
+        }
+
+        /// <summary>
+        /// Queues Send text work and exposes task to await transfer completion
+        /// </summary>
+        /// <param name="Text">Text to send</param>
+        /// <param name="encoding">Text encoding</param>
+        /// <returns></returns>
+        public async Task SendTextAsync(string Text, Encoding encoding)
+        {
+            TaskCompletionSource<object> sendtextCompletiopn = new TaskCompletionSource<object>();
+            AsyncOpsQueue.Enqueue(sendtextCompletiopn);
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendText, new TextTransferWork(encoding, Text)));
+
+            await sendtextCompletiopn.Task;
+        }
+
+        /// <summary>
+        /// Queues Send file work and exposes task to await transfer completion
+        /// </summary>
+        /// <param name="path">Path to file to send</param>
+        /// <returns></returns>
+        public async Task SendFileAsync(string path)
+        {
+            TaskCompletionSource<object> sendFileCompletion = new TaskCompletionSource<object>();
+            AsyncOpsQueue.Enqueue(sendFileCompletion);
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendFile, path));
+
+            await sendFileCompletion.Task;
+        }
+
+        /// <summary>
+        /// Queues Send directory work and exposes task to await transfer completion
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task SendDirectoryAsync(string path)
+        {
+            TaskCompletionSource<object> sendDirectoryCompletion = new TaskCompletionSource<object>();
+            AsyncOpsQueue.Enqueue(sendDirectoryCompletion);
+            this.WriterChannel.Writer.TryWrite(new KeyValuePair<SteerCodes, object>(SteerCodes.SendDirectory, path));
+
+            await sendDirectoryCompletion.Task;
+        }
 
 
         #endregion

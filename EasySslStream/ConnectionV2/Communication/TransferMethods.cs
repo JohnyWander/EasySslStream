@@ -83,6 +83,7 @@ namespace EasySslStream.ConnectionV2.Communication
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
             await stream.WriteAsync(steerBytes);
+            await Task.Delay(100);
 
             string fileName = Path.GetFileName(path);
             byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
