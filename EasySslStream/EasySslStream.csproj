@@ -7,6 +7,7 @@
     <OutputType>Library</OutputType>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <FileVersion>2.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -24,10 +25,6 @@
     <Compile Remove="TESTS\**" />
     <EmbeddedResource Remove="TESTS\**" />
     <None Remove="TESTS\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Moq" Version="4.20.69" />
   </ItemGroup>
 
 </Project>
