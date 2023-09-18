@@ -4,7 +4,7 @@ using EasySslStream.CertGenerationClasses;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStreamTests.ConnectionTests;
 
-namespace EasySslStreamTests.ConnectionV2Tests
+namespace EasySslStreamTests.ConnectionV2Testing
 {
     internal class PreparationBase
     {

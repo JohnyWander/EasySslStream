@@ -9,7 +9,7 @@ using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace EasySslStreamTests.ConnectionV2Tests
+namespace EasySslStreamTests.ConnectionV2Testing
 {
     [TestFixture]
     internal class ConnectionV2Tests : PreparationBase
@@ -25,8 +25,8 @@ namespace EasySslStreamTests.ConnectionV2Tests
         TaskCompletionSource<object> TestEnder;
         TaskCompletionSource<object> ClientWaiter;
 
-        Server srv;
-        Client client;
+        public Server srv;
+        public Client client;
 
         Random rnd = new Random();
 

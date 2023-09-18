@@ -77,7 +77,6 @@ namespace EasySslStream.ConnectionV2.Communication
         #endregion
 
         #region Files
-
         internal async Task SendFileAsync(string path, SteerCodes code)
         {
             int steercode = (int)code;

@@ -24,7 +24,7 @@ namespace EasySslStream.ConnectionV2.Communication.ConnectionSpeed
         private long _currentRead = 0;
         private long _previousRead = 0;
         private int _checkDelay = 0;
-
+        
         private double DividableCheckDelay;
 
         public double TransferSpeedInbytesPerSecond { get; set; }

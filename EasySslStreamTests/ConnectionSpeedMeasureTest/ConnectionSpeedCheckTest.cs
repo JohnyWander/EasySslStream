@@ -6,13 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 
 using EasySslStream.ConnectionV2.Communication.ConnectionSpeed;
+using EasySslStreamTests.ConnectionV2Testing;
 
 namespace EasySslStreamTests.ConnectionSpeedMeasureTest
 {
     internal class ConnectionSpeedCheckTest
     {
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-        ConnectionV2Tests.ConnectionV2Tests connectionCallback = new ConnectionV2Tests.ConnectionV2Tests();
+        
 
         [SetUp]
         public void Setup()
@@ -34,7 +35,7 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
                     int buffpos = 0;
                     for(int ii =0; ii <= 100; ii++)
                     {
-                        buffpos += rnd.Next(100000 * 8, 500000 * 8);
+                        buffpos += rnd.Next(40992768, 107298816); // took from real transfer values
                         tmeasure.CurrentBufferPosition = buffpos;
                         Task.Delay(100).Wait();
                     }                  
@@ -53,8 +54,33 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
 
             Assert.That(average > 0);
         }
-            
 
+        [Test]
+        [Ignore]
+        public async Task ConnectionspeedTestOnRealtransferClientToServerTest()
+        {
+            ConnectionV2Tests ccallback = new ConnectionV2Tests();
+            ccallback.Setup();
+            ccallback.OneTimeSetup();
+
+            Task senddirTest = Task.Run(() => ccallback.DiretoryTransferAsyncClientToServer());
+            await Task.Delay(1000);
+
+            TransferSpeedMeasurment receiveSpeed = ccallback.srv.ConnectedClientsById[0].ConnectionHandler.ReceiveSpeed;
+            TransferSpeedMeasurment sendingSpeed = ccallback.client.ConnectionHandler.Sendspeed;
+
+            while(!senddirTest.IsCompleted)
+            {
+                Debug.WriteLine(receiveSpeed.TransferSpeedInbytesPerSecond);
+                await Task.Delay(100);
+            }
+
+
+
+
+
+            await senddirTest;
+        }
         
 
 
