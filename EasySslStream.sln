@@ -10,7 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySslStreamTests", "EasySslStreamTests\EasySslStreamTests.csproj", "{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasySslStreamTests", "EasySslStreamTests\EasySslStreamTests.csproj", "{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EndtoEndWindowsServer", "EndtoEndWindowsServer\EndtoEndWindowsServer.csproj", "{6B74FC98-B289-46D8-8BE6-7D03A7EF8726}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CFA66E5-8560-4CAA-91D1-2D8776E135E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B74FC98-B289-46D8-8BE6-7D03A7EF8726}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B74FC98-B289-46D8-8BE6-7D03A7EF8726}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B74FC98-B289-46D8-8BE6-7D03A7EF8726}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B74FC98-B289-46D8-8BE6-7D03A7EF8726}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
