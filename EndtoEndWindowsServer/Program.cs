@@ -9,24 +9,37 @@ namespace EndtoEndWindowsServer
 {
     internal class Program
     {
-       
-        
+
+
         static private List<SrvParam> AvaiableParams = new List<SrvParam>()
         {
-            new SrvParam("Server","s","-s /--Server Sets ip to listen on", (string ip) => SetIp(ip)),
-            new SrvParam("Port","p","-p / --Port  Sets port to listen on", (string port) => SetPort(port)),
-            new SrvParam("JustListen","j","-j / --JustListen true/ false -  Sets server to just listen to show debu messages",)
+            new SrvParam("Help","h","-h /--help Prompts help message",(string x) => WriteHelpMessage(x)),
+            new SrvParam("Server","s","-s /--Server Sets ip to listen on", (string ip) => server.IpToListenOn = ip),
+            new SrvParam("Port","p","-p / --Port  Sets port to listen on", (string port) => server.PortToListenOn = int.Parse(port.Trim())),
+            new SrvParam("Console","c","-c / use to expose sending console",(string just)=> server.ExposeSendingConsole()),
+            new SrvParam("Recert","r","-r / --Recert - Generates new server certificate",(string name)=>GenerateNewServerCert(name))
         };
-        static private List<SrvParam> ActivatedParams;
+        static private List<SrvParam> ActivatedParams = new List<SrvParam>();
 
-        
+        static private HandleServer server = new HandleServer();
 
 
         static void Main(string[] args)
         {
+            if (args.Length > 0)
+            {
+                ParseCommandLineArgs(args);
+                LaunchActivatedParams();
+                server.Launch();
+            }
+            else
+            {
+                args = new string[] { "-h" };
+                ParseCommandLineArgs(args);
+                LaunchActivatedParams();
+            }
 
-            ParseCommandLineArgs(args);
-
+           
             Console.ReadKey();
         }
 
@@ -71,31 +84,33 @@ namespace EndtoEndWindowsServer
                 {
                     SrvParam p = pickedParam.ToArray()[0];
                     p.ParamValue = value;
-                    Console.WriteLine(p.ParamName);
-                    Console.WriteLine(p.ParamValue);
+
+                    ActivatedParams.Add(new SrvParam(p.ParamName, value, p.ParamAction));
                 }
 
             }
-
-
-
         }
 
-
-        static void SetIp(string ip)
+        static void LaunchActivatedParams()
         {
-
+            foreach(SrvParam activeparam in ActivatedParams)
+            {
+                activeparam.ParamAction.Invoke(activeparam.ParamValue);
+            }
         }
 
-        static void SetPort(string port)
+        static void WriteHelpMessage(string n)
         {
-
+            foreach(SrvParam param in AvaiableParams)
+            {
+                Console.WriteLine($"{param.ParamShortName}, {param.ParamHelpMessage}");
+            }
         }
 
-        static void SetJustListen(string )
+        
+        static void GenerateNewServerCert(string filename)
         {
-
+            Console.WriteLine("Generating new certificate...");
         }
-
     }
 }

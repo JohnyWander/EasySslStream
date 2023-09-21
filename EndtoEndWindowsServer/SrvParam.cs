@@ -24,5 +24,11 @@ namespace EndtoEndTestServer
             this.ParamAction = paramAction;
         }
 
+        public SrvParam(string ParamName,string ParamValue,Action<string> paramAction)
+        {
+            this.ParamName = ParamName;
+            this.ParamValue = ParamValue;
+            this.ParamAction = paramAction;
+        }
     }
 }

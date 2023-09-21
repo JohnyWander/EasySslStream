@@ -9,9 +9,20 @@ namespace EndtoEndTestServer
 {
     internal class HandleServer
     {
-        IPAddress listenOn;
-        int port;
+        public string IpToListenOn;
+        public int PortToListenOn;
+        public bool UseConsole;
+        public void ExposeSendingConsole()
+        {
 
+        }
+
+        public void Launch()
+        {
+            Console.WriteLine(IpToListenOn);
+            Console.WriteLine(PortToListenOn);
+            Console.WriteLine(UseConsole);
+        }
 
         public HandleServer()
         {
