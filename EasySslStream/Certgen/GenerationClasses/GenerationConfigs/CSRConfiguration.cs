@@ -1,4 +1,4 @@
-﻿using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
+﻿using EasySslStream.CertGenerationClasses.GenerationConfigs;
 
 namespace EasySslStream.CertGenerationClasses.GenerationConfigs
 {

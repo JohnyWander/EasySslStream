@@ -5,6 +5,11 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using EasySslStream.CertGenerationClasses;
+using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
+using EasySslStream.CertGenerationClasses.GenerationConfigs;
+using EasySslStream;
+
 namespace EndtoEndWindowsServer
 {
     internal class Program
@@ -110,7 +115,29 @@ namespace EndtoEndWindowsServer
         
         static void GenerateNewServerCert(string filename)
         {
-            Console.WriteLine("Generating new certificate...");
+            OpensslCertGeneration certgen = new OpensslCertGeneration();
+
+            CaCertgenConfig CA = new CaCertgenConfig();
+            CA.HashAlgorithm = Config.HashAlgorithms.sha256;
+            CA.KeyLength = Config.KeyLengths.RSA_2048;
+            CA.CommonName = "TestCa.com";
+            CA.CountryCode = "JP";
+            certgen.GenerateCA(CA);
+
+
+            CSRConfiguration CSR = new CSRConfiguration();
+            CSR.HashAlgorithm = Config.HashAlgorithms.sha256;
+            CSR.KeyLength = Config.KeyLengths.RSA_2048;
+            CSR.alt_names.Add("server.com");
+            CSR.alt_names.Add("s.server.com");
+            CSR.CountryCode = "US";
+            CSR.CommonName = "server.com";
+            certgen.GenerateCSR(CSR);
+
+            SignCSRConfig SIGN = new SignCSRConfig();
+            SIGN.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Server);
+
+            certgen.SignCSR(SIGN, "CSR.csr", "CA.crt", "CA.key", "Server.crt");
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using EasySslStream.Exceptions;
 
-namespace EasySslStream.Certgen.GenerationClasses.GenerationConfigs
+namespace EasySslStream.CertGenerationClasses.GenerationConfigs
 {
     public abstract class Config
     {

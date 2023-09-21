@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace EasySslStream
+namespace EasySslStream.CertGenerationClasses.GenerationConfigs
 {
     /// <summary>
     /// Class that contains configuration for CSR signing with OpenSSL
