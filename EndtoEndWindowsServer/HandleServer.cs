@@ -10,11 +10,11 @@ namespace EndtoEndTestServer
     internal class HandleServer
     {
         public string IpToListenOn;
-        public int PortToListenOn;
+        public int PortToListenOn = 2000;
         public bool UseConsole;
         public void ExposeSendingConsole()
         {
-
+            UseConsole = true;
         }
 
         public void Launch()
