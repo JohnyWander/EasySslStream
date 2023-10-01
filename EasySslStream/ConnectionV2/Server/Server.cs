@@ -50,10 +50,7 @@ namespace EasySslStream.ConnectionV2.Server
                     ClientConnected?.Invoke();
                     id++;
                 }
-
             });
-
-
         }
 
 
@@ -64,8 +61,12 @@ namespace EasySslStream.ConnectionV2.Server
 
         #region Events
 
-        public ServerEvent ClientConnected;
+        public event ServerEvent ClientConnected;
 
+        internal void InvokeClientConnected()
+        {
+            this.ClientConnected?.Invoke();
+        }
 
         #endregion
 

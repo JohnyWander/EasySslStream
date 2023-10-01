@@ -22,8 +22,6 @@ namespace EasySslStream.ConnectionV2.Client
         {
             this.connectToEndpoint = connectTo;
             _config = config;
-
-
         }
 
         public Client(string connectToIP, int port, ClientConfiguration config) : this(new IPEndPoint(IPAddress.Parse(connectToIP), port), config) { }

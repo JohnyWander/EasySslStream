@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 
 using EasySslStream.CertGenerationClasses;
-using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream;
 
@@ -138,6 +137,8 @@ namespace EndtoEndWindowsServer
             SIGN.SetDefaultConfig(SignCSRConfig.DefaultConfigs.Server);
 
             certgen.SignCSR(SIGN, "CSR.csr", "CA.crt", "CA.key", "Server.crt");
+
+            certgen.ConvertX509ToPfx("Server.crt", "CSR.key", "servercert.pfx", "123");
         }
     }
 }

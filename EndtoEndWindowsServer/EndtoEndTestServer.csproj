@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <Reference Include="EasySslStream">
-      <HintPath>..\EasySslStream\bin\Release\net6.0\EasySslStream.dll</HintPath>
+      <HintPath>..\EasySslStream\bin\Debug\net6.0\EasySslStream.dll</HintPath>
     </Reference>
   </ItemGroup>
 

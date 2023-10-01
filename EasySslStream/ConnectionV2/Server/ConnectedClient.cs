@@ -23,6 +23,18 @@ namespace EasySslStream.ConnectionV2.Server
         }
         ServerConfiguration _servConf;
 
+        public IPEndPoint clientEndPoint
+        {
+            get
+            {
+                return this._client.Client.RemoteEndPoint as IPEndPoint;
+            }
+            private set
+            {
+
+            }
+        }
+
         private bool ValidateClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             if (sslPolicyErrors == SslPolicyErrors.None)
@@ -30,11 +42,11 @@ namespace EasySslStream.ConnectionV2.Server
                 return true;
 
             }
-            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && _servConf.authOptions.VerifyDomainName == false)
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && _servConf.connectionOptions.VerifyDomainName == false)
             {
                 return true;
             }
-            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && _servConf.authOptions.VerifyCertificateChain == false)
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && _servConf.connectionOptions.VerifyCertificateChain == false)
             {
                 return true;
             }
@@ -59,7 +71,7 @@ namespace EasySslStream.ConnectionV2.Server
             srvCallback.ConnectedClientsByEndpoint.TryAdd((IPEndPoint)client.Client.RemoteEndPoint, this);
             srvCallback.ConnectedClientsById.TryAdd(ID, this);
 
-            if (this._servConf.authOptions.VerifyClientCertificates)
+            if (this._servConf.connectionOptions.VerifyClientCertificates)
             {
                 this._stream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(srvCallback._config.ValidadeClientCert));
             }
@@ -70,10 +82,10 @@ namespace EasySslStream.ConnectionV2.Server
 
             SslServerAuthenticationOptions options = new SslServerAuthenticationOptions();
             options.ServerCertificate = serverCert;
-            options.EnabledSslProtocols = srvCallback._config.enabledSSLProtocols;
+            options.EnabledSslProtocols = srvCallback._config.connectionOptions.enabledProtocols;
             options.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
 
-            if (srvCallback._config.authOptions.VerifyClientCertificates)
+            if (srvCallback._config.connectionOptions.VerifyClientCertificates)
             {
                 options.ClientCertificateRequired = true;
             }
@@ -82,6 +94,7 @@ namespace EasySslStream.ConnectionV2.Server
                 options.ClientCertificateRequired = false;
             }
             this._stream.AuthenticateAsServer(options);
+            srvCallback.InvokeClientConnected();
 
             this.ConnectionHandler = new ConnectionHandler(this._stream, this._servConf.BufferSize);
 

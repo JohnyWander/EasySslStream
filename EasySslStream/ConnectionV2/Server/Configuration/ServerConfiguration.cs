@@ -7,18 +7,19 @@ namespace EasySslStream.ConnectionV2.Server.Configuration
 {
     public class ServerConfiguration
     {
-        public ConnectionConfig connectionOptions;
-        public CertfificateVerificationConfig authOptions;
-        public SslProtocols enabledSSLProtocols = SslProtocols.None;
 
-        public int BufferSize = 8192;
+        public ConnectionConfig connectionOptions { get; set; } 
+       
+
+        /// <summary>
+        /// Default buffer size for transport buffer - 8192 by default - Fast and stable
+        /// </summary>
+        public int BufferSize { get; set; } = 8192;
 
 
         public ServerConfiguration()
         {
-            connectionOptions = new ConnectionConfig();
-            authOptions = new CertfificateVerificationConfig();
-
+            connectionOptions = new ConnectionConfig();           
         }
 
         internal bool ValidadeClientCert(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
@@ -27,11 +28,11 @@ namespace EasySslStream.ConnectionV2.Server.Configuration
             {
                 return true;
             }
-            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && authOptions.VerifyDomainName == false)
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch && connectionOptions.VerifyDomainName == false)
             {
                 return true;
             }
-            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && authOptions.VerifyCertificateChain == false)
+            else if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && connectionOptions.VerifyCertificateChain == false)
             {
                 return true;
             }
