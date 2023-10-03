@@ -90,7 +90,14 @@ namespace EndtoEndTestServer
         {
             if(srv.ConnectedClientsById.Count == 0)
             {
-                Console.WriteLine();
+                Console.WriteLine("There are not connected clients");
+            }
+            else
+            {
+                foreach (KeyValuePair<int,ConnectedClient> IdClientPair in srv.ConnectedClientsById)
+                {
+                    Console.WriteLine($"{IdClientPair}")
+                }
             }
         }
 
