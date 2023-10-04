@@ -9,6 +9,7 @@ using EasySslStream;
 using EasySslStream.ConnectionV2.Server;
 using EasySslStream.ConnectionV2.Server.Configuration;
 using EasySslStream.ConnectionV2.Communication;
+using EasySslStream.ConnectionV2.Client;
 
 namespace EndtoEndTestServer
 {
@@ -91,21 +92,99 @@ namespace EndtoEndTestServer
             if(srv.ConnectedClientsById.Count == 0)
             {
                 Console.WriteLine("There are not connected clients");
+                Console.Clear();
+                MainMenu();
             }
             else
             {
+                Console.WriteLine("Select client to send to");
                 foreach (KeyValuePair<int,ConnectedClient> IdClientPair in srv.ConnectedClientsById)
                 {
-                    Console.WriteLine($"{IdClientPair}")
+                    Console.WriteLine($"{IdClientPair.Key} {IdClientPair.Value.clientEndPoint}");
                 }
+
+                ConnectedClient selected = selection();
+
+                
             }
         }
 
-        void ActionMenu()
+        void ActionMenu(ConnectedClient client)
         {
+            Console.WriteLine("1. Send text");
+            Console.WriteLine("2. Send Bytes");
+            Console.WriteLine("3. Send File");
+            Console.WriteLine("4. Send Directory");
+            Console.WriteLine("5. Pick another");
+
+            int selection = GetUserInputToInt();
+
+            switch (selection)
+            {
+                case 1:
+                        Console.WriteLine("Enter string to send");
+                        client.ConnectionHandler.SendText(Console.ReadLine(),Encoding.UTF8);
+                    break;
+                case 2:
+                    SendBytes(client);
+
+                   break;                 
+                 
+            }
+        }
+
+
+        void SendBytes(ConnectedClient client)
+        {
+            string[] validAsyncSwitches = new string[] { "Y", "y", "N", "n" };
+            string asyncSwitch = "";
+            while (validAsyncSwitches.Any(x => x != asyncSwitch))
+            {
+                Console.WriteLine("Test async version? (y/n)");
+                asyncSwitch = Console.ReadLine();
+            }
+            Console.WriteLine("Enter bytes to send like - FF,11,22,AB,CC ...");
+            string[] providedByteStrings = Console.ReadLine().Trim(',').Split(",");
+            byte[] byteArray = new byte[providedByteStrings.Length];
+
+            for (int i = 0; i < providedByteStrings.Length; i++)
+            {
+                if (byte.TryParse(providedByteStrings[i], System.Globalization.NumberStyles.HexNumber, null, out byte parsedByte))
+                {
+                    byteArray[i] = parsedByte;
+                }
+                else
+                {
+                    Console.WriteLine($"Invalid byte at index {i}: {providedByteStrings[i]}");
+                    ActionMenu(client);
+                }
+            }
+
+            if (asyncSwitch == "Y" || asyncSwitch == "y")
+            {
+                client.ConnectionHandler.SendBytesAsync(byteArray).Wait();
+            }
+            else
+            {
+                client.ConnectionHandler.SendBytes(byteArray);
+            }
 
         }
 
+        ConnectedClient selection()
+        {
+            try
+            {
+                ConnectedClient selected = srv.ConnectedClientsById[GetUserInputToInt()];
+                return selected;
+            }
+            catch (IndexOutOfRangeException)
+            {
+                Console.WriteLine("Invalid selection, try again");
+                return selection();
+            }
+                      
+        }
 
         void ConfigureEvents(ConnectedClient client)
         {
@@ -130,6 +209,23 @@ namespace EndtoEndTestServer
             {
                 Console.WriteLine($"{client.clientEndPoint.ToString()} sended [Directory] - {path}");
             };
+        }
+
+
+        int GetUserInputToInt()
+        {
+            try
+            {
+                ConsoleKeyInfo k = Console.ReadKey();
+                int selection = Convert.ToInt32(new string(k.KeyChar, 1));
+                return selection;
+            }
+            catch
+            {
+                Console.WriteLine("It's not valid number, please pick valid number from list above");
+                return GetUserInputToInt();
+            }
+            
         }
 
         public HandleServer()
