@@ -122,19 +122,51 @@ namespace EndtoEndTestServer
             switch (selection)
             {
                 case 1:
-                        Console.WriteLine("Enter string to send");
-                        client.ConnectionHandler.SendText(Console.ReadLine(),Encoding.UTF8);
+                    bool async1 = AsyncVersion();
+                    Console.WriteLine("Enter string to send");
+                    if (async1)
+                    {
+                        client.ConnectionHandler.SendTextAsync(Console.ReadLine(), Encoding.UTF8).Wait();
+                    }
+                    else
+                    {
+                        client.ConnectionHandler.SendTextAsync(Console.ReadLine(),Encoding.UTF8);
+                    }                                        
                     break;
                 case 2:
                     SendBytes(client);
+                   break;
+                case 3:
+                    bool async3 = AsyncVersion();
+                    Console.WriteLine("Enter path to file");
+                    if (async3)
+                    {
+                        client.ConnectionHandler.SendFileAsync(Console.ReadLine()).Wait();
+                    }
+                    else
+                    {
+                        client.ConnectionHandler.SendFile(Console.ReadLine());
+                    }
+                    break; 
 
-                   break;                 
+                case 4:
+                    bool async4 = AsyncVersion();
+                    Console.WriteLine("Enter path to directory");
+                    if (async4)
+                    {
+                        client.ConnectionHandler.SendDirectoryAsync(Console.ReadLine()).Wait();
+                    }
+                    else
+                    {
+                        client.ConnectionHandler.SendDirectory(Console.ReadLine());
+                    }
+                    break;
                  
             }
+            Console.WriteLine("DONE!");
         }
 
-
-        void SendBytes(ConnectedClient client)
+        bool AsyncVersion()
         {
             string[] validAsyncSwitches = new string[] { "Y", "y", "N", "n" };
             string asyncSwitch = "";
@@ -143,7 +175,29 @@ namespace EndtoEndTestServer
                 Console.WriteLine("Test async version? (y/n)");
                 asyncSwitch = Console.ReadLine();
             }
+
+            if(asyncSwitch == "Y" || asyncSwitch == "y")
+            {
+                return true;
+            }
+            else if(asyncSwitch == "N" || asyncSwitch == "n")
+            {
+                return false;
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
+
+        }
+
+       
+
+        void SendBytes(ConnectedClient client)
+        {
+            
             Console.WriteLine("Enter bytes to send like - FF,11,22,AB,CC ...");
+            bool asyncAction = AsyncVersion();
             string[] providedByteStrings = Console.ReadLine().Trim(',').Split(",");
             byte[] byteArray = new byte[providedByteStrings.Length];
 
@@ -160,7 +214,7 @@ namespace EndtoEndTestServer
                 }
             }
 
-            if (asyncSwitch == "Y" || asyncSwitch == "y")
+            if (asyncAction)
             {
                 client.ConnectionHandler.SendBytesAsync(byteArray).Wait();
             }
@@ -168,6 +222,9 @@ namespace EndtoEndTestServer
             {
                 client.ConnectionHandler.SendBytes(byteArray);
             }
+            
+            
+            
 
         }
 
