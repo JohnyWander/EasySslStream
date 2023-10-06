@@ -52,7 +52,7 @@ namespace EndtoEndTestServer
             while (!srv.RunningServerListener.IsCompleted)
             {
 
-
+                MainMenu();
             }
 
 
@@ -65,7 +65,7 @@ namespace EndtoEndTestServer
             Console.WriteLine("2. Clear Console");
             Console.WriteLine("2. Shut down server");
 
-            ConsoleKeyInfo c = Console.ReadKey();
+            ConsoleKeyInfo c = Console.ReadKey(true);
             ConsoleKey key = c.Key;
 
             switch (key)
@@ -92,7 +92,7 @@ namespace EndtoEndTestServer
             if(srv.ConnectedClientsById.Count == 0)
             {
                 Console.WriteLine("There are not connected clients");
-                Console.Clear();
+                
                 MainMenu();
             }
             else
@@ -161,7 +161,10 @@ namespace EndtoEndTestServer
                         client.ConnectionHandler.SendDirectory(Console.ReadLine());
                     }
                     break;
-                 
+                case 5:
+                    Console.Clear();
+                    SelectionMenu();
+                    break;
             }
             Console.WriteLine("DONE!");
         }
