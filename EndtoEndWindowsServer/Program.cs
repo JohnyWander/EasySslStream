@@ -30,6 +30,10 @@ namespace EndtoEndWindowsServer
 
         static void Main(string[] args)
         {
+#if DEBUG
+            args = new string[] { "-h", "-s", "127.0.0.1", "-p", "2000","-c" };
+#endif
+
             if (args.Length > 0)
             {
                 ParseCommandLineArgs(args);

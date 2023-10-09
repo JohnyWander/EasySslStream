@@ -41,6 +41,8 @@ namespace EndtoEndTestServer
                 ConnectedClient client = srv.ConnectedClientsById.Last().Value;
                 Console.WriteLine($"Client connected {client.clientEndPoint.ToString()}");
                 Console.WriteLine($"Cipher is {client.sslStream.CipherAlgorithm.ToString()}");
+                Console.WriteLine($"Key exchange algorithm is {client.sslStream.KeyExchangeAlgorithm.ToString()}");
+                Console.WriteLine($"Ssl protocol is {client.sslStream.SslProtocol.ToString()}");
 
                 client.ConnectionHandler.FileSavePath = client.ConnectionID.ToString();
                 client.ConnectionHandler.DirectorySavePath = client.ConnectionID.ToString();
@@ -51,7 +53,6 @@ namespace EndtoEndTestServer
 
             while (!srv.RunningServerListener.IsCompleted)
             {
-
                 MainMenu();
             }
 
@@ -104,7 +105,7 @@ namespace EndtoEndTestServer
                 }
 
                 ConnectedClient selected = selection();
-
+                ActionMenu(selected);
                 
             }
         }
@@ -173,7 +174,7 @@ namespace EndtoEndTestServer
         {
             string[] validAsyncSwitches = new string[] { "Y", "y", "N", "n" };
             string asyncSwitch = "";
-            while (validAsyncSwitches.Any(x => x != asyncSwitch))
+            while (!validAsyncSwitches.Contains(asyncSwitch))
             {
                 Console.WriteLine("Test async version? (y/n)");
                 asyncSwitch = Console.ReadLine();
@@ -233,9 +234,10 @@ namespace EndtoEndTestServer
 
         ConnectedClient selection()
         {
+            Console.WriteLine("select client");
             try
             {
-                ConnectedClient selected = srv.ConnectedClientsById[GetUserInputToInt()];
+                ConnectedClient selected = srv.ConnectedClientsById[GetUserInputToInt()];                
                 return selected;
             }
             catch (IndexOutOfRangeException)

@@ -14,6 +14,8 @@ namespace TestClient
             new cmdarg("-s","-s - Connect to  - server:port",(string cto) => client.ConnectTo = cto).SetRequired(),
             new cmdarg("-c","-c - Client Certificate - use if server verifies client certs",(string cpath) => client.CertificatePath = cpath),
             new cmdarg("-c","-cp - Password to client certificate - use if you provided certificate for connection", (string cpass) => client.CertificatePassword = cpass),
+            new cmdarg("-vc","-vc - Verify certificate chain - use if client should verify chain of server certificate",(string _)=> client.VerifyChain = true),
+            new cmdarg("-vn","-vn - Verify certificate name - use if client should verify server name with one in provided certificate",(string _)=> client.VerifyCN = true),
             new cmdarg("-h","-h - Displays help message",(string _) => DisplayHelp())
 
 
@@ -24,13 +26,28 @@ namespace TestClient
 
         static void Main(string[] args)
         {
+#if DEBUG
+
+
+#endif
+            args = new string[] { "-s", "127.0.0.1:2000" };
             if (args.Length > 0)
             {
                 ParseCommandLineArgs2(args);
                 CheckForRequiredArgs();
+                InvokeParamSetters();
+                client.StartClient();
 
-
-
+                try
+                {
+                    client.client.RunningClient.Wait();
+                }
+                catch (Exception e)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Connection failed with error - {e.GetType().Name} {e.Message}");
+                    Console.ResetColor();
+                }
             }
             else
             {
@@ -41,6 +58,13 @@ namespace TestClient
 
         }
 
+        static void InvokeParamSetters()
+        {
+            foreach (cmdarg p in ActivatedCmdArgs)
+            {
+                p.ArgAction.Invoke(p.ArgValue);
+            }
+        }
         static void DisplayHelp()
         {
             AvaiableCmdArgs.ForEach(cmdarg => Console.WriteLine(cmdarg.ArgHelpMessage));
@@ -54,7 +78,7 @@ namespace TestClient
             foreach (string arg in args)
             {
                 try
-                {
+                {                    
                     cmdarg PickedArg = AvaiableCmdArgs.Where(x => x.ArgName == arg).Single();
                     ToActivate = new cmdarg(PickedArg.ArgName, PickedArg.ArgHelpMessage, null, PickedArg.ArgAction);
                     ActivatedCmdArgs.Add(ToActivate);

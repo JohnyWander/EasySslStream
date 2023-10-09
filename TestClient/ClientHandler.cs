@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using EasySslStream;
 using EasySslStream.ConnectionV2.Client;
+using EasySslStream.ConnectionV2.Client.Configuration;
 
 namespace TestClient
 {
@@ -18,6 +19,8 @@ namespace TestClient
             set
             {
                 string[] split = value.Split(':');
+                ip = split[0];
+                port = int.Parse(split[1]);
             }
         }
         string ip;
@@ -27,15 +30,61 @@ namespace TestClient
         bool ServerVerifiesCerts = false;
         public string CertificatePath;
         public string CertificatePassword;
-        
+
+        public bool VerifyChain = false;
+        public bool VerifyCN = false;
+
+        public Client client;
 
         public void StartClient()
         {
-            string ip;
-          //  Client client = new Client()
+            ClientConfiguration conf = new ClientConfiguration();
+            conf.verifyCertificateChain = VerifyChain;
+            conf.verifyDomainName = VerifyCN;
+
+            if (ServerVerifiesCerts)
+            {
+                conf.pathToClientPfxCertificate = CertificatePath;
+                conf.certificatePassword = CertificatePassword;
+            }
+
+
+            client = new Client(ip,port,conf);
+
+            client.Connect().Wait();
+
+            Console.WriteLine("Sucessfully connected to server");
+            Console.WriteLine($"Cipher is {client.sslStream.CipherAlgorithm.ToString()}");
+            Console.WriteLine($"Key exchange algorithm is {client.sslStream.KeyExchangeAlgorithm.ToString()}");
+            Console.WriteLine($"Ssl protocol is {client.sslStream.SslProtocol.ToString()}");
+
+            ConfigureCLient(client);
+
+            client.RunningClient.Wait();
         }
 
 
+        public void ConfigureCLient(Client client)
+        {
+            client.ConnectionHandler.DirectorySavePath = "DirectoriesFromServer";
+            client.ConnectionHandler.FileSavePath = "FilesFromServer";
+
+            client.ConnectionHandler.HandleReceivedText += (string received) =>
+            {
+                Console.WriteLine($"Server said [text] {received}");
+            };
+
+            client.ConnectionHandler.HandleReceivedBytes += (byte[] received) =>
+            {
+                Console.WriteLine("Server said [bytes]");
+                received.ToList().ForEach(x => Console.WriteLine(x.ToString()));
+            };
+
+            client.ConnectionHandler.HandleReceivedFile += (string filepath) =>
+            {
+
+            };
+        }
 
     
     }

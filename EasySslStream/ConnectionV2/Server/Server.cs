@@ -47,7 +47,7 @@ namespace EasySslStream.ConnectionV2.Server
                 {
                     TcpClient client = await _tcpListener.AcceptTcpClientAsync();
                     ConnectedClient connection = new ConnectedClient(id, client, this._serverCertificate, this);
-                    ClientConnected?.Invoke();
+                    
                     id++;
                 }
             });

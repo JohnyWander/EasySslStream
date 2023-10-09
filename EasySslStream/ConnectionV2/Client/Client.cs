@@ -26,6 +26,10 @@ namespace EasySslStream.ConnectionV2.Client
 
         public Client(string connectToIP, int port, ClientConfiguration config) : this(new IPEndPoint(IPAddress.Parse(connectToIP), port), config) { }
 
+        /// <summary>
+        /// Task that ends when client successfully connects, if you want to wait for connection to complete use RunningClient task
+        /// </summary>
+        /// <returns></returns>
         public Task Connect()
         {
             TaskCompletionSource connectionCompletion = new TaskCompletionSource();

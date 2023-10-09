@@ -27,7 +27,7 @@ namespace EasySslStream.ConnectionV2.Server
         {
             get
             {
-                return this._client.Client.RemoteEndPoint as IPEndPoint;
+                return this._client.Client.RemoteEndPoint as IPEndPoint;               
             }
             private set
             {
@@ -64,7 +64,7 @@ namespace EasySslStream.ConnectionV2.Server
 
         public ConnectedClient(int ID, TcpClient client, X509Certificate2 serverCert, Server srvCallback)
         {
-
+            this._client = client;
 
             ConnectionID = ID;
             this._servConf = srvCallback._config;
@@ -94,11 +94,11 @@ namespace EasySslStream.ConnectionV2.Server
                 options.ClientCertificateRequired = false;
             }
             this._stream.AuthenticateAsServer(options);
-            srvCallback.InvokeClientConnected();
+           
 
             this.ConnectionHandler = new ConnectionHandler(this._stream, this._servConf.BufferSize);
 
-
+            srvCallback.InvokeClientConnected();
 
         }
 
