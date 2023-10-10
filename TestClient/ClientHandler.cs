@@ -50,7 +50,7 @@ namespace TestClient
 
 
             client = new Client(ip,port,conf);
-
+            Console.WriteLine($"Connecting to {ip}:{port}");
             client.Connect().Wait();
 
             Console.WriteLine("Sucessfully connected to server");

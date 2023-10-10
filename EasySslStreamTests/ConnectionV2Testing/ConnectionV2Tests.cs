@@ -76,9 +76,9 @@ namespace EasySslStreamTests.ConnectionV2Testing
             ServerConfiguration conf = new ServerConfiguration();
             conf.BufferSize = 8192;
 
-            conf.authOptions.VerifyDomainName = false;
-            conf.authOptions.VerifyCertificateChain = false;
-            conf.authOptions.VerifyClientCertificates = false;
+            conf.connectionOptions.VerifyDomainName = false;
+            conf.connectionOptions.VerifyCertificateChain = false;
+            conf.connectionOptions.VerifyClientCertificates = false;
             srv = new Server(new IPEndPoint(IPAddress.Any, 5000), conf);
             srv.StartServer($"{Workspace}\\{ServerWorkspace}\\Server.pfx", "123");
 
@@ -155,8 +155,8 @@ namespace EasySslStreamTests.ConnectionV2Testing
             Task clientWaiter = Task.Run(() => ClientAwaiter());
 
             ServerConfiguration sconf = new ServerConfiguration();
-            sconf.authOptions.VerifyClientCertificates = false;
-            sconf.enabledSSLProtocols = protocol;
+            sconf.connectionOptions.VerifyClientCertificates = false;
+            sconf.connectionOptions.enabledProtocols = protocol;
 
             ClientConfiguration cconf = new ClientConfiguration();
             cconf.enabledSSLProtocols = protocol;

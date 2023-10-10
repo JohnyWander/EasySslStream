@@ -27,10 +27,10 @@ namespace TestClient
         static void Main(string[] args)
         {
 #if DEBUG
-
+            args = new string[] { "-s", "127.0.0.1:2000" };
 
 #endif
-            args = new string[] { "-s", "127.0.0.1:2000" };
+
             if (args.Length > 0)
             {
                 ParseCommandLineArgs2(args);

@@ -35,28 +35,36 @@ namespace EasySslStream.ConnectionV2.Client
             TaskCompletionSource connectionCompletion = new TaskCompletionSource();
             this.RunningClient = Task.Run(() =>
             {
-                this.client = new TcpClient(connectToEndpoint.Address.ToString(), connectToEndpoint.Port);
-
-                this.sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(_config.ValidateServerCertificate));
-                this.sslStream.WriteTimeout = -1;
-                this.sslStream.ReadTimeout = -1;
-
-                SslClientAuthenticationOptions options = new SslClientAuthenticationOptions();
-                options.TargetHost = connectToEndpoint.Address.ToString();
-                options.EnabledSslProtocols = this._config.enabledSSLProtocols;
-                options.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
-
-
-                if (this._config.serverVerifiesClient)
+                try
                 {
-                    X509Certificate2 clientCert = new X509Certificate2(this._config.pathToClientPfxCertificate, this._config.certificatePassword, X509KeyStorageFlags.PersistKeySet);
-                    X509Certificate2Collection certstore = new X509Certificate2Collection(clientCert);
-                    options.ClientCertificates = certstore;
+                    
+
+                    this.client = new TcpClient(connectToEndpoint.Address.ToString(), connectToEndpoint.Port);
+
+                    this.sslStream = new SslStream(client.GetStream(), false, new RemoteCertificateValidationCallback(_config.ValidateServerCertificate));
+                    this.sslStream.WriteTimeout = -1;
+                    this.sslStream.ReadTimeout = -1;
+
+                    SslClientAuthenticationOptions options = new SslClientAuthenticationOptions();
+                    options.TargetHost = connectToEndpoint.Address.ToString();
+                    options.EnabledSslProtocols = this._config.enabledSSLProtocols;
+                    options.EncryptionPolicy = EncryptionPolicy.RequireEncryption;
+
+
+                    if (this._config.serverVerifiesClient)
+                    {
+                        X509Certificate2 clientCert = new X509Certificate2(this._config.pathToClientPfxCertificate, this._config.certificatePassword, X509KeyStorageFlags.PersistKeySet);
+                        X509Certificate2Collection certstore = new X509Certificate2Collection(clientCert);
+                        options.ClientCertificates = certstore;
+                    }
+
+                    this.sslStream.AuthenticateAsClient(options);
+                    this.ConnectionHandler = new ConnectionHandler(this.sslStream, this._config.BufferSize, connectionCompletion);
                 }
-
-                this.sslStream.AuthenticateAsClient(options);
-                this.ConnectionHandler = new ConnectionHandler(this.sslStream, this._config.BufferSize, connectionCompletion);
-
+                catch (Exception e)
+                {
+                    connectionCompletion.SetException(new InvalidOperationException(e.Message));                   
+                }
             });
 
             return connectionCompletion.Task;

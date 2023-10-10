@@ -18,25 +18,40 @@ namespace EasySslStream.ConnectionV2.Communication
             Custom = 999
         }
 
+     
+        
+
         protected TransferSpeedMeasurment SendSpeed;
         protected TransferSpeedMeasurment ReceiveSpeed;
 
         protected internal SslStream stream;
         protected internal int _bufferSize;
 
+        
+        protected internal TaskCompletionSource<object> PeerResponseWaiter = new TaskCompletionSource<object>();
+       
+        
+
         #region bytes
         internal async Task WriteBytesAsync(byte[] bytes, SteerCodes code)
-        {
-            
+        {            
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
+
             await stream.WriteAsync(steerBytes);
+            await PeerResponseWaiter.Task;
+
             await stream.WriteAsync(bytes);
+            await PeerResponseWaiter.Task;
         }
 
         internal async Task<int> ReadBytes(byte[] OutBuffer)
         {
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
             int ReceivedCount = await stream.ReadAsync(OutBuffer);
+
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
             return ReceivedCount;
         }
         #endregion
@@ -46,32 +61,41 @@ namespace EasySslStream.ConnectionV2.Communication
 
 
         internal async Task SendTextAsync(TextTransferWork work, SteerCodes code)
-        {
+        {           
             EncodingEnum encodingEnum = ResolveEncodingEnum(work.encoding);
             string message = work.stringToSend;
 
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
-
             int encodingCode = (int)encodingEnum;
             byte[] encodingBytes = BitConverter.GetBytes(encodingCode);
-
+            
             await stream.WriteAsync(steerBytes);
+            await PeerResponseWaiter.Task;
+
             await stream.WriteAsync(encodingBytes);
-            await Task.Delay(10);
+            await PeerResponseWaiter.Task;
+
             await stream.WriteAsync(work.encoding.GetBytes(message));
+            await PeerResponseWaiter.Task;          
         }
 
         internal async Task<string> GetTextAsync(int bufferSize)
         {
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
             byte[] EncodingBytes = new byte[16];
             int received = await stream.ReadAsync(EncodingBytes);
             int encodingCode = BitConverter.ToInt32(EncodingBytes.Take(received).ToArray());
-            Encoding encoding = ResolveEncodingFromEnum((EncodingEnum)encodingCode);
 
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
+            Encoding encoding = ResolveEncodingFromEnum((EncodingEnum)encodingCode);
+            
             byte[] textReadBuffer = new byte[bufferSize];
             int textBytesReceived = await stream.ReadAsync(textReadBuffer);
 
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
             return encoding.GetString(textReadBuffer.Take(textBytesReceived).ToArray());
         }
         #endregion
@@ -82,16 +106,18 @@ namespace EasySslStream.ConnectionV2.Communication
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
             await stream.WriteAsync(steerBytes);
-            await Task.Delay(100);
+            await PeerResponseWaiter.Task;
 
             string fileName = Path.GetFileName(path);
             byte[] fileNameBytes = Encoding.UTF8.GetBytes(fileName);
             await stream.WriteAsync(fileNameBytes);
+            await PeerResponseWaiter.Task;
 
             FileStream fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
             byte[] lenghtBytes = BitConverter.GetBytes(fileStream.Length);
             await stream.WriteAsync(lenghtBytes);
+            await PeerResponseWaiter.Task;
 
             byte[] DataChunk = new byte[this._bufferSize];
 
@@ -104,17 +130,30 @@ namespace EasySslStream.ConnectionV2.Communication
                 this.SendSpeed.CurrentBufferPosition = Sended;
             }
             await fileStream.DisposeAsync();
+
+
+            await PeerResponseWaiter.Task;
         }
 
         internal async Task<string> GetFileAsync(string SaveDir)
         {
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
             byte[] FilenameBytes = new byte[256];
             int receivedCount = await stream.ReadAsync(FilenameBytes);
             string Filename = Encoding.UTF8.GetString(FilenameBytes.Take(receivedCount).ToArray());
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
 
             byte[] FileLengthBuffer = new byte[16];
             int LengthBytesReceived = await stream.ReadAsync(FileLengthBuffer);
             long ExpectedFileLentgh = BitConverter.ToInt64(FileLengthBuffer);
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
+            if (!Directory.Exists(SaveDir))
+            {
+                Directory.CreateDirectory(SaveDir);
+            }
 
             FileStream saveStream = new FileStream(Path.Combine(SaveDir, Filename), FileMode.OpenOrCreate, FileAccess.Write);
             long FileBytesReceived = 0;
@@ -131,32 +170,33 @@ namespace EasySslStream.ConnectionV2.Communication
             saveStream.SetLength(ExpectedFileLentgh);
             await saveStream.DisposeAsync();
 
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
             return Filename;
         }
 
         #endregion
 
         #region Directories
-
         internal async Task SendDirectory(string path, SteerCodes code)
         {
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
             await stream.WriteAsync(steerBytes);
+            await PeerResponseWaiter.Task;
 
             string DirInfo = SerializeDirectoryTransferInfo(path);
             byte[] DirInfoBytes = Encoding.UTF8.GetBytes(DirInfo);
             byte[] DirInfoSizeBytes = BitConverter.GetBytes(DirInfoBytes.LongLength);
 
             await stream.WriteAsync(DirInfoSizeBytes);
-            await Task.Delay(100);
+            await PeerResponseWaiter.Task;
+
             await stream.WriteAsync(DirInfoBytes);
-            await Task.Delay(100);
+            await PeerResponseWaiter.Task;
 
             string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
             byte[] DataChunk = new byte[this._bufferSize];
-            try
-            {
+
                 foreach (string file in files)
                 {
                     FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read);
@@ -172,22 +212,23 @@ namespace EasySslStream.ConnectionV2.Communication
                     f.Close();
                     await f.DisposeAsync();
                 }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-            }
+
+            await PeerResponseWaiter.Task;
         }
 
         internal  async Task<string> GetDirectoryAsync(string workdir)
-        {            
+        {
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
             byte[] DirInfoSizeBytes = new byte[16];
             int receivedDirInfoSizeBytes = await stream.ReadAsync(DirInfoSizeBytes);
             long DirInfoSize = BitConverter.ToInt64(DirInfoSizeBytes.Take(receivedDirInfoSizeBytes).ToArray());
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
             byte[] DirInfoBytes = new byte[DirInfoSize];
             int receivedDirInfoBytes = await stream.ReadAsync(DirInfoBytes);
             string DirInfo = Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(DirInfoBytes)));
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
             string[] DirInfoLines = DirInfo.Split('\n');
             string DirectoryName = DirInfoLines[0];
@@ -244,7 +285,8 @@ namespace EasySslStream.ConnectionV2.Communication
             {
                 Debug.WriteLine(e.Message);
             }
-         
+
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
             return WorkingDirectory;
         }
 

@@ -34,7 +34,8 @@ namespace EndtoEndTestServer
             srv = new Server(IpToListenOn, PortToListenOn, config);
             srv.StartServer("servercert.pfx", "123");
             Console.WriteLine("Successfully started server");
-
+            Console.WriteLine($"Listening on {IpToListenOn}:{PortToListenOn}");
+            
 
             srv.ClientConnected += () =>
             {

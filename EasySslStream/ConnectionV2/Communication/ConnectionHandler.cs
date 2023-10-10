@@ -11,7 +11,8 @@ namespace EasySslStream.ConnectionV2.Communication
         SendBytes = 1,
         SendText = 2,
         SendFile = 3,
-        SendDirectory = 4
+        SendDirectory = 4,
+        ReceivedDataPropertly = 1000      
     }
 
 
@@ -90,6 +91,8 @@ namespace EasySslStream.ConnectionV2.Communication
         {
             while (!cancel.IsCancellationRequested)
             {
+                
+
                 await WorkingStream.ReadAsync(steerbuffer);
                 int steercode = BitConverter.ToInt32(steerbuffer, 0);
                 SteerCodes steer = (SteerCodes)steercode;
@@ -119,6 +122,12 @@ namespace EasySslStream.ConnectionV2.Communication
                         this.HandleReceivedDirectory?.Invoke(receivedDirectoryPath);
                         break;
 
+                    case SteerCodes.ReceivedDataPropertly:
+
+                        base.PeerResponseWaiter.SetResult(true);
+                        base.PeerResponseWaiter = new TaskCompletionSource<object>();
+
+                        break;
 
                 }
             }
@@ -281,5 +290,8 @@ namespace EasySslStream.ConnectionV2.Communication
         /// </summary>
         public event HandleReceivedDirectory HandleReceivedDirectory;
         #endregion
+
+
+        
     }
 }

@@ -1,5 +1,4 @@
 ﻿using EasySslStream;
-using EasySslStream.Certgen.GenerationClasses.GenerationConfigs;
 using EasySslStream.CertGenerationClasses;
 using EasySslStream.CertGenerationClasses.GenerationConfigs;
 using EasySslStream.Exceptions;

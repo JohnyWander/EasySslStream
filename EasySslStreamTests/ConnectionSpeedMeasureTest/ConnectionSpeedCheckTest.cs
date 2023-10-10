@@ -56,7 +56,7 @@ namespace EasySslStreamTests.ConnectionSpeedMeasureTest
         }
 
         [Test]
-        [Ignore]
+        [Ignore("Heavy...")]
         public async Task ConnectionspeedTestOnRealtransferClientToServerTest()
         {
             ConnectionV2Tests ccallback = new ConnectionV2Tests();
