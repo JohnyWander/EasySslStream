@@ -2,6 +2,7 @@
 using EasySslStream.ConnectionV2.Communication.TranferTypeConfigs;
 using System.Diagnostics;
 using System.Net.Security;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace EasySslStream.ConnectionV2.Communication
@@ -150,10 +151,8 @@ namespace EasySslStream.ConnectionV2.Communication
             long ExpectedFileLentgh = BitConverter.ToInt64(FileLengthBuffer);
             await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
-            if (!Directory.Exists(SaveDir))
-            {
                 Directory.CreateDirectory(SaveDir);
-            }
+            
 
             FileStream saveStream = new FileStream(Path.Combine(SaveDir, Filename), FileMode.OpenOrCreate, FileAccess.Write);
             long FileBytesReceived = 0;
@@ -177,62 +176,74 @@ namespace EasySslStream.ConnectionV2.Communication
         #endregion
 
         #region Directories
-        internal async Task SendDirectory(string path, SteerCodes code)
+
+
+        internal Task SendDirectory(string path, SteerCodes code)
         {
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
-            await stream.WriteAsync(steerBytes);
-            await PeerResponseWaiter.Task;
+            stream.Write(steerBytes);
 
             string DirInfo = SerializeDirectoryTransferInfo(path);
             byte[] DirInfoBytes = Encoding.UTF8.GetBytes(DirInfo);
             byte[] DirInfoSizeBytes = BitConverter.GetBytes(DirInfoBytes.LongLength);
 
-            await stream.WriteAsync(DirInfoSizeBytes);
-            await PeerResponseWaiter.Task;
-
-            await stream.WriteAsync(DirInfoBytes);
-            await PeerResponseWaiter.Task;
+            stream.Write(DirInfoSizeBytes);
+            Task.Delay(100).Wait();
+            stream.Write(DirInfoBytes);
+            Task.Delay(100).Wait();
 
             string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
-            byte[] DataChunk = new byte[this._bufferSize];
+
+            try
+            {
 
                 foreach (string file in files)
                 {
-                    FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read);
-                    long Sended = 0;
-                    this.SendSpeed.CurrentBufferPosition = 0;
-                    while (Sended != f.Length)
+                    Task.Delay(100).Wait();
+
+                    byte[] buffer = new byte[this._bufferSize];
+
+                    FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read);
+                    int ReadFromFileStream = 0;
+
+                    int sent = 0;
+
+                    byte[] chunk = new byte[this._bufferSize];
+                    while (sent != fs.Length)
                     {
-                        Sended += await f.ReadAsync(DataChunk, 0, DataChunk.Length);
-                        await stream.WriteAsync(DataChunk, 0, DataChunk.Length);
-                        this.SendSpeed.CurrentBufferPosition = Sended;
+                        sent += fs.Read(chunk, 0, chunk.Length);
+
+                        stream.Write(chunk);
+                        
                     }
-                    await stream.FlushAsync();
-                    f.Close();
-                    await f.DisposeAsync();
+                    stream.Flush();
+
+                    fs.Close();
                 }
 
-            await PeerResponseWaiter.Task;
+            }catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+            return Task.CompletedTask;
         }
 
-        internal  async Task<string> GetDirectoryAsync(string workdir)
+        internal Task<string> GetDirectory(string workdir)
         {
-            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
-
+           
             byte[] DirInfoSizeBytes = new byte[16];
-            int receivedDirInfoSizeBytes = await stream.ReadAsync(DirInfoSizeBytes);
+            int receivedDirInfoSizeBytes = stream.Read(DirInfoSizeBytes);
             long DirInfoSize = BitConverter.ToInt64(DirInfoSizeBytes.Take(receivedDirInfoSizeBytes).ToArray());
-            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
             byte[] DirInfoBytes = new byte[DirInfoSize];
-            int receivedDirInfoBytes = await stream.ReadAsync(DirInfoBytes);
+            int receivedDirInfoBytes = stream.Read(DirInfoBytes);
             string DirInfo = Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(DirInfoBytes)));
-            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
             string[] DirInfoLines = DirInfo.Split('\n');
             string DirectoryName = DirInfoLines[0];
-            string[] FileInfos = DirInfoLines.Skip(1).ToArray();
+            string[] FileInfos = DirInfoLines.Where(x=>x.Contains("###")).Skip(1).ToArray();
 
             string WorkingDirectory = workdir + "\\" + DirectoryName.Split("###")[0];
 
@@ -246,49 +257,43 @@ namespace EasySslStream.ConnectionV2.Communication
                 Directory.CreateDirectory(WorkingDirectory);
             }
 
-            try
+            foreach (string file in FileInfos)
             {
-                foreach (string file in FileInfos)
+                string[] splitted = file.Split("###");
+                string AllPath = splitted[0];
+                string Size = splitted[1];
+                long FileSize = long.Parse(Size);
+                long FileBytesReceived = 0;
+
+                string Dirpath = Path.GetDirectoryName(AllPath);
+                string Filename = Path.GetFileName(AllPath);
+
+                Directory.CreateDirectory($"{WorkingDirectory}\\{Dirpath}");
+
+                FileStream saveStream = new FileStream($"{WorkingDirectory}\\{Dirpath}\\{Filename}", FileMode.OpenOrCreate, FileAccess.Write);
+
+
+                byte[] buffer = new byte[this._bufferSize];
+
+                while ((stream.Read(buffer, 0, buffer.Length) != 0))
                 {
-                    string[] splitted = file.Split("###");
-                    string AllPath = splitted[0];
-                    string Size = splitted[1];
-                    long FileSize = long.Parse(Size);
-                    long FileBytesReceived = 0;
-
-                    string Dirpath = Path.GetDirectoryName(AllPath);
-                    string Filename = Path.GetFileName(AllPath);
-
-                    Directory.CreateDirectory($"{WorkingDirectory}\\{Dirpath}");
-
-                    FileStream saveStream = new FileStream($"{WorkingDirectory}\\{Dirpath}\\{Filename}", FileMode.OpenOrCreate, FileAccess.Write);
-
-                    byte[] buffer = new byte[this._bufferSize];
-                    this.ReceiveSpeed.CurrentBufferPosition = 0;
-                    while (FileBytesReceived <= FileSize)
-                    {
-                        FileBytesReceived += await stream.ReadAsync(buffer);
-                        await saveStream.WriteAsync(buffer);
-                        this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
-                        if (saveStream.Length >= FileSize)
-                        {
-                            break;
-                        }
+                    saveStream.Write(buffer);
+                    if (saveStream.Length >= FileSize)
+                    {                        
+                        break;
                     }
-
-                    saveStream.SetLength(FileSize);
-                    await saveStream.DisposeAsync();
-                    await stream.FlushAsync();
                 }
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
+                    stream.Flush();
+                saveStream.SetLength(FileSize);
+
+                saveStream.Dispose();
+                
             }
 
-            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
-            return WorkingDirectory;
+            return Task.FromResult(WorkingDirectory);
         }
+
+
 
         #endregion
 

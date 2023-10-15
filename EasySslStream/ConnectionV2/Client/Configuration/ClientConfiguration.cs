@@ -8,9 +8,9 @@ namespace EasySslStream.ConnectionV2.Client.Configuration
     public class ClientConfiguration
     {
         /// <summary>
-        /// Size of tranport buffer, 8192 bu default
+        /// Size of tranport buffer, 4096 bu default
         /// </summary>
-        public int BufferSize = 8192;
+        public int BufferSize = 4096;
 
         /// <summary>
         /// False by default, if true client will check if certificate provided by server matches it's CN or alternative names

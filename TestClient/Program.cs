@@ -36,6 +36,7 @@ namespace TestClient
                 ParseCommandLineArgs2(args);
                 CheckForRequiredArgs();
                 InvokeParamSetters();
+                
                 client.StartClient();
 
                 try

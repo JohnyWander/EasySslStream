@@ -90,9 +90,7 @@ namespace EasySslStream.ConnectionV2.Communication
         private async Task ListenerTask(CancellationToken cancel)
         {
             while (!cancel.IsCancellationRequested)
-            {
-                
-
+            {               
                 await WorkingStream.ReadAsync(steerbuffer);
                 int steercode = BitConverter.ToInt32(steerbuffer, 0);
                 SteerCodes steer = (SteerCodes)steercode;
@@ -118,7 +116,7 @@ namespace EasySslStream.ConnectionV2.Communication
 
                     case SteerCodes.SendDirectory:
 
-                        string receivedDirectoryPath = await base.GetDirectoryAsync(this.DirectorySavePath);
+                        string receivedDirectoryPath = await base.GetDirectory(this.DirectorySavePath);
                         this.HandleReceivedDirectory?.Invoke(receivedDirectoryPath);
                         break;
 
@@ -148,8 +146,7 @@ namespace EasySslStream.ConnectionV2.Communication
                 switch (steer)
                 {
                     case SteerCodes.SendBytes:
-                        await base.WriteBytesAsync((byte[])work, steer);
-                        
+                        await base.WriteBytesAsync((byte[])work, steer);                        
 
                         break;
                     case SteerCodes.SendText:

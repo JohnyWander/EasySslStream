@@ -28,7 +28,7 @@ namespace EndtoEndTestServer
         public void Launch()
         {
             ServerConfiguration config = new ServerConfiguration();
-            config.BufferSize = 8096;
+            
             config.connectionOptions.enabledProtocols = SslProtocols.Tls12;
 
             srv = new Server(IpToListenOn, PortToListenOn, config);
