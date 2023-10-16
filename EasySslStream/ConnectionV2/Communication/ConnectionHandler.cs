@@ -12,7 +12,8 @@ namespace EasySslStream.ConnectionV2.Communication
         SendText = 2,
         SendFile = 3,
         SendDirectory = 4,
-        ReceivedDataPropertly = 1000      
+        ReceivedDataPropertly = 1000,
+        ReceivedFileFromDiretoryPropertly = 1001
     }
 
 
@@ -124,6 +125,11 @@ namespace EasySslStream.ConnectionV2.Communication
 
                         base.PeerResponseWaiter.SetResult(true);
                         base.PeerResponseWaiter = new TaskCompletionSource<object>();
+
+                        break;
+                    case SteerCodes.ReceivedFileFromDiretoryPropertly:
+                        base.EndOfDirectroryFileTransmission.SetResult(true);
+                        base.EndOfDirectroryFileTransmission = new TaskCompletionSource<object>();
 
                         break;
 
