@@ -177,97 +177,63 @@ namespace EasySslStream.ConnectionV2.Communication
 
         #region Directories
 
-
-        internal Task SendDirectory(string path, SteerCodes code)
+        internal async Task SendDirectory(string path, SteerCodes code)
         {
             int steercode = (int)code;
             byte[] steerBytes = BitConverter.GetBytes(steercode);
-            stream.Write(steerBytes);
-            
+            await stream.WriteAsync(steerBytes); // Informs peer that it should use GetDirectoryAsync task
 
-            string DirName = Path.GetFileName(path);
-            string[] Files = Directory.GetFiles(path,"*",SearchOption.AllDirectories);
-            string fileCount = Convert.ToString(Files.Length);
+            string DirInfo = SerializeDirectoryTransferInfo(path);
+            byte[] DirInfoBytes = Encoding.UTF8.GetBytes(DirInfo);
+            byte[] DirInfoSizeBytes = BitConverter.GetBytes(DirInfoBytes.LongLength);
 
-            string BeginMessage=$"{DirName}###{fileCount}";
-            string Base64BeginMessage = Convert.ToBase64String(Encoding.UTF8.GetBytes(BeginMessage));
-            byte[] MessageBuffer = Encoding.UTF8.GetBytes(Base64BeginMessage);
-            int MessageLength = MessageBuffer.Length;
+            await stream.WriteAsync(DirInfoSizeBytes);
+            await Task.Delay(100);
+            await stream.WriteAsync(DirInfoBytes);
+            await Task.Delay(100);
 
-            stream.Write(BitConverter.GetBytes(MessageLength));
-            this.PeerResponseWaiter.Task.Wait();
-            Task.Delay(100).Wait();
-
-            stream.Write(MessageBuffer, 0, MessageLength);
-            this.PeerResponseWaiter.Task.Wait();
-            Task.Delay(100).Wait();
-
-            foreach (string File in Files)
+            string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+            byte[] DataChunk = new byte[4096];
+            try
             {
-                Task.Delay(1000).Wait();
-                using(FileStream fs = new FileStream(File,FileMode.Open,FileAccess.Read))
+                foreach (string file in files)
                 {
-                    string relativePath = fs.Name.Split(DirName + "\\")[1];
-                    string supportMessage = relativePath + "###" + fs.Length;
-                    string BASE64Message = Convert.ToBase64String(Encoding.UTF8.GetBytes(supportMessage));
-                    
-                    byte[] BASE64MessageBuffer = Encoding.UTF8.GetBytes(BASE64Message);
-                    byte[] supportLength = BitConverter.GetBytes(BASE64MessageBuffer.Length);
-
-                    stream.Write(supportLength, 0, supportLength.Length);
-                    this.PeerResponseWaiter.Task.Wait();
-
-                    Task.Delay(1000).Wait();
-                    
-                    stream.Write(BASE64MessageBuffer,0,BASE64MessageBuffer.Length);
-                    this.PeerResponseWaiter.Task.Wait();
-
-                    Task.Delay(1000).Wait();
-
-                    byte[] buffer = new byte[this._bufferSize];
-                    int Read = 0;
-                    int TotalRead = 0;
-                    while(TotalRead <= fs.Length)
+                    FileStream f = new FileStream(file, FileMode.Open, FileAccess.Read);
+                    long Sended = 0;
+                    this.SendSpeed.CurrentBufferPosition = 0;
+                    while (Sended != f.Length)
                     {
-                       
-                       Read = fs.Read(buffer, 0, buffer.Length);
-                       TotalRead += Read;
-                       stream.Write(buffer, 0, buffer.Length);                                       
+                        Sended += await f.ReadAsync(DataChunk, 0, DataChunk.Length);
+                        await stream.WriteAsync(DataChunk, 0, DataChunk.Length);
+                        this.SendSpeed.CurrentBufferPosition = Sended;
                     }
-                    stream.Flush();
-                    
+                    await stream.FlushAsync();
+                    f.Close();
+                    await f.DisposeAsync();
                 }
-
-                
-               
             }
-
-            return Task.CompletedTask;
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+            }
         }
 
-        internal  Task<string> GetDirectory(string workdir)
+        internal async Task<string> GetDirectoryAsync(string workdir)
         {
-            byte[] BeginMessagelengthBuffer = new byte[16];
-            stream.Read(BeginMessagelengthBuffer,0,BeginMessagelengthBuffer.Length);
-            stream.Write(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+            byte[] DirInfoSizeBytes = new byte[16];
+            int receivedDirInfoSizeBytes = await stream.ReadAsync(DirInfoSizeBytes);
+            long DirInfoSize = BitConverter.ToInt64(DirInfoSizeBytes.Take(receivedDirInfoSizeBytes).ToArray());
 
-            byte[] MessageBuffer = new byte[BitConverter.ToInt32(BeginMessagelengthBuffer)];
-            stream.Read(MessageBuffer,0,MessageBuffer.Length);
-            stream.Write(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+            byte[] DirInfoBytes = new byte[DirInfoSize];
+            int receivedDirInfoBytes = await stream.ReadAsync(DirInfoBytes);
+            string DirInfo = Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(DirInfoBytes)));
 
-            string Base64BeginMessage = Encoding.UTF8.GetString(MessageBuffer);
-            byte[] BeginMessageBytes = Convert.FromBase64String(Base64BeginMessage);
-            string BeginMessage = Encoding.UTF8.GetString(BeginMessageBytes);
+            string[] DirInfoLines = DirInfo.Split('\n');
+            string DirectoryName = DirInfoLines[0];
+            string[] FileInfos = DirInfoLines.Skip(1).ToArray();
 
-            //////////////////////////////////////
+            string WorkingDirectory = workdir + "\\" + DirectoryName.Split("###")[0];
 
-            string[] beginSplitted = BeginMessage.Split("###");
-            string Dirname = beginSplitted[0];
-            int FileCount = int.Parse(beginSplitted[1]);
-
-            string WorkingDirectory = workdir + "\\" + Dirname;
-
-            
             if (!Directory.Exists(WorkingDirectory))
             {
                 Directory.CreateDirectory(WorkingDirectory);
@@ -278,57 +244,49 @@ namespace EasySslStream.ConnectionV2.Communication
                 Directory.CreateDirectory(WorkingDirectory);
             }
 
-            
-            for(int i = 0; i < FileCount; i++)
+            try
             {
-                Task.Delay(1000).Wait(); ;
-                byte[] SupportMessageSizeBuffer = new byte[16];
-                stream.Read(SupportMessageSizeBuffer,0,SupportMessageSizeBuffer.Length);               
-                int SupportMessageSize = BitConverter.ToInt32(SupportMessageSizeBuffer);
-                Console.WriteLine($"Support Message Size: {SupportMessageSize}");
-                stream.Write(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
-
-                byte[] SupportMessageBuffer = new byte[SupportMessageSize];
-                stream.Read(SupportMessageBuffer, 0, SupportMessageBuffer.Length);
-                string BASE64ReceivedString = Encoding.UTF8.GetString(SupportMessageBuffer);
-                string TrueSupportMessage = Encoding.UTF8.GetString(Convert.FromBase64String(BASE64ReceivedString));
-                stream.Write(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
-
-                string[] splitTrueMessage = TrueSupportMessage.Split("###");
-                string AllPath = splitTrueMessage[0];
-
-                int fileSize = int.Parse(splitTrueMessage[1]);
-                string Dirpath = Path.GetDirectoryName(AllPath);
-                string Filename = Path.GetFileName(AllPath);
-
-                Directory.CreateDirectory($"{WorkingDirectory}\\{Dirpath}");
-
-                stream.Write(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
-
-                
-                using(FileStream SaveStream = new FileStream($"{WorkingDirectory}\\{Dirpath}\\{Filename}",FileMode.Create,FileAccess.Write))
+                foreach (string file in FileInfos)
                 {
-                    int received = 0;
-                    int TotalReceived = 0;
-                    byte[] buffer = new byte[this._bufferSize];
+                    string[] splitted = file.Split("###");
+                    string AllPath = splitted[0];
+                    string Size = splitted[1];
+                    long FileSize = long.Parse(Size);
+                    long FileBytesReceived = 0;
 
-                    while ((stream.Read(buffer, 0, buffer.Length) != 0))
+                    string Dirpath = Path.GetDirectoryName(AllPath);
+                    string Filename = Path.GetFileName(AllPath);
+
+                    Directory.CreateDirectory($"{WorkingDirectory}\\{Dirpath}");
+
+                    FileStream saveStream = new FileStream($"{WorkingDirectory}\\{Dirpath}\\{Filename}", FileMode.OpenOrCreate, FileAccess.Write);
+
+                    byte[] buffer = new byte[4096];
+                    this.ReceiveSpeed.CurrentBufferPosition = 0;
+                    while (FileBytesReceived <= FileSize)
                     {
-                        SaveStream.Write(buffer);
-                        if (SaveStream.Length >= fileSize)
+                        FileBytesReceived += await stream.ReadAsync(buffer);
+                        await saveStream.WriteAsync(buffer);
+                        this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
+                        if (saveStream.Length >= FileSize)
                         {
                             break;
                         }
                     }
-                    stream.Flush();
+
+                    saveStream.SetLength(FileSize);
+                    await saveStream.DisposeAsync();
+                    await stream.FlushAsync();
                 }
-
-
-               
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
             }
 
-            return Task.FromResult("XD");
+            return WorkingDirectory;
         }
+
 
 
 
@@ -337,7 +295,22 @@ namespace EasySslStream.ConnectionV2.Communication
 
         #region helpers
 
-      
+        string SerializeDirectoryTransferInfo(string path)
+        {
+            StringBuilder sb = new StringBuilder();
+            DirectoryInfo directoryInfo = new DirectoryInfo(path);
+
+            string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+            sb.AppendLine($"{Path.GetFileName(path)}###DIRNAME");
+
+            foreach (string file in files)
+            {
+                FileInfo fileInfo = new FileInfo(file);
+                sb.AppendLine($"{file.Split(directoryInfo.Name + "\\")[1]}###{fileInfo.Length}");
+            }
+
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
+        }
         EncodingEnum ResolveEncodingEnum(Encoding enc)
         {
             if (enc == Encoding.UTF8)
