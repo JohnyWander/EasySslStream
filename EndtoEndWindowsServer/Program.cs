@@ -142,7 +142,7 @@ namespace EndtoEndWindowsServer
 
             certgen.SignCSR(SIGN, "CSR.csr", "CA.crt", "CA.key", "Server.crt");
 
-            certgen.ConvertX509ToPfx("Server.crt", "CSR.key", "servercert.pfx", "123");
+            certgen.ConvertX509ToPfx("Server.crt", "CSR.key", "servercert.pfx", "");
         }
     }
 }

@@ -32,7 +32,7 @@ namespace EndtoEndTestServer
             config.connectionOptions.enabledProtocols = SslProtocols.Tls12;
 
             srv = new Server(IpToListenOn, PortToListenOn, config);
-            srv.StartServer("servercert.pfx", "123");
+            srv.StartServer("servercert.pfx", "");
             Console.WriteLine("Successfully started server");
             Console.WriteLine($"Listening on {IpToListenOn}:{PortToListenOn}");
             

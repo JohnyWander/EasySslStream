@@ -218,7 +218,7 @@ namespace EasySslStream.ConnectionV2.Communication
             }
         }
 
-        internal async Task<string> GetDirectoryAsync(string workdir)
+        internal async Task<string> GetDirectory(string workdir)
         {
             byte[] DirInfoSizeBytes = new byte[16];
             int receivedDirInfoSizeBytes = await stream.ReadAsync(DirInfoSizeBytes);
@@ -231,7 +231,7 @@ namespace EasySslStream.ConnectionV2.Communication
             string[] DirInfoLines = DirInfo.Split('\n');
             string DirectoryName = DirInfoLines[0];
             string[] FileInfos = DirInfoLines.Skip(1).ToArray();
-
+            
             string WorkingDirectory = workdir + "\\" + DirectoryName.Split("###")[0];
 
             if (!Directory.Exists(WorkingDirectory))
@@ -268,10 +268,7 @@ namespace EasySslStream.ConnectionV2.Communication
                         FileBytesReceived += await stream.ReadAsync(buffer);
                         await saveStream.WriteAsync(buffer);
                         this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
-                        if (saveStream.Length >= FileSize)
-                        {
-                            break;
-                        }
+                     
                     }
 
                     saveStream.SetLength(FileSize);
