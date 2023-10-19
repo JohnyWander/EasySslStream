@@ -177,6 +177,8 @@ namespace EasySslStream.ConnectionV2.Communication
 
         #region Directories
 
+        
+
         internal async Task SendDirectory(string path, SteerCodes code)
         {
             int steercode = (int)code;
@@ -188,9 +190,9 @@ namespace EasySslStream.ConnectionV2.Communication
             byte[] DirInfoSizeBytes = BitConverter.GetBytes(DirInfoBytes.LongLength);
 
             await stream.WriteAsync(DirInfoSizeBytes);
-            await Task.Delay(100);
+            await PeerResponseWaiter.Task;
             await stream.WriteAsync(DirInfoBytes);
-            await Task.Delay(100);
+            await PeerResponseWaiter.Task;
 
             string[] files = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
             byte[] DataChunk = new byte[4096];
@@ -223,10 +225,15 @@ namespace EasySslStream.ConnectionV2.Communication
             byte[] DirInfoSizeBytes = new byte[16];
             int receivedDirInfoSizeBytes = await stream.ReadAsync(DirInfoSizeBytes);
             long DirInfoSize = BitConverter.ToInt64(DirInfoSizeBytes.Take(receivedDirInfoSizeBytes).ToArray());
+            Console.WriteLine("DirinfoSizeIS:" + DirInfoSize);
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
 
-            byte[] DirInfoBytes = new byte[DirInfoSize];
-            int receivedDirInfoBytes = await stream.ReadAsync(DirInfoBytes);
-            string DirInfo = Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(DirInfoBytes)));
+            List<byte> DirectoryInfoMessage = new List<byte>();
+            await SingleMessageGetter(DirInfoSize, DirectoryInfoMessage);            
+            string DirInfo = Encoding.UTF8.GetString(Convert.FromBase64String(Encoding.UTF8.GetString(DirectoryInfoMessage.ToArray())));
+            await stream.WriteAsync(BitConverter.GetBytes((int)SteerCodes.ReceivedDataPropertly));
+
+            Console.WriteLine(DirInfo);
 
             string[] DirInfoLines = DirInfo.Split('\n');
             string DirectoryName = DirInfoLines[0];
@@ -265,8 +272,9 @@ namespace EasySslStream.ConnectionV2.Communication
                     this.ReceiveSpeed.CurrentBufferPosition = 0;
                     while (FileBytesReceived <= FileSize)
                     {
-                        FileBytesReceived += await stream.ReadAsync(buffer);
-                        await saveStream.WriteAsync(buffer);
+                        int CurrentRead =  await stream.ReadAsync(buffer);
+                        FileBytesReceived += CurrentRead;
+                        await saveStream.WriteAsync(buffer,0,CurrentRead);
                         this.ReceiveSpeed.CurrentBufferPosition = FileBytesReceived;
                      
                     }
@@ -292,6 +300,20 @@ namespace EasySslStream.ConnectionV2.Communication
 
         #region helpers
 
+
+        async Task SingleMessageGetter(long ExpectedBytes, List<byte> TotalMessage)
+        {
+            int Received = 0;
+            byte[] ReceiveBuffer = new byte[this._bufferSize];
+
+            while (Received < ExpectedBytes)
+            {
+                int CurrentRead = await stream.ReadAsync(ReceiveBuffer);
+                Received += CurrentRead;
+                TotalMessage.AddRange(ReceiveBuffer.Take(CurrentRead));
+            }          
+        }
+
         string SerializeDirectoryTransferInfo(string path)
         {
             StringBuilder sb = new StringBuilder();
@@ -306,7 +328,7 @@ namespace EasySslStream.ConnectionV2.Communication
                 sb.AppendLine($"{file.Split(directoryInfo.Name + "\\")[1]}###{fileInfo.Length}");
             }
 
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString().Trim('\n')));
         }
         EncodingEnum ResolveEncodingEnum(Encoding enc)
         {

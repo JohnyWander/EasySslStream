@@ -31,7 +31,7 @@ namespace EndtoEndWindowsServer
         static void Main(string[] args)
         {
 #if DEBUG
-            args = new string[] { "-h", "-s", "127.0.0.1", "-p", "2000","-c" };
+            args = new string[] { "-h", "-s", "0.0.0.0", "-p", "2000","-c","-r" };
 #endif
 
             if (args.Length > 0)
